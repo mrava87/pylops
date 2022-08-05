@@ -1,8 +1,10 @@
 from __future__ import division
 
 import logging
+from typing import Tuple, Union, List
 
 import numpy as np
+import numpy.typing as npt
 import scipy as sp
 from numpy.linalg import solve as np_solve
 from scipy.linalg import eigvals, lstsq
@@ -77,15 +79,15 @@ class LinearOperator(spLinearOperator):
 
     def __init__(
         self,
-        Op=None,
-        dtype=None,
-        shape=None,
-        dims=None,
-        dimsd=None,
-        clinear=None,
-        explicit=None,
-        name=None,
-    ):
+        Op: spLinearOperator = None,
+        dtype = None, # TODO implement type annotation for numpy dtype
+        shape: Tuple[int, int] = None,
+        dims: Tuple[int, ..., int] = None,
+        dimsd: Tuple[int, ..., int] = None,
+        clinear: bool = None,
+        explicit: bool = None,
+        name: str = None,
+    ) -> None:
         if Op is not None:
             self.Op = Op
             # All Operators must have shape and dtype
@@ -123,7 +125,7 @@ class LinearOperator(spLinearOperator):
         self.rmatmat_count = 0
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         _shape = getattr(self, "_shape", None)
         if _shape is None:  # Cannot find shape, falling back on dims and dimsd
             dims = getattr(self, "_dims", None)
@@ -140,7 +142,7 @@ class LinearOperator(spLinearOperator):
         return _shape
 
     @shape.setter
-    def shape(self, new_shape):
+    def shape(self, new_shape) -> None:
         new_shape = tuple(new_shape)
         if not isshape(new_shape):
             raise ValueError(f"invalid shape %{new_shape:r} (must be 2-d)")
@@ -156,11 +158,11 @@ class LinearOperator(spLinearOperator):
         self._shape = new_shape
 
     @shape.deleter
-    def shape(self):
+    def shape(self) -> None:
         del self._shape
 
     @property
-    def dims(self):
+    def dims(self) -> Tuple[int, ..., int]:
         _dims = getattr(self, "_dims", None)
         if _dims is None:
             shape = getattr(self, "_shape", None)
@@ -172,7 +174,7 @@ class LinearOperator(spLinearOperator):
         return _dims
 
     @dims.setter
-    def dims(self, new_dims):
+    def dims(self, new_dims) -> None:
         new_dims = tuple(new_dims)
         shape = getattr(self, "_shape", None)
         if shape is None:  # shape not set yet
@@ -184,11 +186,11 @@ class LinearOperator(spLinearOperator):
                 raise ValueError("dims incompatible with shape[1]")
 
     @dims.deleter
-    def dims(self):
+    def dims(self) -> None:
         del self._dims
 
     @property
-    def dimsd(self):
+    def dimsd(self) -> Tuple[int, ..., int]:
         _dimsd = getattr(self, "_dimsd", None)
         if _dimsd is None:
             shape = getattr(self, "_shape", None)
@@ -200,7 +202,7 @@ class LinearOperator(spLinearOperator):
         return _dimsd
 
     @dimsd.setter
-    def dimsd(self, new_dimsd):
+    def dimsd(self, new_dimsd: Tuple[int, ..., int]) -> None:
         new_dimsd = tuple(new_dimsd)
         shape = getattr(self, "_shape", None)
         if shape is None:  # shape not set yet
@@ -212,43 +214,43 @@ class LinearOperator(spLinearOperator):
                 raise ValueError("dimsd incompatible with shape[0]")
 
     @dimsd.deleter
-    def dimsd(self):
+    def dimsd(self) -> None:
         del self._dimsd
 
     @property
-    def clinear(self):
+    def clinear(self) -> bool:
         return getattr(self, "_clinear", True)
 
     @clinear.setter
-    def clinear(self, new_clinear):
+    def clinear(self, new_clinear) -> None:
         self._clinear = bool(new_clinear)
 
     @clinear.deleter
-    def clinear(self, new_clinear):
+    def clinear(self, new_clinear: bool) -> None:
         del self._clinear
 
     @property
-    def explicit(self):
+    def explicit(self) -> bool:
         return getattr(self, "_explicit", False)
 
     @explicit.setter
-    def explicit(self, new_explicit):
+    def explicit(self, new_explicit: bool) -> None:
         self._explicit = bool(new_explicit)
 
     @explicit.deleter
-    def explicit(self, new_explicit):
+    def explicit(self, new_explicit: bool) -> None:
         del self._explicit
 
     @property
-    def name(self):
+    def name(self) -> str:
         return getattr(self, "_name", None)
 
     @name.setter
-    def name(self, new_name):
+    def name(self, new_name: str) -> None:
         self._name = new_name
 
     @name.deleter
-    def name(self, new_name):
+    def name(self, new_name: str) -> None:
         del self._name
 
     def _copy_attributes(self, dest, exclude=["name"]):
@@ -353,7 +355,7 @@ class LinearOperator(spLinearOperator):
         return Op
 
     @count(forward=True)
-    def matvec(self, x):
+    def matvec(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """Matrix-vector multiplication.
 
         Modified version of scipy matvec which does not consider the case
@@ -387,7 +389,7 @@ class LinearOperator(spLinearOperator):
         return y
 
     @count(forward=False)
-    def rmatvec(self, x):
+    def rmatvec(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """Adjoint matrix-vector multiplication.
 
         Modified version of scipy rmatvec which does not consider the case
@@ -421,7 +423,7 @@ class LinearOperator(spLinearOperator):
         return y
 
     @count(forward=True, matmat=True)
-    def matmat(self, X):
+    def matmat(self, X: npt.ArrayLike) -> npt.ArrayLike:
         """Matrix-matrix multiplication.
 
         Modified version of scipy matmat which does not consider the case
@@ -447,7 +449,7 @@ class LinearOperator(spLinearOperator):
         return Y
 
     @count(forward=False, matmat=True)
-    def rmatmat(self, X):
+    def rmatmat(self, X: npt.ArrayLike) -> npt.ArrayLike:
         """Matrix-matrix multiplication.
 
         Modified version of scipy rmatmat which does not consider the case
@@ -472,7 +474,7 @@ class LinearOperator(spLinearOperator):
         Y = self._rmatmat(X)
         return Y
 
-    def dot(self, x):
+    def dot(self, x: npt.ArrayLike) -> npt.ArrayLike:
         """Matrix-matrix or matrix-vector multiplication.
 
         Parameters
@@ -535,7 +537,7 @@ class LinearOperator(spLinearOperator):
                     )
                 )
 
-    def div(self, y, niter=100, densesolver="scipy"):
+    def div(self, y: npt.ArrayLike, niter: int = 100, densesolver: str = "scipy") -> npt.ArrayLike:
         r"""Solve the linear problem :math:`\mathbf{y}=\mathbf{A}\mathbf{x}`.
 
         Overloading of operator ``/`` to improve expressivity of `Pylops`
@@ -596,7 +598,7 @@ class LinearOperator(spLinearOperator):
                 )[0]
         return xest
 
-    def todense(self, backend="numpy"):
+    def todense(self, backend: str = "numpy") -> Union[npt.ArrayLike, ...]: # todo: add cupy type
         r"""Return dense matrix.
 
         The operator is converted into its dense matrix equivalent. In order
@@ -647,7 +649,7 @@ class LinearOperator(spLinearOperator):
             matrix = np.conj(Op.rmatmat(identity)).T
         return matrix
 
-    def tosparse(self):
+    def tosparse(self) -> sp.sparse.csr_matrix:
         r"""Return sparse matrix.
 
         The operator in converted into its sparse (CSR) matrix equivalent. In order
@@ -695,8 +697,8 @@ class LinearOperator(spLinearOperator):
         return matrix
 
     def eigs(
-        self, neigs=None, symmetric=False, niter=None, uselobpcg=False, **kwargs_eig
-    ):
+        self, neigs: int = None, symmetric: bool = False, niter:int = None, uselobpcg: bool = False, **kwargs_eig
+    ) -> npt.ArrayLike:
         r"""Most significant eigenvalues of linear operator.
 
         Return an estimate of the most significant eigenvalues
@@ -843,7 +845,7 @@ class LinearOperator(spLinearOperator):
                     )
         return -np.sort(-eigenvalues)
 
-    def cond(self, uselobpcg=False, **kwargs_eig):
+    def cond(self, uselobpcg: bool = False, **kwargs_eig) -> npt.ArrayLike:
         r"""Condition number of linear operator.
 
         Return an estimate of the condition number of the linear operator as
@@ -896,7 +898,7 @@ class LinearOperator(spLinearOperator):
 
         return cond
 
-    def conj(self):
+    def conj(self) -> LinearOperator:
         """Complex conjugate operator
 
         Returns
@@ -908,7 +910,7 @@ class LinearOperator(spLinearOperator):
         conjop = _ConjLinearOperator(self)
         return conjop
 
-    def apply_columns(self, cols):
+    def apply_columns(self, cols: List) -> npt.ArrayLike:
         """Apply subset of columns of operator
 
         This method can be used to wrap a LinearOperator and mimic the action
@@ -936,7 +938,7 @@ class LinearOperator(spLinearOperator):
         colop = _ColumnLinearOperator(self, cols)
         return colop
 
-    def toreal(self, forw=True, adj=True):
+    def toreal(self, forw: bool = True, adj: bool = True) -> LinearOperator:
         """Real operator
 
         Parameters
@@ -955,7 +957,7 @@ class LinearOperator(spLinearOperator):
         realop = _RealImagLinearOperator(self, forw, adj, True)
         return realop
 
-    def toimag(self, forw=True, adj=True):
+    def toimag(self, forw: bool = True, adj: bool = True) -> LinearOperator:
         """Imag operator
 
         Parameters
@@ -976,11 +978,11 @@ class LinearOperator(spLinearOperator):
 
     def trace(
         self,
-        neval=None,
-        method=None,
-        backend="numpy",
+        neval: int = None,
+        method: str = None,
+        backend: str = "numpy",
         **kwargs_trace,
-    ):
+    ): # todo: add union type for trace
         r"""Trace of linear operator.
 
         Returns the trace (or its estimate) of the linear operator.
@@ -1044,7 +1046,7 @@ class LinearOperator(spLinearOperator):
         else:
             raise NotImplementedError(f"method {method} not available.")
 
-    def reset_count(self):
+    def reset_count(self) -> None:
         """Reset counters
 
         When invoked all counters are set back to 0.
