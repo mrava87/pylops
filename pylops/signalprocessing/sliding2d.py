@@ -181,7 +181,7 @@ def Sliding2D(
     nwins = len(dwin_ins)
 
     # check patching
-    if nwins * Op.shape[1] // dims[1] != dims[0]:
+    if nwins * Op.shape[1] // dims[1] != dims[0] and Op.shape[1] != np.prod(dims):
         raise ValueError(
             f"Model shape (dims={dims}) is not consistent with chosen "
             f"number of windows. Run sliding2d_design to identify the "
@@ -196,17 +196,27 @@ def Sliding2D(
         tapin[:nover] = 1
         tapend = tap.copy()
         tapend[-nover:] = 1
-        taps = {}
-        taps[0] = tapin
+        taps = {0: tapin}
         for i in range(1, nwins - 1):
             taps[i] = tap
         taps[nwins - 1] = tapend
 
     # transform to apply
-    if tapertype is None:
-        OOp = BlockDiag([Op for _ in range(nwins)])
+    if Op.shape[1] == np.prod(dims):
+        # apply operator to entire input
+        if tapertype is None:
+            OOp = Op
+        else:
+            taps = np.concatenate([taps[itap] for itap in range(nwins)])
+            OOp = Diagonal(taps) @ Op
     else:
-        OOp = BlockDiag([Diagonal(taps[itap].ravel()) * Op for itap in range(nwins)])
+        # apply operator to each patch individually
+        if tapertype is None:
+            OOp = BlockDiag([Op for _ in range(nwins)])
+        else:
+            OOp = BlockDiag(
+                [Diagonal(taps[itap].ravel()) * Op for itap in range(nwins)]
+            )
 
     combining = HStack(
         [
@@ -214,6 +224,7 @@ def Sliding2D(
             for win_in, win_end in zip(dwin_ins, dwin_ends)
         ]
     )
+
     Sop = LinearOperator(combining * OOp)
     Sop.dims, Sop.dimsd = (nwins, int(dims[0] // nwins), dims[1]), dimsd
     Sop.name = name

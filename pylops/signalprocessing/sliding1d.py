@@ -6,6 +6,8 @@ __all__ = [
 import logging
 from typing import Tuple, Union
 
+import numpy as np
+
 from pylops import LinearOperator
 from pylops.basicoperators import BlockDiag, Diagonal, HStack, Restriction
 from pylops.signalprocessing.sliding2d import _slidingsteps
@@ -88,11 +90,12 @@ def Sliding1D(
 ) -> LinearOperator:
     r"""1D Sliding transform operator.
 
-    Apply a transform operator ``Op`` repeatedly to slices of the model
-    vector in forward mode and slices of the data vector in adjoint mode.
-    More specifically, in forward mode the model vector is divided into
-    slices, each slice is transformed, and slices are then recombined in a
-    sliding window fashion.
+    Apply a transform operator ``Op`` repeatedly to slices (or to all
+    slices simultaneously) of the model vector in forward mode and
+    slices of the data vector in adjoint mode. More specifically, in
+    forward mode the model vector is divided into slices, each slice
+    is transformed, and slices are then recombined in a sliding window
+    fashion.
 
     This operator can be used to perform local, overlapping transforms (e.g.,
     :obj:`pylops.signalprocessing.FFT`) on 1-dimensional arrays.
@@ -111,7 +114,11 @@ def Sliding1D(
     Parameters
     ----------
     Op : :obj:`pylops.LinearOperator`
-        Transform operator
+        Transform operator to be applied to each slice or to all slices at the
+        same time. In the second case, the operator must have `Op.shape[1] == dim[0]`
+        and it must be designed such that it internally reshapes the model in
+        a 2d-array of size :math:`nwins \times nwin` (where :math:`nwins` is the
+        number of windows) and applies the transform on each window.
     dim : :obj:`tuple`
         Shape of 1-dimensional model.
     dimd : :obj:`tuple`
@@ -147,7 +154,7 @@ def Sliding1D(
     nwins = len(dwin_ins)
 
     # check windows
-    if nwins * Op.shape[1] != dim[0]:
+    if nwins * Op.shape[1] != dim[0] and Op.shape[1] != dim[0]:
         raise ValueError(
             f"Model shape (dim={dim}) is not consistent with chosen "
             f"number of windows. Run sliding1d_design to identify the "
@@ -162,17 +169,27 @@ def Sliding1D(
         tapin[:nover] = 1
         tapend = tap.copy()
         tapend[-nover:] = 1
-        taps = {}
-        taps[0] = tapin
+        taps = {0: tapin}
         for i in range(1, nwins - 1):
             taps[i] = tap
         taps[nwins - 1] = tapend
 
     # transform to apply
-    if tapertype is None:
-        OOp = BlockDiag([Op for _ in range(nwins)])
+    if Op.shape[1] == dim[0]:
+        # apply operator to entire input
+        if tapertype is None:
+            OOp = Op
+        else:
+            taps = np.concatenate([taps[itap] for itap in range(nwins)])
+            OOp = Diagonal(taps) @ Op
     else:
-        OOp = BlockDiag([Diagonal(taps[itap].ravel()) * Op for itap in range(nwins)])
+        # apply operator to each patch individually
+        if tapertype is None:
+            OOp = BlockDiag([Op for _ in range(nwins)])
+        else:
+            OOp = BlockDiag(
+                [Diagonal(taps[itap].ravel()) * Op for itap in range(nwins)]
+            )
 
     combining = HStack(
         [
