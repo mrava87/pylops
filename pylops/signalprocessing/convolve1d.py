@@ -1,5 +1,6 @@
 __all__ = ["Convolve1D"]
 
+from functools import partial
 from typing import Callable, Tuple, Union
 
 import numpy as np
@@ -19,7 +20,10 @@ from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 
 def _choose_convfunc(
-    x: npt.ArrayLike, method: Union[None, str], dims
+    x: npt.ArrayLike,
+    method: Union[None, str],
+    dims: Union[int, InputDimsLike],
+    axis: int = -1,
 ) -> Tuple[Callable, str]:
     """Choose convolution function
 
@@ -35,12 +39,19 @@ def _choose_convfunc(
         if method is None:
             method = "fft"
         if method == "fft":
-            convfunc = get_fftconvolve(x)
+            convfunc = partial(get_fftconvolve(x), axes=axis)
         elif method == "overlapadd":
-            convfunc = get_oaconvolve(x)
+            convfunc = partial(get_oaconvolve(x), axes=axis)(x)
         else:
             raise NotImplementedError("method must be fft or overlapadd")
     return convfunc, method
+
+
+def _pad_along_axis(array: np.ndarray, pad_size: tuple, axis: int = 0) -> np.ndarray:
+
+    npad = [(0, 0)] * array.ndim
+    npad[axis] = pad_size
+    return np.pad(array, pad_width=npad)
 
 
 class _Convolve1Dshort(LinearOperator):
@@ -58,35 +69,34 @@ class _Convolve1Dshort(LinearOperator):
     ) -> None:
         dims = _value_or_sized_to_tuple(dims)
         super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dims, name=name)
-
         self.axis = axis
-        if offset > len(h) - 1:
-            raise ValueError("offset must be smaller than len(h) - 1")
-        self.nh = len(h)
+        if offset > h.shape[axis] - 1:
+            raise ValueError("offset must be smaller than h.shape[axis] - 1")
+        self.nh = h.shape[axis]
         self.h = h
-        self.hstar = np.flip(self.h, axis=-1)
         self.offset = 2 * (self.nh // 2 - int(offset))
         if self.nh % 2 == 0:
             self.offset -= 1
         if self.offset != 0:
-            self.h = np.pad(
+            self.h = _pad_along_axis(
                 self.h,
                 (
                     self.offset if self.offset > 0 else 0,
                     -self.offset if self.offset < 0 else 0,
                 ),
-                mode="constant",
+                axis=axis,
             )
         self.hstar = np.flip(self.h, axis=-1)
 
         # add dimensions to filter to match dimensions of model and data
-        hdims = np.ones(len(self.dims), dtype=int)
-        hdims[self.axis] = len(self.h)
-        self.h = self.h.reshape(hdims)
-        self.hstar = self.hstar.reshape(hdims)
+        if self.h.ndim == 1:
+            hdims = np.ones(len(self.dims), dtype=int)
+            hdims[self.axis] = len(self.h)
+            self.h = self.h.reshape(hdims)
+            self.hstar = self.hstar.reshape(hdims)
 
         # choose method and function handle
-        self.convfunc, self.method = _choose_convfunc(h, method, self.dims)
+        self.convfunc, self.method = _choose_convfunc(h, method, self.dims, self.axis)
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
@@ -108,7 +118,7 @@ class _Convolve1Dshort(LinearOperator):
 
 
 class _Convolve1Dlong(LinearOperator):
-    r"""1D convolution operator with extended filter (larger than input signal)"""
+    """1D convolution operator with extended filter (larger than input signal)"""
 
     def __init__(
         self,
@@ -120,60 +130,41 @@ class _Convolve1Dlong(LinearOperator):
         dtype: DTypeLike = "float64",
         name: str = "C",
     ) -> None:
-        dimsd = _value_or_sized_to_array(dims)
         dims = _value_or_sized_to_tuple(dims)
-        dimsd[axis] = len(h)
-        dimsd = _value_or_sized_to_tuple(dimsd)
+        dimsd = h.shape
         super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dimsd, name=name)
 
         # create filter
-        self.dimeven = True if dims[axis] == 0 else False
-        self.heven = True if len(h) % 2 == 0 else False
-        if self.heven:
-            # force filter to have odd size
-            h = np.pad(h, (0, 1))
-
         self.axis = axis
-        if offset > len(h) - 1:
-            raise ValueError("offset must be smaller than len(h) - 1")
+        if offset > self.dims[self.axis] - 1:
+            raise ValueError("offset must be smaller than self.dims[self.axis] - 1")
         self.nh = len(h)
         self.h = h
         self.offset = 2 * (self.dims[self.axis] // 2 - int(offset))
-        if self.offset != 0:
-            self.h = np.pad(
-                self.h,
-                (
-                    self.offset if self.offset > 0 else 0,
-                    -self.offset if self.offset < 0 else 0,
-                ),
-                mode="constant",
-            )
+        if self.dims[self.axis] % 2 == 0:
+            self.offset -= 1
         self.hstar = np.flip(self.h, axis=-1)
+
         self.pad = np.zeros((len(dims), 2), dtype=int)
-        self.pad[self.axis, 1] = 1
+        self.pad[self.axis, 0] = self.offset if self.offset > 0 else 0
+        self.pad[self.axis, 1] = -self.offset if self.offset < 0 else 0
+
+        self.padd = np.zeros((len(dims), 2), dtype=int)
+        self.padd[self.axis, 1] = self.offset if self.offset > 0 else 0
+        self.padd[self.axis, 0] = -self.offset if self.offset < 0 else 0
 
         # add dimensions to filter to match dimensions of model and data
-        hdims = np.ones(len(self.dims), dtype=int)
-        hdims[self.axis] = len(self.h)
-        self.h = self.h.reshape(hdims)
-        self.hstar = self.hstar.reshape(hdims)
-
-        # choose how to cut signals
-        self.start, self.end = self.offset, self.dimsd[self.axis] + self.offset
-        self.startd, self.endd = self.offset, self.dims[self.axis] + self.offset
-        if self.dimeven:
-            self.start += 1
-            self.end += 1
-        if self.heven:
-            self.startd += 1
-            self.endd += 1
+        if self.h.ndim == 1:
+            hdims = np.ones(len(self.dims), dtype=int)
+            hdims[self.axis] = len(self.h)
+            self.h = self.h.reshape(hdims)
+            self.hstar = self.hstar.reshape(hdims)
 
         # choose method and function handle
-        self.convfunc, self.method = _choose_convfunc(h, method, self.dims)
+        self.convfunc, self.method = _choose_convfunc(h, method, self.dims, self.axis)
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
         if type(self.h) != type(x):
             self.h = to_cupy_conditional(x, self.h)
             self.convfunc, self.method = _choose_convfunc(
@@ -181,20 +172,36 @@ class _Convolve1Dlong(LinearOperator):
             )
         x = np.pad(x, self.pad)
         y = self.convfunc(self.h, x, mode="same")
-        y = ncp.take(y, range(self.start, self.end), axis=self.axis)
         return y
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
         ncp = get_array_module(x)
-        if type(self.hstar) != type(x):
+        if type(self.h) != type(x):
             self.hstar = to_cupy_conditional(x, self.hstar)
             self.convfunc, self.method = _choose_convfunc(
                 self.hstar, self.method, self.dims
             )
-        y = self.convfunc(self.hstar, x, mode="same")
-        print(y)
-        y = ncp.take(y, range(self.startd, self.endd), axis=self.axis)
+        x = np.pad(x, self.padd)
+        y = self.convfunc(self.hstar, x)
+        if self.dims[self.axis] % 2 == 0:
+            y = ncp.take(
+                y,
+                range(
+                    len(y) // 2 - self.dims[self.axis] // 2,
+                    len(y) // 2 + self.dims[self.axis] // 2,
+                ),
+                axis=self.axis,
+            )
+        else:
+            y = ncp.take(
+                y,
+                range(
+                    len(y) // 2 - self.dims[self.axis] // 2,
+                    len(y) // 2 + self.dims[self.axis] // 2 + 1,
+                ),
+                axis=self.axis,
+            )
         return y
 
 
@@ -207,7 +214,7 @@ def Convolve1D(
     dtype: DTypeLike = "float64",
     name: str = "C",
 ) -> LinearOperator:
-    """1D convolution operator.
+    r"""1D convolution operator.
 
     Apply one-dimensional convolution with a compact filter to model (and data)
     along an ``axis`` of a multi-dimensional array.
@@ -290,7 +297,7 @@ def Convolve1D(
         y(t) = \mathscr{F}^{-1} (H(f)^* * X(f))
 
     """
-    if len(h) <= _value_or_sized_to_tuple(dims)[axis]:
+    if h.shape[axis] <= _value_or_sized_to_tuple(dims)[axis]:
         convop = _Convolve1Dshort
     else:
         convop = _Convolve1Dlong
