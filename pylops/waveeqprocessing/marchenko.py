@@ -341,7 +341,7 @@ class Marchenko:
             for numpy and cupy `data`, respectively)
 
         Returns
-        ----------
+        -------
         f1_inv_minus : :obj:`numpy.ndarray`
             Inverted upgoing focusing function of size :math:`[n_r \times n_t]`
         f1_inv_plus : :obj:`numpy.ndarray`
@@ -548,7 +548,7 @@ class Marchenko:
             for numpy and cupy `data`, respectively)
 
         Returns
-        ----------
+        -------
         f1_inv_minus : :obj:`numpy.ndarray`
             Inverted upgoing focusing function of size
             :math:`[n_r \times n_{vs} \times n_t]`

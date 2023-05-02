@@ -14,7 +14,7 @@ compressed and the sparse nature of the Seislet transform can also be used to
 precondition sparsity-promoting inverse problems.
 
 We will show examples of a variety of different settings, including a comparison
-with the original implementation in [1].
+with the original implementation in _[1].
 
 .. [1] van Vliet, L. J.,  Verbeek, P. W., "Estimators for orientation and
     anisotropy in digitized images", Journal ASCI Imaging Workshop. 1995.

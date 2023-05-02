@@ -42,7 +42,6 @@ for which we will use the :py:class:`pylops.optimization.sparsity.fista` solver.
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.sparse.linalg import lobpcg as sp_lobpcg
 
 import pylops
 
