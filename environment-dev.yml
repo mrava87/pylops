@@ -18,6 +18,7 @@ dependencies:
   - pytest
   - Sphinx
   - numpydoc
+  - Cython
   - numba
   - icc_rt
   - pre-commit
