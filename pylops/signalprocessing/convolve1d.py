@@ -70,9 +70,9 @@ class _Convolve1Dshort(LinearOperator):
         dims = _value_or_sized_to_tuple(dims)
         super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dims, name=name)
         self.axis = axis
-        if offset > h.shape[axis] - 1:
+        self.nh = h.size if h.ndim == 1 else h.shape[axis]
+        if offset > self.nh - 1:
             raise ValueError("offset must be smaller than h.shape[axis] - 1")
-        self.nh = h.shape[axis]
         self.h = h
         self.offset = 2 * (self.nh // 2 - int(offset))
         if self.nh % 2 == 0:
@@ -138,7 +138,7 @@ class _Convolve1Dlong(LinearOperator):
         self.axis = axis
         if offset > self.dims[self.axis] - 1:
             raise ValueError("offset must be smaller than self.dims[self.axis] - 1")
-        self.nh = len(h)
+        self.nh = h.size if h.ndim == 1 else h.shape[axis]
         self.h = h
         self.offset = 2 * (self.dims[self.axis] // 2 - int(offset))
         if self.dims[self.axis] % 2 == 0:
@@ -297,7 +297,8 @@ def Convolve1D(
         y(t) = \mathscr{F}^{-1} (H(f)^* * X(f))
 
     """
-    if h.shape[axis] <= _value_or_sized_to_tuple(dims)[axis]:
+    nh = h.size if h.ndim == 1 else h.shape[axis]
+    if nh <= _value_or_sized_to_tuple(dims)[axis]:
         convop = _Convolve1Dshort
     else:
         convop = _Convolve1Dlong
