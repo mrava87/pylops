@@ -38,6 +38,8 @@ avo
     Linear Operators for Seismic Reservoir Characterization
 waveeqprocessing
     Linear Operators for Wave Equation oriented processing
+medical
+    Linear Operators for Medical imaging
 optimization
     Solvers
 utils
@@ -52,6 +54,7 @@ from .basicoperators import *
 from . import (
     avo,
     basicoperators,
+    medical,
     optimization,
     signalprocessing,
     utils,

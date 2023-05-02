@@ -1,4 +1,5 @@
 __all__ = [
+    "astra_enabled",
     "cupy_enabled",
     "cusignal_enabled",
     "devito_enabled",
@@ -15,6 +16,7 @@ import os
 from importlib import util
 
 # check package availability
+astra_enabled = util.find_spec("astra") is not None
 cupy_enabled = (
     util.find_spec("cupy") is not None and int(os.getenv("CUPY_PYLOPS", 1)) == 1
 )
@@ -32,6 +34,23 @@ torch_enabled = util.find_spec("torch") is not None
 
 
 # error message at import of available package
+def astra_import(message):
+    if astra_enabled:
+        try:
+            import astra  # noqa: F401
+
+            astra_message = None
+        except Exception as e:
+            astra_message = f"Failed to import astra (error:{e})."
+    else:
+        astra_message = (
+            f"ASTRA not available. "
+            f"In order to be able to use "
+            f'{message} run "pip install astra-toolbox".'
+        )
+    return astra_message
+
+
 def devito_import(message):
     if devito_enabled:
         try:
