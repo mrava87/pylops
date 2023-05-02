@@ -84,7 +84,7 @@ class _Convolve1Dshort(LinearOperator):
                     self.offset if self.offset > 0 else 0,
                     -self.offset if self.offset < 0 else 0,
                 ),
-                axis=axis,
+                axis=-1 if h.ndim == 1 else axis,
             )
         self.hstar = np.flip(self.h, axis=-1)
 
