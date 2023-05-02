@@ -27,6 +27,7 @@ dependencies:
   - pip:
     - devito
     - scikit-fmm
+    - astra-toolbox
     - spgl1
     - pytest-runner
     - setuptools_scm

@@ -35,6 +35,7 @@ setup(
     install_requires=["numpy >= 1.21.0", "scipy >= 1.4.0"],
     extras_require={
         "advanced": [
+            "astra-toolbox",
             "llvmlite",
             "numba",
             "pyfftw",
