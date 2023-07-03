@@ -5,10 +5,8 @@ on: [push, pull_request]
 jobs:
   miniconda:
     name: Miniconda ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-        matrix:
-            os: "ubuntu-latest"
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v2
       - uses: conda-incubator/setup-miniconda@v2
