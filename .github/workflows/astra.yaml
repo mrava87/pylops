@@ -1,18 +1,25 @@
-name: Astra Toolbox Installation
+name: Astra-toolbox
 
 on: [push, pull_request]
 
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  miniconda:
+    name: Miniconda ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+            os: "ubuntu-latest"
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install dependencies
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: test
+          environment-file: environment-dev.yml
+          python-version: 3.8
+          auto-activate-base: false
+      - name: Install pylops
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential
-          pip install astra-toolbox
+          pip install .
+      - name: Test with pytest
+        run: |
+          pytest
