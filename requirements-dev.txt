@@ -9,7 +9,6 @@ spgl1
 scikit-fmm
 sympy
 devito
-astra-toolbox
 matplotlib
 ipython
 pytest
