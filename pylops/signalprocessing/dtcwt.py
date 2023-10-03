@@ -73,66 +73,74 @@ class DTCWT(LinearOperator):
         dtype: DTypeLike = "float64",
         name: str = "C",
     ) -> None:
-        self.dims = _value_or_sized_to_tuple(dims)
-        self.ndim = len(self.dims)
+        dims = _value_or_sized_to_tuple(dims)
+        self.ndim = len(dims)
+        self.axis = axis
+
+        self.otherdims = int(np.prod(dims) / dims[self.axis])
+        self.dims_swapped = list(dims)
+        self.dims_swapped[0], self.dims_swapped[self.axis] = (
+            self.dims_swapped[self.axis],
+            self.dims_swapped[0],
+        )
+        self.dims_swapped = tuple(self.dims_swapped)
+
         self.nlevels = nlevels
         self.include_scale = include_scale
-        self.axis = axis
-        # dry-run of transform to
+        # dry-run of transform to find dimensions of coefficients at different levels
         self._transform = dtcwt.Transform1d(biort=biort, qshift=qshift)
-        self._interpret_coeffs()
+        self._interpret_coeffs(dims, self.axis)
+        dimsd = list(dims)
+        dimsd[self.axis] = self.coeff_array_size
+        dimsd = tuple(dimsd)
+        self.dimsd_swapped = list(dimsd)
+        self.dimsd_swapped[0], self.dimsd_swapped[self.axis] = (
+            self.dimsd_swapped[self.axis],
+            self.dimsd_swapped[0],
+        )
+        self.dimsd_swapped = tuple(self.dimsd_swapped)
+
         super().__init__(
             dtype=np.dtype(dtype),
-            dims=self.dims,
-            dimsd=(self.coeff_array_size,),
+            clinear=False,
+            dims=dims,
+            dimsd=dimsd,
             name=name,
         )
 
-    def _interpret_coeffs(self):
-        x = np.ones(self.dims)
-        x = x.swapaxes(self.axis, -1)
-        self.swapped_dims = x.shape
-        x = self._nd_to_2d(x)
-        pyr = self._transform.forward(x, nlevels=self.nlevels, include_scale=True)
-        self.coeff_array_size = 0
-        self.lowpass_size = len(pyr.lowpass)
-        self.slices = []
+    def _interpret_coeffs(self, dims, axis):
+        x = np.ones(dims[axis])
+        pyr = self._transform.forward(
+            x, nlevels=self.nlevels, include_scale=self.include_scale
+        )
+        self.lowpass_size = pyr.lowpass.size
+        self.coeff_array_size = self.lowpass_size
+        self.highpass_sizes = []
         for _h in pyr.highpasses:
-            self.slices.append(len(_h))
-            self.coeff_array_size += len(_h)
-        self.coeff_array_size += self.lowpass_size
-        elements = np.prod(x.shape[1:])
-        self.coeff_array_size *= elements
-        self.lowpass_size *= elements
-        self.first_dim = elements
+            self.highpass_sizes.append(_h.size)
+            self.coeff_array_size += _h.size
 
     def _nd_to_2d(self, arr_nd):
-        arr_2d = arr_nd.reshape((self.dims[0], -1))
+        arr_2d = arr_nd.reshape(self.dims[self.axis], -1).squeeze()
         return arr_2d
 
-    def _2d_to_nd(self, arr_2d):
-        arr_nd = arr_2d.reshape(self.swapped_dims)
-        return arr_nd
+    # def _2d_to_nd(self, arr_2d):
+    #    arr_nd = arr_2d.reshape(self.dims_swapped)
+    #    return arr_nd
 
     def _coeff_to_array(self, pyr: dtcwt.Pyramid) -> NDArray:
-        coeffs = pyr.highpasses
-        flat_coeffs = []
-        for band in coeffs:
-            for c in band:
-                flat_coeffs.append(c)
-        flat_coeffs = np.concatenate((flat_coeffs, pyr.lowpass))
-        return flat_coeffs
+        highpass_coeffs = np.vstack([h for h in pyr.highpasses])
+        coeffs = np.concatenate((highpass_coeffs, pyr.lowpass), axis=0)
+        return coeffs
 
     def _array_to_coeff(self, X: NDArray) -> dtcwt.Pyramid:
-        lowpass = np.array([x.real for x in X[-self.lowpass_size :]]).reshape(
-            (-1, self.first_dim)
-        )
+        lowpass = (X[-self.lowpass_size :].real).reshape((-1, self.otherdims))
         _ptr = 0
         highpasses = ()
-        for _sl in self.slices:
-            _h = X[_ptr : _ptr + (_sl * self.first_dim)]
-            _ptr += _sl * self.first_dim
-            _h = _h.reshape((-1, self.first_dim))
+        for _sl in self.highpass_sizes:
+            _h = X[_ptr : _ptr + _sl]
+            _ptr += _sl
+            _h = _h.reshape(-1, self.otherdims)
             highpasses += (_h,)
         return dtcwt.Pyramid(lowpass, highpasses)
 
@@ -142,14 +150,19 @@ class DTCWT(LinearOperator):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
-        x = x.swapaxes(self.axis, -1)
-        x = self._nd_to_2d(x)
-        return self._coeff_to_array(
-            self._transform.forward(x, nlevels=self.nlevels, include_scale=False)
+        x = x.swapaxes(self.axis, 0)
+        y = self._nd_to_2d(x)
+        y = self._coeff_to_array(
+            self._transform.forward(
+                y, nlevels=self.nlevels, include_scale=self.include_scale
+            )
         )
+        y = y.reshape(self.dimsd_swapped)
+        return y.swapaxes(self.axis, 0)
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
-        Y = self._transform.inverse(self._array_to_coeff(x))
-        Y = self._2d_to_nd(Y)
-        return Y.swapaxes(self.axis, -1)
+        x = x.swapaxes(self.axis, 0)
+        y = self._transform.inverse(self._array_to_coeff(x))
+        y = y.reshape(self.dims_swapped)
+        return y.swapaxes(self.axis, 0)
