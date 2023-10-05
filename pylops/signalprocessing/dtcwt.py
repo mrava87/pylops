@@ -30,7 +30,7 @@ class DTCWT(LinearOperator):
         Level 1 wavelets to use. See :py:func:`dtcwt.coeffs.birot`. Default is `"near_sym_a"`.
     qshift : :obj:`str`, optional
         Level >= 2 wavelets to use. See :py:func:`dtcwt.coeffs.qshift`. Default is `"qshift_a"`
-    nlevels : :obj:`int`, optional
+    level : :obj:`int`, optional
         Number of levels of wavelet decomposition. Default is 3.
     include_scale : :obj:`bool`, optional
         Include scales in pyramid. See :py:class:`dtcwt.Pyramid`. Default is False.
@@ -67,7 +67,7 @@ class DTCWT(LinearOperator):
         dims: Union[int, InputDimsLike],
         biort: str = "near_sym_a",
         qshift: str = "qshift_a",
-        nlevels: int = 3,
+        level: int = 3,
         include_scale: bool = False,
         axis: int = -1,
         dtype: DTypeLike = "float64",
@@ -85,7 +85,7 @@ class DTCWT(LinearOperator):
         )
         self.dims_swapped = tuple(self.dims_swapped)
 
-        self.nlevels = nlevels
+        self.level = level
         self.include_scale = include_scale
         # dry-run of transform to find dimensions of coefficients at different levels
         self._transform = dtcwt.Transform1d(biort=biort, qshift=qshift)
@@ -111,7 +111,7 @@ class DTCWT(LinearOperator):
     def _interpret_coeffs(self, dims, axis):
         x = np.ones(dims[axis])
         pyr = self._transform.forward(
-            x, nlevels=self.nlevels, include_scale=self.include_scale
+            x, nlevels=self.level, include_scale=self.include_scale
         )
         self.lowpass_size = pyr.lowpass.size
         self.coeff_array_size = self.lowpass_size
@@ -154,7 +154,7 @@ class DTCWT(LinearOperator):
         y = self._nd_to_2d(x)
         y = self._coeff_to_array(
             self._transform.forward(
-                y, nlevels=self.nlevels, include_scale=self.include_scale
+                y, nlevels=self.level, include_scale=self.include_scale
             )
         )
         y = y.reshape(self.dimsd_swapped)

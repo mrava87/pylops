@@ -1,74 +1,80 @@
 """
 Dual-Tree Complex Wavelet Transform
-=========================
-This example shows how to use the :py:class:`pylops.signalprocessing.DCT` operator.
-This operator performs the 1D Dual-Tree Complex Wavelet Transform on a (single or multi-dimensional)
-input array.
+===================================
+This example shows how to use the :py:class:`pylops.signalprocessing.DTCWT` operator to perform the
+1D Dual-Tree Complex Wavelet Transform on a (single or multi-dimensional) input array. Such a transform
+provides advantages over the DWT which lacks shift invariance in 1-D and directional sensitivity in N-D.
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pywt
 
 import pylops
 
 plt.close("all")
 
 ###############################################################################
-# Let's define a 1D array x of having random values
+# To begin with, let's define two 1D arrays with a spike at slightly different location
 
-n = 50
-x = np.random.rand(n,)
+n = 128
+x = np.zeros(n)
+x1 = np.zeros(n)
+
+x[59] = 1
+x1[63] = 1
 
 ###############################################################################
-# We create the DTCWT operator with shape of our input array. DTCWT transform
-# gives a Pyramid object that is flattened out `y`.
+# We now create the DTCWT operator with the shape of our input array. The DTCWT transform
+# provides a Pyramid object that is internally flattened out into a vector. Here we re-obtain
+# the Pyramid object such that we can visualize the different scales indipendently.
 
-DOp = pylops.signalprocessing.DTCWT(dims=x.shape)
-y = DOp @ x
-xadj = DOp.H @ y
+level = 3
+DCOp = pylops.signalprocessing.DTCWT(dims=n, level=level)
+Xc = DCOp.get_pyramid(DCOp @ x)
+Xc1 = DCOp.get_pyramid(DCOp @ x1)
 
-plt.figure(figsize=(8, 5))
-plt.plot(x, "k", label="input array")
-plt.plot(y, "r", label="transformed array")
-plt.plot(xadj, "--b", label="transformed array")
-plt.title("Dual-Tree Complex Wavelet Transform 1D")
-plt.legend()
-plt.tight_layout()
+###############################################################################
+# To prove the superiority of the DTCWT transform over the DWT in shift-invariance,
+# let's also compute the DWT transform of these two signals and compare the coefficents
+# of both transform at level 3. As you will see, the coefficients change completely for
+# the DWT despite the two input signals are very similar; this is not the case for the
+# DCWT transform.
 
-#################################################################################
-# To get the Pyramid object use the `get_pyramid` method.
-# We can get the Highpass signal and Lowpass signal from it
+DOp = pylops.signalprocessing.DWT(dims=n, level=level, wavelet="sym7")
+X = pywt.array_to_coeffs(DOp @ x, DOp.sl, output_format="wavedecn")
+X1 = pywt.array_to_coeffs(DOp @ x1, DOp.sl, output_format="wavedecn")
 
-pyr = DOp.get_pyramid(y)
-
-plt.figure(figsize=(10, 5))
-plt.plot(x, "--b", label="orignal signal")
-plt.plot(pyr.lowpass, "k", label="lowpass")
-plt.plot(pyr.highpasses[0], "r", label="highpass level 1 signal")
-plt.plot(pyr.highpasses[1], "b", label="highpass level 2 signal")
-plt.plot(pyr.highpasses[2], "g", label="highpass level 3 signal")
-
-plt.title("DTCWT Pyramid Object")
-plt.legend()
+fig, axs = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(10, 5))
+axs[0, 0].stem(np.abs(X[1]["d"]), linefmt="k", markerfmt=".k", basefmt="k")
+axs[0, 0].set_title(f"DWT (Norm={np.linalg.norm(np.abs(K[1]['d']))**2:.3f})")
+axs[0, 1].stem(np.abs(X1[1]["d"]), linefmt="k", markerfmt=".k", basefmt="k")
+axs[0, 1].set_title(f"DWT (Norm={np.linalg.norm(np.abs(K1[1]['d']))**2:.3f})")
+axs[1, 0].stem(np.abs(Xc.highpasses[2]), linefmt="k", markerfmt=".k", basefmt="k")
+axs[1, 0].set_title(f"DCWT (Norm={np.linalg.norm(np.abs(Kc.highpasses[2]))**2:.3f})")
+axs[1, 1].stem(np.abs(Xc1.highpasses[2]), linefmt="k", markerfmt=".k", basefmt="k")
+axs[1, 1].set_title(f"DCWT (Norm={np.linalg.norm(np.abs(Kc1.highpasses[2]))**2:.3f})")
 plt.tight_layout()
 
 ###################################################################################
-# DTCWT can also be performed on multi-dimension arrays. The number of levels can also
-# be defined using the `nlevels`
+# The DTCWT can also be performed on multi-dimension arrays, where the parameter
+# ``axis`` is used to define the axis over which the transform is performed. Let's
+# just replicate our input signal over the second axis and see how the transform
+# will produce the same series of coefficients for all replicas.
 
-n = 10
-m = 2
+nrepeat = 10
+x = np.repeat(np.random.rand(n, 1), 10, axis=1).T
 
-x = np.random.rand(n, m)
+level = 3
+DCOp = pylops.signalprocessing.DTCWT(dims=(nrepeat, n), level=level, axis=1)
+X = DCOp @ x
 
-DOp = pylops.signalprocessing.DTCWT(dims=x.shape, nlevels=5)
-y = DOp @ x
-xadj = DOp.H @ y
-
-plt.figure(figsize=(8, 5))
-plt.plot(x, "k", label="input array")
-plt.plot(y, "r", label="transformed array")
-plt.plot(xadj, "--b", label="transformed array")
-plt.title("Dual-Tree Complex Wavelet Transform 1D on ND array")
-plt.legend()
+fig, axs = plt.subplots(1, 2, sharey=True, figsize=(10, 3))
+axs[0].imshow(X.real)
+axs[0].axis("tight")
+axs[0].set_xlabel("Coeffs")
+axs[0].set_ylabel("Replicas")
+axs[1].imshow(X.imag)
+axs[1].axis("tight")
+axs[1].set_xlabel("Coeffs")
 plt.tight_layout()
