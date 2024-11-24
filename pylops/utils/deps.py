@@ -1,4 +1,5 @@
 __all__ = [
+    "astra_enabled",
     "cupy_enabled",
     "jax_enabled",
     "devito_enabled",
@@ -81,6 +82,23 @@ def jax_import(message: Optional[str] = None) -> str:
     return jax_message
 
 
+def astra_import(message):
+    if astra_enabled:
+        try:
+            import_module("astra")  # noqa: F401
+
+            astra_message = None
+        except Exception as e:
+            astra_message = f"Failed to import astra (error:{e})."
+    else:
+        astra_message = (
+            f"ASTRA not available. "
+            f"In order to be able to use "
+            f'{message} run "pip install astra-toolbox".'
+        )
+    return astra_message
+
+
 def devito_import(message: Optional[str] = None) -> str:
     if devito_enabled:
         try:
@@ -101,7 +119,7 @@ def devito_import(message: Optional[str] = None) -> str:
 def dtcwt_import(message: Optional[str] = None) -> str:
     if dtcwt_enabled:
         try:
-            import dtcwt  # noqa: F401
+            import_module("dtcwt")  # noqa: F401
 
             dtcwt_message = None
         except Exception as e:
@@ -254,6 +272,7 @@ cupy_enabled: bool = (
 jax_enabled: bool = (
     True if (jax_import() is None and int(os.getenv("JAX_PYLOPS", 1)) == 1) else False
 )
+astra_enabled = util.find_spec("astra") is not None
 devito_enabled = util.find_spec("devito") is not None
 dtcwt_enabled = util.find_spec("dtcwt") is not None
 numba_enabled = util.find_spec("numba") is not None

@@ -27,6 +27,7 @@ dependencies:
   - isort
   - black
   - pip:
+    - astra-toolbox
     - devito
     - dtcwt
     - scikit-fmm

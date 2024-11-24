@@ -9,6 +9,7 @@ scikit-fmm
 sympy
 devito
 dtcwt
+astra-toolbox
 matplotlib
 ipython
 pytest
