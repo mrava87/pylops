@@ -13,6 +13,7 @@ dependencies:
   - sympy
   - pymc>=5
   - pytensor
+  - astra-toolbox
   - matplotlib
   - ipython
   - pytest
@@ -25,7 +26,6 @@ dependencies:
   - black
   - pip:
     - torch
-    - astra-toolbox
     - devito
     # - dtcwt (until numpy>=2.0.0 is supported)
     - scikit-fmm
