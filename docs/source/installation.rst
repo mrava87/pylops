@@ -326,6 +326,20 @@ of GPUs should install it prior to installing PyLops as described in :ref:`Optio
 
 In alphabetic order:
 
+ASTRA
+-----
+`ASTRA <https://www.astra-toolbox.com>`_ is library used to perform computerized
+tomography. It is used in PyLops in the operator :py:class:`pylops.medical.CT2D`
+
+To use this library, install it manually either via ``conda``:
+
+.. code-block:: bash
+   >> conda install --channel astra-toolbox astra-toolbox
+or via pip:
+
+.. code-block:: bash
+   >> pip install astra-toolbox
+
 
 dtcwt
 -----
