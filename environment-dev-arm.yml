@@ -15,6 +15,7 @@ dependencies:
   - pyfftw
   - pywavelets
   - sympy
+  - astra-toolbox
   - matplotlib
   - ipython
   - pytest
@@ -26,7 +27,6 @@ dependencies:
   - isort
   - black
   - pip:
-    - astra-toolbox
     - devito
     - dtcwt
     - scikit-fmm
