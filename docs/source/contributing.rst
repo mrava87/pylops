@@ -126,6 +126,7 @@ Before you submit a pull request, check that it meets these guidelines:
 Project structure
 #################
 This repository is organized as follows:
+
 * **pylops**:     Python library containing various linear operators and auxiliary routines
 * **pytests**:    set of pytests
 * **testdata**:   sample datasets used in pytests and documentation
