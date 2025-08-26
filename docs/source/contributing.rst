@@ -68,8 +68,9 @@ Ready to contribute?
 
 Now you can make your changes locally.
 
-3. When you're done making changes, check that your code follows the guidelines for :ref:`addingoperator` and
-that the both old and new tests pass successfully:
+3. When you're done making changes, check that your code follows the guidelines for 
+:ref:`addingoperator` or :ref:`addingsolver` and that both old and new tests pass 
+successfully:
 
 .. code-block:: bash
 
