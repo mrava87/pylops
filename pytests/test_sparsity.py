@@ -149,9 +149,10 @@ def test_IRLS_datamodel(par):
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
+
     x0 = (
         np.asarray(
             npp.random.normal(0, 1, par["nx"])
@@ -186,15 +187,15 @@ def test_IRLS_datamodel(par):
 def test_IRLS_model(par):
     """Invert problem with model IRLS"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     maxit = 100
@@ -210,15 +211,15 @@ def test_IRLS_model_stopping(par):
     """IRLS model testing stopping criterion rtol (here the class based
     solver is used as cost is not returned by the function based one)"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     maxit = 100
@@ -247,15 +248,15 @@ def test_IRLS_model_stopping(par):
 def test_MP(par):
     """Invert problem with MP"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     sigma = 1e-4
@@ -277,15 +278,15 @@ def test_MP(par):
 def test_OMP(par):
     """Invert problem with OMP"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     sigma = 1e-4
@@ -299,15 +300,15 @@ def test_OMP(par):
 def test_OMP_stopping(par):
     """OMP testing stopping criterion rtol"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     maxit = 100
@@ -505,15 +506,15 @@ def test_ISTA_FISTA_multiplerhs(par):
 def test_ISTA_FISTA_stopping(par):
     """ISTA/FISTA testing stopping criterion rtol"""
     npp.random.seed(42)
-    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
-        "imag"
-    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
     Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
     x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
     eps = 0.5
