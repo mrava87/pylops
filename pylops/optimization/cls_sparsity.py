@@ -125,13 +125,17 @@ def _halfthreshold(x: NDArray, thresh: float) -> NDArray:
             Since version 1.17.0 does not produce ``np.nan`` on bad input.
 
     """
-    arg = np.ones_like(x)
-    arg[x != 0] = (thresh / 8.0) * (np.abs(x[x != 0]) / 3.0) ** (-1.5)
-    arg = np.clip(arg, -1, 1)
-    phi = 2.0 / 3.0 * np.arccos(arg)
-    x1 = 2.0 / 3.0 * x * (1 + np.cos(2.0 * np.pi / 3.0 - phi))
-    # x1[np.abs(x) <= 1.5 * thresh ** (2. / 3.)] = 0
-    x1[np.abs(x) <= (54 ** (1.0 / 3.0) / 4.0) * thresh ** (2.0 / 3.0)] = 0
+    ncp = get_array_module(x)
+    arg = ncp.ones_like(x)
+    arg[x != 0] = (thresh / 8.0) * (ncp.abs(x[x != 0.0]) / 3.0) ** (-1.5)
+    if ncp.iscomplexobj(arg):
+        arg.real = ncp.clip(arg.real, -1.0, 1.0)
+        arg.imag = ncp.clip(arg.imag, -1.0, 1.0)
+    else:
+        arg = ncp.clip(arg, -1.0, 1.0)
+    phi = 2.0 / 3.0 * ncp.arccos(arg)
+    x1 = 2.0 / 3.0 * x * (1.0 + ncp.cos(2.0 * np.pi / 3.0 - phi))
+    x1[ncp.abs(x) <= (54.0 ** (1.0 / 3.0) / 4.0) * thresh ** (2.0 / 3.0)] = 0
     return x1
 
 
