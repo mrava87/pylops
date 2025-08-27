@@ -52,6 +52,14 @@ to install the PyPI distribution:
 
 Note that when installing via ``pip``, only *required* dependencies are installed.
 
+From Source
+===========
+To access the latest source from github:
+
+.. code-block:: bash
+
+   >> pip install https://github.com/PyLops/pylops.git@dev
+
 Docker
 ======
 If you want to try PyLops but do not have Python in your
@@ -87,11 +95,11 @@ Fork the `PyLops repository <https://github.com/PyLops/pylops>`_ and clone it by
 
    >> git clone https://github.com/YOUR-USERNAME/pylops.git
 
-We recommend installing dependencies into a separate environment.
-For that end, we provide a `Makefile` with useful commands for setting up the environment.
-
 Install dependencies
 ====================
+
+We recommend installing dependencies into a separate environment.
+For that end, we provide a `Makefile` with useful commands for setting up the environment.
 
 Conda (recommended)
 -------------------
