@@ -10,6 +10,7 @@ else:
     from numpy.testing import assert_array_almost_equal
 
     backend = "numpy"
+import numpy as npp
 import pytest
 
 from pylops.basicoperators import FirstDerivative, Identity, MatrixMult
@@ -18,7 +19,7 @@ from pylops.optimization.cls_sparsity import IRLS
 from pylops.optimization.sparsity import fista, irls, ista, omp, spgl1, splitbregman
 
 # currently test spgl1 only if numpy<2.0.0 is installed...
-np_version = np.__version__.split(".")
+np_version = npp.__version__.split(".")
 
 par1 = {
     "ny": 11,
@@ -60,35 +61,35 @@ par1j = {
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex64",
+    "dtype": "complex128",
 }  # square complex, zero initial guess
 par2j = {
     "ny": 11,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex64",
+    "dtype": "complex128",
 }  # square complex, non-zero initial guess
 par3j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": False,
-    "dtype": "complex64",
+    "dtype": "complex128",
 }  # overdetermined complex, zero initial guess
 par4j = {
     "ny": 31,
     "nx": 11,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex64",
+    "dtype": "complex128",
 }  # overdetermined complex, non-zero initial guess
 par5j = {
     "ny": 21,
     "nx": 41,
     "imag": 1j,
     "x0": True,
-    "dtype": "complex64",
+    "dtype": "complex128",
 }  # underdetermined complex, non-zero initial guess
 
 
@@ -101,19 +102,22 @@ def test_IRLS_unknown_kind():
 @pytest.mark.parametrize("par", [(par3), (par4), (par3j), (par4j)])
 def test_IRLS_data(par):
     """Invert problem with outliers using data IRLS"""
-    np.random.seed(10)
-    G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32") + par[
+    npp.random.seed(10)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
         "imag"
-    ] * np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32")
-    Gop = MatrixMult(G, dtype=par["dtype"])
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
+
     x = np.ones(par["nx"]) + par["imag"] * np.ones(par["nx"])
     x0 = (
-        np.random.normal(0, 1, par["nx"])
-        + par["imag"] * np.random.normal(0, 1, par["nx"])
+        np.asarray(
+            npp.random.normal(0, 1, par["nx"])
+            + par["imag"] * npp.random.normal(0, 1, par["nx"])
+        )
         if par["x0"]
         else None
     )
-    y = Gop * x
+    y = Aop * x
 
     # add outlier
     y[par["ny"] - 2] *= 5
@@ -121,7 +125,7 @@ def test_IRLS_data(par):
     # irls inversion
     for preallocate in [False, True]:
         xinv = irls(
-            Gop,
+            Aop,
             y,
             x0=x0,
             nouter=10,
@@ -138,23 +142,25 @@ def test_IRLS_data(par):
 @pytest.mark.parametrize("par", [(par3), (par4), (par3j), (par4j)])
 def test_IRLS_datamodel(par):
     """Invert problem with outliers using data-model IRLS"""
-    np.random.seed(10)
-    G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32") + par[
+    npp.random.seed(10)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
         "imag"
-    ] * np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32")
-    Gop = MatrixMult(G, dtype=par["dtype"])
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"]) + par["imag"] * np.ones(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
     x0 = (
-        np.random.normal(0, 1, par["nx"])
-        + par["imag"] * np.random.normal(0, 1, par["nx"])
+        np.asarray(
+            npp.random.normal(0, 1, par["nx"])
+            + par["imag"] * npp.random.normal(0, 1, par["nx"])
+        )
         if par["x0"]
         else None
     )
-    y = Gop * x
+    y = Aop * x
 
     # add outlier
     y[par["ny"] - 2] *= 5
@@ -162,7 +168,7 @@ def test_IRLS_datamodel(par):
     # irls inversion
     for preallocate in [False, True]:
         xinv = irls(
-            Gop,
+            Aop,
             y,
             x0=x0,
             nouter=10,
@@ -179,17 +185,19 @@ def test_IRLS_datamodel(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_IRLS_model(par):
     """Invert problem with model IRLS"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
     y = Aop * x
 
     maxit = 100
-
     for preallocate in [False, True]:
         xinv = irls(
             Aop, y, nouter=maxit, tolIRLS=1e-3, kind="model", preallocate=preallocate
@@ -201,10 +209,13 @@ def test_IRLS_model(par):
 def test_IRLS_model_stopping(par):
     """IRLS model testing stopping criterion rtol (here the class based
     solver is used as cost is not returned by the function based one)"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
@@ -212,6 +223,8 @@ def test_IRLS_model_stopping(par):
 
     maxit = 100
     rtol = 6e-1
+    kwars_solver = dict(iter_lim=5) if backend == "numpy" else dict(niter=5)
+
     rcallback = ResidualNormCallback(rtol)
     irlssolve = IRLS(
         Aop,
@@ -220,7 +233,9 @@ def test_IRLS_model_stopping(par):
         ],
     )
     irlssolve.setup(y=y, epsI=0.1, tolIRLS=0, kind="model")
-    _ = irlssolve.run(np.zeros(Aop.shape[1], dtype=Aop.dtype), nouter=maxit, iter_lim=2)
+    _ = irlssolve.run(
+        np.zeros(Aop.shape[1], dtype=Aop.dtype), nouter=maxit, **kwars_solver
+    )
     assert irlssolve.cost[-2] / irlssolve.cost[0] >= rtol
     assert irlssolve.cost[-1] / irlssolve.cost[0] < rtol
 
@@ -231,10 +246,13 @@ def test_IRLS_model_stopping(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_MP(par):
     """Invert problem with MP"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
@@ -242,7 +260,6 @@ def test_MP(par):
 
     sigma = 1e-4
     maxit = 100
-
     for preallocate in [False, True]:
         xinv, _, _ = omp(
             Aop,
@@ -259,10 +276,13 @@ def test_MP(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_OMP(par):
     """Invert problem with OMP"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
@@ -270,7 +290,6 @@ def test_OMP(par):
 
     sigma = 1e-4
     maxit = 100
-
     for preallocate in [False, True]:
         xinv, _, _ = omp(Aop, y, maxit, sigma=sigma, preallocate=preallocate)
         assert_array_almost_equal(x, xinv, decimal=1)
@@ -279,17 +298,19 @@ def test_OMP(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_OMP_stopping(par):
     """OMP testing stopping criterion rtol"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
     y = Aop * x
 
     maxit = 100
-
     for preallocate in [False, True]:
         rtol = 1e-2
         _, _, cost = omp(Aop, y, maxit, sigma=0.0, rtol=rtol, preallocate=preallocate)
@@ -316,17 +337,21 @@ def test_ISTA_FISTA_missing_perc():
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_ISTA_FISTA(par):
     """Invert problem with ISTA/FISTA"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
-    eps = 0.5
-    perc = 30
+    # some parameters need to be tuned differently for different problem sizes
+    eps = 1.0 if par["ny"] >= par["nx"] else 2.0
+    perc = 50 if par["ny"] >= par["nx"] else 30
     maxit = 500
 
     # ISTA with too high alpha (check that exception is raised)
@@ -401,18 +426,22 @@ def test_ISTA_FISTA(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_ISTA_FISTA_multiplerhs(par):
     """Invert problem with ISTA/FISTA with multiple RHS"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
-    x[par["nx"] // 2] = 1
-    x[3] = 1
-    x[par["nx"] - 4] = -1
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    x[3] = 1.0 + par["imag"] * 1.0
+    x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     x = np.outer(x, np.ones(3))
     y = Aop * x
 
-    eps = 0.5
-    perc = 30
+    # some parameters need to be tuned differently for different problem sizes
+    eps = 1.0 if par["ny"] >= par["nx"] else 2.0
+    perc = 50 if par["ny"] >= par["nx"] else 30
     maxit = 500
 
     # Regularization based ISTA and FISTA
@@ -475,10 +504,13 @@ def test_ISTA_FISTA_multiplerhs(par):
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_ISTA_FISTA_stopping(par):
     """ISTA/FISTA testing stopping criterion rtol"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1
@@ -486,12 +518,13 @@ def test_ISTA_FISTA_stopping(par):
 
     eps = 0.5
     maxit = 500
+    rtol = 5e-1
 
     # Regularization based ISTA and FISTA
     threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
-            rtol = 5e-1
+
             # ISTA
             _, _, cost = ista(
                 Aop,
@@ -529,10 +562,13 @@ def test_ISTA_FISTA_stopping(par):
 )
 def test_SPGL1(par):
     """Invert problem with SPGL1"""
-    np.random.seed(42)
-    Aop = MatrixMult(np.random.randn(par["ny"], par["nx"]))
+    npp.random.seed(42)
+    A = npp.random.normal(0, 10, (par["ny"], par["nx"])) + par[
+        "imag"
+    ] * npp.random.normal(0, 10, (par["ny"], par["nx"]))
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
 
-    x = np.zeros(par["nx"])
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
     x[par["nx"] // 2] = 1
     x[3] = 1
     x[par["nx"] - 4] = -1

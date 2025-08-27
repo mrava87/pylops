@@ -23,7 +23,12 @@ from pylops.optimization.callback import _callback_stop
 from pylops.optimization.eigs import power_iteration
 from pylops.optimization.leastsquares import regularized_inversion
 from pylops.utils import deps
-from pylops.utils.backend import get_array_module, get_module_name, inplace_set
+from pylops.utils.backend import (
+    get_array_module,
+    get_module_name,
+    get_real_dtype,
+    inplace_set,
+)
 from pylops.utils.typing import InputDimsLike, NDArray, SamplingLike
 
 spgl1_message = deps.spgl1_import("the spgl1 solver")
@@ -58,7 +63,7 @@ def _hardthreshold(x: NDArray, thresh: float) -> NDArray:
 
     """
     x1 = x.copy()
-    x1[np.abs(x) <= sqrt(2 * thresh)] = 0
+    x1[np.abs(x) <= sqrt(2 * thresh)] = 0.0
     return x1
 
 
@@ -1609,7 +1614,7 @@ class ISTA(Solver):
 
         # prepare decay (if not passed)
         if perc is None and decay is None:
-            self.decay = self.ncp.ones(niter, dtype=self.Op)
+            self.decay = self.ncp.ones(niter, dtype=get_real_dtype(self.Op.dtype))
 
         # step size
         if alpha is not None:
@@ -1751,6 +1756,7 @@ class ISTA(Solver):
                 self.SOpx_unthesh[:] = self.SOprmatvec(self.x_unthesh)
             else:
                 SOpx_unthesh = self.SOprmatvec(x_unthesh)
+
         # threshold current solution or current solution projected onto SOp.H space
         if self.SOp is None:
             x_unthesh_or_SOpx_unthesh = (
@@ -1767,6 +1773,7 @@ class ISTA(Solver):
             )
         else:
             x = self.threshf(x_unthesh_or_SOpx_unthesh, 100 - self.perc)
+
         # apply SOp to thresholded x
         if self.SOp is not None:
             x = self.SOpmatvec(x)
