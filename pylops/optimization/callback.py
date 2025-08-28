@@ -7,8 +7,6 @@ __all__ = [
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
-import numpy as np
-
 from pylops.utils.metrics import mae, mse, psnr, snr
 from pylops.utils.typing import NDArray
 
