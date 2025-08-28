@@ -214,7 +214,7 @@ class ResidualNormToDataCallback(Callbacks):
         self.stop = False
 
     def on_setup_end(self, solver: "Solver", x: NDArray) -> None:
-        self.ynorm = self.ncp.linalg.norm(self.y)
+        self.ynorm = solver.ncp.linalg.norm(solver.y)
 
     def on_step_end(self, solver: "Solver", x: NDArray) -> None:
         if solver.cost[-1] < self.rtol * self.ynorm:

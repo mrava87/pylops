@@ -187,6 +187,7 @@ def test_cg_stopping(par):
 
     y = Aop * x
 
+    # test ResidualNormToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         _, _, cost = cg(
@@ -194,6 +195,16 @@ def test_cg_stopping(par):
         )
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
+
+    # test ResidualNormToDataCallback callback
+    for preallocate in [False, True]:
+        ynorm = np.linalg.norm(y)
+        rtol = 1e-2
+        _, _, cost = cg(
+            Aop, y, x0=x0, niter=par["nx"], tol=0, rtol1=rtol, preallocate=preallocate
+        )
+        assert cost[-2] / ynorm >= rtol
+        assert cost[-1] / ynorm < rtol
 
 
 @pytest.mark.parametrize(
@@ -307,6 +318,7 @@ def test_cgls_stopping(par):
 
     y = Aop * x
 
+    # test ResidualNormToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         cost = cgls(
@@ -314,6 +326,16 @@ def test_cgls_stopping(par):
         )[-1]
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
+
+    # test ResidualNormToDataCallback callback
+    for preallocate in [False, True]:
+        ynorm = np.linalg.norm(y)
+        rtol = 1e-2
+        cost = cgls(
+            Aop, y, x0=x0, niter=par["nx"], tol=0, rtol1=rtol, preallocate=preallocate
+        )[-1]
+        assert cost[-2] / ynorm >= rtol
+        assert cost[-1] / ynorm < rtol
 
 
 @pytest.mark.skipif(

@@ -312,11 +312,21 @@ def test_OMP_stopping(par):
     y = Aop * x
 
     maxit = 100
+
+    # test ResidualNormToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         _, _, cost = omp(Aop, y, maxit, sigma=0.0, rtol=rtol, preallocate=preallocate)
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
+
+    # test ResidualNormToDataCallback callback
+    for preallocate in [False, True]:
+        ynorm = np.linalg.norm(y)
+        rtol = 1e-2
+        _, _, cost = omp(Aop, y, maxit, sigma=0.0, rtol1=rtol, preallocate=preallocate)
+        assert cost[-2] / ynorm >= rtol
+        assert cost[-1] / ynorm < rtol
 
 
 def test_ISTA_FISTA_unknown_threshkind():
