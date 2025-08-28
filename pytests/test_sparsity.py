@@ -14,7 +14,7 @@ import numpy as npp
 import pytest
 
 from pylops.basicoperators import FirstDerivative, Identity, MatrixMult
-from pylops.optimization.callback import ResidualNormCallback
+from pylops.optimization.callback import ResidualNormToInitialCallback
 from pylops.optimization.cls_sparsity import IRLS
 from pylops.optimization.sparsity import fista, irls, ista, omp, spgl1, splitbregman
 
@@ -226,7 +226,7 @@ def test_IRLS_model_stopping(par):
     rtol = 6e-1
     kwars_solver = dict(iter_lim=5) if backend == "numpy" else dict(niter=5)
 
-    rcallback = ResidualNormCallback(rtol)
+    rcallback = ResidualNormToInitialCallback(rtol)
     irlssolve = IRLS(
         Aop,
         callbacks=[

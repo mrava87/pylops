@@ -1,10 +1,13 @@
 __all__ = [
     "Callbacks",
     "MetricsCallback",
-    "ResidualNormCallback",
+    "ResidualNormToDataCallback",
+    "ResidualNormToInitialCallback",
 ]
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
+
+import numpy as np
 
 from pylops.utils.metrics import mae, mse, psnr, snr
 from pylops.utils.typing import NDArray
@@ -191,8 +194,37 @@ class MetricsCallback(Callbacks):
             self.metrics["psnr"].append(psnr(self.xtrue, x))
 
 
-class ResidualNormCallback(Callbacks):
-    """Residual norm callback
+class ResidualNormToDataCallback(Callbacks):
+    """Residual norm to data callback
+
+    This callback can be used to stop the solver when the residual norm
+    is below a certain threshold defined as a percentage of the
+    initial residual norm.
+
+    Parameters
+    ----------
+    rtol : :obj:`float`
+        Percentage of the initial residual norm below which the solver
+        will stop iterating. For example, if `rtol` is 0.1, the solver
+        will stop when the residual norm is below 10% of the initial
+        residual norm.
+
+    """
+
+    def __init__(self, rtol: float) -> None:
+        self.rtol = rtol
+        self.stop = False
+
+    def on_setup_end(self, solver: "Solver", x: NDArray) -> None:
+        self.ynorm = self.ncp.linalg.norm(self.y)
+
+    def on_step_end(self, solver: "Solver", x: NDArray) -> None:
+        if solver.cost[-1] < self.rtol * self.ynorm:
+            self.stop = True
+
+
+class ResidualNormToInitialCallback(Callbacks):
+    """Residual norm to initial callback
 
     This callback can be used to stop the solver when the residual norm
     is below a certain threshold defined as a percentage of the

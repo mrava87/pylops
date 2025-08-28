@@ -9,7 +9,10 @@ __all__ = [
 
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
-from pylops.optimization.callback import ResidualNormCallback
+from pylops.optimization.callback import (
+    ResidualNormToDataCallback,
+    ResidualNormToInitialCallback,
+)
 from pylops.optimization.cls_sparsity import FISTA, IRLS, ISTA, OMP, SPGL1, SplitBregman
 from pylops.utils.decorators import add_ndarray_support_to_solver
 from pylops.utils.typing import NDArray, SamplingLike
@@ -142,6 +145,7 @@ def omp(
     niter_inner: int = 40,
     sigma: float = 1e-4,
     rtol: float = 0.0,
+    rtol1: float = 0.0,
     normalizecols: bool = False,
     Opbasis: Optional["LinearOperator"] = None,
     optimal_coeff: bool = False,
@@ -172,9 +176,13 @@ def omp(
     sigma : :obj:`float`, optional
         Maximum :math:`L_2` norm of residual. When smaller stop iterations.
     rtol : :obj:`float`, optional
-        Relative tolerance on residual. Stops the solver when the
-        ratio of the current residual norm to the initial residual norm
-        is below this value.
+        Relative tolerance on residual norm wrt initial residual norm. Stops
+        the solver when the ratio of the current residual norm to the initial
+        residual norm is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on residual norm wrt to data. Stops the solver
+        when the ratio of the current residual norm to the data norm is
+        below this value.
     normalizecols : :obj:`list`, optional
         Normalize columns (``True``) or not (``False``). Note that this can be
         expensive as it requires applying the forward operator
@@ -229,12 +237,15 @@ def omp(
     See :class:`pylops.optimization.cls_sparsity.OMP`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(ResidualNormToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(ResidualNormToDataCallback(rtol1))
+
     ompsolve = OMP(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         ompsolve.callback = callback
@@ -264,7 +275,8 @@ def ista(
     alpha: Optional[float] = None,
     eigsdict: Optional[Dict[str, Any]] = None,
     tol: float = 1e-10,
-    rtol: bool = 0.0,
+    rtol: float = 0.0,
+    rtol1: float = 0.0,
     threshkind: str = "soft",
     perc: Optional[float] = None,
     decay: Optional[NDArray] = None,
@@ -309,9 +321,13 @@ def ista(
         Absolute tolerance on model update. Stop iterations if difference between inverted model
         at subsequent iterations is smaller than ``tol``
     rtol : :obj:`float`, optional
-        Relative tolerance on total cost function. Stops the solver when the
-        ratio of the current cost function to the initial cost function
-        is below this value.
+        Relative tolerance on residual norm wrt initial residual norm. Stops
+        the solver when the ratio of the current residual norm to the initial
+        residual norm is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on residual norm wrt to data. Stops the solver
+        when the ratio of the current residual norm to the data norm is
+        below this value.
     threshkind : :obj:`str`, optional
         Kind of thresholding ('hard', 'soft', 'half', 'hard-percentile',
         'soft-percentile', or 'half-percentile' - 'soft' used as default)
@@ -370,12 +386,15 @@ def ista(
     See :class:`pylops.optimization.cls_sparsity.ISTA`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(ResidualNormToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(ResidualNormToDataCallback(rtol1))
+
     istasolve = ISTA(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         istasolve.callback = callback
@@ -410,6 +429,7 @@ def fista(
     eigsdict: Optional[Dict[str, Any]] = None,
     tol: float = 1e-10,
     rtol: float = 0.0,
+    rtol1: float = 0.0,
     threshkind: str = "soft",
     perc: Optional[float] = None,
     decay: Optional[NDArray] = None,
@@ -513,12 +533,15 @@ def fista(
     See :class:`pylops.optimization.cls_sparsity.FISTA`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(ResidualNormToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(ResidualNormToDataCallback(rtol1))
+
     fistasolve = FISTA(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         fistasolve.callback = callback
@@ -673,6 +696,7 @@ def splitbregman(
     epsRL2s: Optional[SamplingLike] = None,
     tol: float = 1e-10,
     rtol: float = 0.0,
+    rtol1: float = 0.0,
     tau: float = 1.0,
     restart: bool = False,
     engine: str = "scipy",
@@ -726,9 +750,13 @@ def splitbregman(
         Tolerance. Stop the solver if difference between inverted model
         at subsequent iterations is smaller than ``tol``
     rtol : :obj:`float`, optional
-        Relative tolerance on total cost function. Stops the solver when the
-        ratio of the current cost function to the initial cost function
-        is below this value.
+        Relative tolerance on residual norm wrt initial residual norm. Stops
+        the solver when the ratio of the current residual norm to the initial
+        residual norm is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on residual norm wrt to data. Stops the solver
+        when the ratio of the current residual norm to the data norm is
+        below this value.
     tau : :obj:`float`, optional
         Scaling factor in the Bregman update (must be close to 1)
     restart : :obj:`bool`, optional
@@ -772,12 +800,14 @@ def splitbregman(
     See :class:`pylops.optimization.cls_sparsity.SplitBregman`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(ResidualNormToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(ResidualNormToDataCallback(rtol1))
     sbsolve = SplitBregman(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         sbsolve.callback = callback
