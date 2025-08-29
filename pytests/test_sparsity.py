@@ -14,7 +14,7 @@ import numpy as npp
 import pytest
 
 from pylops.basicoperators import FirstDerivative, Identity, MatrixMult
-from pylops.optimization.callback import ResidualNormCallback
+from pylops.optimization.callback import CostToInitialCallback
 from pylops.optimization.cls_sparsity import IRLS
 from pylops.optimization.sparsity import fista, irls, ista, omp, spgl1, splitbregman
 
@@ -226,7 +226,7 @@ def test_IRLS_model_stopping(par):
     rtol = 6e-1
     kwars_solver = dict(iter_lim=5) if backend == "numpy" else dict(niter=5)
 
-    rcallback = ResidualNormCallback(rtol)
+    rcallback = CostToInitialCallback(rtol)
     irlssolve = IRLS(
         Aop,
         callbacks=[
@@ -312,11 +312,21 @@ def test_OMP_stopping(par):
     y = Aop * x
 
     maxit = 100
+
+    # test CostToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         _, _, cost = omp(Aop, y, maxit, sigma=0.0, rtol=rtol, preallocate=preallocate)
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
+
+    # test CostToDataCallback callback
+    for preallocate in [False, True]:
+        ynorm = np.linalg.norm(y)
+        rtol = 1e-2
+        _, _, cost = omp(Aop, y, maxit, sigma=0.0, rtol1=rtol, preallocate=preallocate)
+        assert cost[-2] / ynorm >= rtol
+        assert cost[-1] / ynorm < rtol
 
 
 def test_ISTA_FISTA_unknown_threshkind():
@@ -336,6 +346,45 @@ def test_ISTA_FISTA_missing_perc():
 
 
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
+def test_ISTA_FISTA_alpha_too_high(par):
+    """Check error is raised or solver is stopped when alpha is chosen
+    too high"""
+    npp.random.seed(42)
+    A = npp.random.randn(par["ny"], par["nx"]) + par["imag"] * npp.random.randn(
+        par["ny"], par["nx"]
+    )
+    Aop = MatrixMult(np.asarray(A), dtype=par["dtype"])
+
+    x = np.zeros(par["nx"]) + par["imag"] * np.zeros(par["nx"])
+    x[par["nx"] // 2] = 1.0 + par["imag"] * 1.0
+    y = Aop * x
+
+    for solver in [ista, fista]:
+        # check that exception is raised
+        with pytest.raises(ValueError):
+            _, _, _ = solver(
+                Aop,
+                y,
+                niter=100,
+                eps=0.1,
+                alpha=1e5,
+                monitorres=True,
+                tol=0,
+            )
+
+        # check that CostNanInfCallback catches cost=np.inf
+        _, _, cost = solver(
+            Aop,
+            y,
+            niter=100,
+            eps=0.1,
+            alpha=1e5,
+            tol=0,
+        )
+        assert np.isinf(cost[-1])
+
+
+@pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
 def test_ISTA_FISTA(par):
     """Invert problem with ISTA/FISTA"""
     npp.random.seed(42)
@@ -350,78 +399,42 @@ def test_ISTA_FISTA(par):
     x[par["nx"] - 4] = -1.0 - par["imag"] * 1.0
     y = Aop * x
 
-    # some parameters need to be tuned differently for different problem sizes
+    # Some parameters need to be tuned differently for different problem sizes
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
     perc = 50 if par["ny"] >= par["nx"] else 30
     maxit = 500
-
-    # ISTA with too high alpha (check that exception is raised)
-    with pytest.raises(ValueError):
-        xinv, _, _ = ista(
-            Aop,
-            y,
-            niter=maxit,
-            eps=eps,
-            alpha=1e5,
-            monitorres=True,
-            tol=0,
-        )
 
     # Regularization based ISTA and FISTA
     threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
-            # ISTA
-            xinv, _, _ = ista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0,
-                preallocate=preallocate,
-            )
-            assert_array_almost_equal(x, xinv, decimal=1)
-
-            # FISTA
-            xinv, _, _ = fista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0,
-                preallocate=preallocate,
-            )
-            assert_array_almost_equal(x, xinv, decimal=1)
+            for solver in [ista, fista]:
+                xinv, _, _ = solver(
+                    Aop,
+                    y,
+                    niter=maxit,
+                    eps=eps,
+                    threshkind=threshkind,
+                    tol=0,
+                    preallocate=preallocate,
+                )
+                assert_array_almost_equal(x, xinv, decimal=1)
 
     # Percentile based ISTA and FISTA
     if backend == "numpy":
         for threshkind in ["hard-percentile", "soft-percentile", "half-percentile"]:
             for preallocate in [False, True]:
-                # ISTA
-                xinv, _, _ = ista(
-                    Aop,
-                    y,
-                    niter=maxit,
-                    perc=perc,
-                    threshkind=threshkind,
-                    tol=0,
-                    preallocate=preallocate,
-                )
-                assert_array_almost_equal(x, xinv, decimal=1)
-
-                # FISTA
-                xinv, _, _ = fista(
-                    Aop,
-                    y,
-                    niter=maxit,
-                    perc=perc,
-                    threshkind=threshkind,
-                    tol=0,
-                    preallocate=preallocate,
-                )
-                assert_array_almost_equal(x, xinv, decimal=1)
+                for solver in [ista, fista]:
+                    xinv, _, _ = solver(
+                        Aop,
+                        y,
+                        niter=maxit,
+                        perc=perc,
+                        threshkind=threshkind,
+                        tol=0,
+                        preallocate=preallocate,
+                    )
+                    assert_array_almost_equal(x, xinv, decimal=1)
 
 
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
@@ -440,7 +453,7 @@ def test_ISTA_FISTA_multiplerhs(par):
     x = np.outer(x, np.ones(3))
     y = Aop * x
 
-    # some parameters need to be tuned differently for different problem sizes
+    # Some parameters need to be tuned differently for different problem sizes
     eps = 1.0 if par["ny"] >= par["nx"] else 2.0
     perc = 50 if par["ny"] >= par["nx"] else 30
     maxit = 500
@@ -449,57 +462,33 @@ def test_ISTA_FISTA_multiplerhs(par):
     threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
-            # ISTA
-            xinv, _, _ = ista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0,
-                preallocate=preallocate,
-            )
-            assert_array_almost_equal(x, xinv, decimal=1)
-
-            # FISTA
-            xinv, _, _ = fista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0,
-                preallocate=preallocate,
-            )
-            assert_array_almost_equal(x, xinv, decimal=1)
+            for solver in [ista, fista]:
+                xinv, _, _ = solver(
+                    Aop,
+                    y,
+                    niter=maxit,
+                    eps=eps,
+                    threshkind=threshkind,
+                    tol=0,
+                    preallocate=preallocate,
+                )
+                assert_array_almost_equal(x, xinv, decimal=1)
 
     # Percentile based ISTA and FISTA
     if backend == "numpy":
         for threshkind in ["hard-percentile", "soft-percentile", "half-percentile"]:
             for preallocate in [False, True]:
-                # ISTA
-                xinv, _, _ = ista(
-                    Aop,
-                    y,
-                    niter=maxit,
-                    perc=perc,
-                    threshkind=threshkind,
-                    tol=0,
-                    preallocate=preallocate,
-                )
-                assert_array_almost_equal(x, xinv, decimal=1)
-
-                # FISTA
-                xinv, _, _ = fista(
-                    Aop,
-                    y,
-                    niter=maxit,
-                    perc=perc,
-                    threshkind=threshkind,
-                    tol=0,
-                    preallocate=preallocate,
-                )
-                assert_array_almost_equal(x, xinv, decimal=1)
+                for solver in [ista, fista]:
+                    xinv, _, _ = solver(
+                        Aop,
+                        y,
+                        niter=maxit,
+                        perc=perc,
+                        threshkind=threshkind,
+                        tol=0,
+                        preallocate=preallocate,
+                    )
+                    assert_array_almost_equal(x, xinv, decimal=1)
 
 
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
@@ -525,34 +514,19 @@ def test_ISTA_FISTA_stopping(par):
     threshkinds = ["hard", "soft", "half"] if backend == "numpy" else ["soft", "half"]
     for threshkind in threshkinds:
         for preallocate in [False, True]:
-
-            # ISTA
-            _, _, cost = ista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0.0,
-                rtol=rtol,
-                preallocate=preallocate,
-            )
-            assert cost[-2] / cost[0] >= rtol
-            assert cost[-1] / cost[0] < rtol
-
-            # FISTA
-            _, _, cost = fista(
-                Aop,
-                y,
-                niter=maxit,
-                eps=eps,
-                threshkind=threshkind,
-                tol=0.0,
-                rtol=rtol,
-                preallocate=preallocate,
-            )
-            assert cost[-2] / cost[0] >= rtol
-            assert cost[-1] / cost[0] < rtol
+            for solver in [ista, fista]:
+                _, _, cost = solver(
+                    Aop,
+                    y,
+                    niter=maxit,
+                    eps=eps,
+                    threshkind=threshkind,
+                    tol=0.0,
+                    rtol=rtol,
+                    preallocate=preallocate,
+                )
+                assert cost[-2] / cost[0] >= rtol
+                assert cost[-1] / cost[0] < rtol
 
 
 @pytest.mark.skipif(

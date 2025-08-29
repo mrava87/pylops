@@ -249,6 +249,9 @@ Callbacks
    :toctree: generated/
 
     Callbacks
+    CostNanInfCallback
+    CostToDataCallback
+    CostToInitialCallback
     MetricsCallback
 
 

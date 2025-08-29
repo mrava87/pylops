@@ -1028,7 +1028,7 @@ class OMP(Solver):
         # create variables to track the residual norm and iterations
         self.res = self.y.copy()
         self.cost = [
-            float(np.linalg.norm(self.y)),
+            float(np.linalg.norm(self.res)),
         ]
         self.iiter = 0
 

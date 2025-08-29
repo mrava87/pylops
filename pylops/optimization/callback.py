@@ -1,10 +1,14 @@
 __all__ = [
     "Callbacks",
+    "CostNanInfCallback",
+    "CostToDataCallback",
+    "CostToInitialCallback",
     "MetricsCallback",
-    "ResidualNormCallback",
 ]
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
+
+import numpy as np
 
 from pylops.utils.metrics import mae, mse, psnr, snr
 from pylops.utils.typing import NDArray
@@ -141,6 +145,83 @@ class Callbacks:
         pass
 
 
+class CostToDataCallback(Callbacks):
+    """Cost to data callback
+
+    This callback can be used to stop the solver when the ``cost`` parameter
+    of the solver is below a certain threshold defined as a percentage of the
+    Euclidean norm of the data.
+
+    Note that the meaning of ``cost`` can change from solver to solver - e.g.,
+    it can represent the misfit of the data term or the total cost function.
+
+    Parameters
+    ----------
+    rtol : :obj:`float`
+        Percentage of the initial cost below which the solver
+        will stop iterating. For example, if ``rtol`` is 0.1, the solver
+        will stop when the cost is below 10% of the Euclidean norm of
+        the data.
+
+    """
+
+    def __init__(self, rtol: float) -> None:
+        self.rtol = rtol
+        self.stop = False
+
+    def on_setup_end(self, solver: "Solver", x: NDArray) -> None:
+        self.ynorm = solver.ncp.linalg.norm(solver.y)
+
+    def on_step_end(self, solver: "Solver", x: NDArray) -> None:
+        if solver.cost[-1] < self.rtol * self.ynorm:
+            self.stop = True
+
+
+class CostToInitialCallback(Callbacks):
+    """Cost to initial callback
+
+    This callback can be used to stop the solver when the ``cost``
+    parameter of the solver is below a certain threshold defined as a
+    percentage of the initial residual norm.
+
+    Note that the meaning of ``cost`` can change from solver to solver - e.g.,
+    it can represent the misfit of the data term or the total cost function.
+
+    Parameters
+    ----------
+    rtol : :obj:`float`
+        Percentage of the initial cost below which the solver
+        will stop iterating. For example, if ``rtol`` is 0.1, the solver
+        will stop when the cost is below 10% of the initial
+        cost.
+
+    """
+
+    def __init__(self, rtol: float) -> None:
+        self.rtol = rtol
+        self.stop = False
+
+    def on_step_end(self, solver: "Solver", x: NDArray) -> None:
+        if solver.cost[-1] < self.rtol * solver.cost[0]:
+            self.stop = True
+
+
+class CostNanInfCallback(Callbacks):
+    """Cost Nan/Inf callback
+
+    This callback can be used to stop the solver when the ``cost``
+    becomes either ``np.nan`` or ``np.inf``
+
+    """
+
+    def __init__(self) -> None:
+        self.stop = False
+
+    def on_step_end(self, solver: "Solver", x: NDArray) -> None:
+        if np.isnan(solver.cost[-1]) or np.isinf(solver.cost[-1]):
+            self.stop = True
+
+
 class MetricsCallback(Callbacks):
     r"""Metrics callback
 
@@ -189,32 +270,6 @@ class MetricsCallback(Callbacks):
             self.metrics["snr"].append(snr(self.xtrue, x))
         if "psnr" in self.which:
             self.metrics["psnr"].append(psnr(self.xtrue, x))
-
-
-class ResidualNormCallback(Callbacks):
-    """Residual norm callback
-
-    This callback can be used to stop the solver when the residual norm
-    is below a certain threshold defined as a percentage of the
-    initial residual norm.
-
-    Parameters
-    ----------
-    rtol : :obj:`float`
-        Percentage of the initial residual norm below which the solver
-        will stop iterating. For example, if `rtol` is 0.1, the solver
-        will stop when the residual norm is below 10% of the initial
-        residual norm.
-
-    """
-
-    def __init__(self, rtol: float) -> None:
-        self.rtol = rtol
-        self.stop = False
-
-    def on_step_end(self, solver: "Solver", x: NDArray) -> None:
-        if solver.cost[-1] < self.rtol * solver.cost[0]:
-            self.stop = True
 
 
 def _callback_stop(callbacks: Sequence[Callbacks]) -> bool:

@@ -6,7 +6,7 @@ __all__ = [
 
 from typing import TYPE_CHECKING, Callable, Optional, Tuple
 
-from pylops.optimization.callback import ResidualNormCallback
+from pylops.optimization.callback import CostToDataCallback, CostToInitialCallback
 from pylops.optimization.cls_basic import CG, CGLS, LSQR
 from pylops.utils.decorators import add_ndarray_support_to_solver
 from pylops.utils.typing import NDArray
@@ -22,7 +22,8 @@ def cg(
     x0: Optional[NDArray] = None,
     niter: int = 10,
     tol: float = 1e-4,
-    rtol: bool = 0.0,
+    rtol: float = 0.0,
+    rtol1: float = 0.0,
     show: bool = False,
     itershow: Tuple[int, int, int] = (10, 10, 10),
     callback: Optional[Callable] = None,
@@ -47,8 +48,12 @@ def cg(
         Absolute tolerance on residual norm. Stops the solver when the
         residual norm is below this value.
     rtol : :obj:`float`, optional
-        Relative tolerance on residual norm. Stops the solver when the
-        ratio of the current residual norm to the initial residual norm is
+        Relative tolerance on residual norm wrt initial residual norm. Stops
+        the solver when the ratio of the current residual norm to the initial
+        residual norm is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on residual norm wrt to data. Stops the solver
+        when the ratio of the current residual norm to the data norm is
         below this value.
     show : :obj:`bool`, optional
         Display iterations log
@@ -78,12 +83,15 @@ def cg(
     See :class:`pylops.optimization.cls_basic.CG`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(CostToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(CostToDataCallback(rtol1))
+
     cgsolve = CG(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         cgsolve.callback = callback
@@ -108,6 +116,7 @@ def cgls(
     damp: float = 0.0,
     tol: float = 1e-4,
     rtol: float = 0.0,
+    rtol1: float = 0.0,
     show: bool = False,
     itershow: Tuple[int, int, int] = (10, 10, 10),
     callback: Optional[Callable] = None,
@@ -134,8 +143,12 @@ def cgls(
         Absolute tolerance on residual norm. Stops the solver when the
         residual norm is below this value.
     rtol : :obj:`float`, optional
-        Relative tolerance on residual norm. Stops the solver when the
-        ratio of the current residual norm to the initial residual norm is
+        Relative tolerance on residual norm wrt initial residual norm. Stops
+        the solver when the ratio of the current residual norm to the initial
+        residual norm is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on residual norm wrt to data. Stops the solver
+        when the ratio of the current residual norm to the data norm is
         below this value.
     show : :obj:`bool`, optional
         Display iterations log
@@ -180,12 +193,14 @@ def cgls(
     See :class:`pylops.optimization.cls_basic.CGLS`
 
     """
-    rcallback = ResidualNormCallback(rtol)
+    callbacks = []
+    if rtol > 0.0:
+        callbacks.append(CostToInitialCallback(rtol))
+    if rtol1 > 0.0:
+        callbacks.append(CostToDataCallback(rtol1))
     cgsolve = CGLS(
         Op,
-        callbacks=[
-            rcallback,
-        ],
+        callbacks=callbacks if len(callbacks) > 0 else None,
     )
     if callback is not None:
         cgsolve.callback = callback

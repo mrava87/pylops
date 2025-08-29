@@ -189,8 +189,7 @@ input and returns some of the most valuable properties of the class-based solver
 
     def cg(Op, y, x0, niter=10, tol=1e-4, rtol=0.0,
            show=False, itershow=(10, 10, 10), callback=None):
-        rcallback = ResidualNormCallback(rtol)
-        cgsolve = CG(Op, callbacks=[rcallback, ])
+        cgsolve = CG(Op, callbacks=[CostToInitialCallback(rtol), ])
         if callback is not None:
             cgsolve.callback = callback
         x, iiter, cost = cgsolve.solve(
