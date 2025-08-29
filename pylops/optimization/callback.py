@@ -1,8 +1,8 @@
 __all__ = [
     "Callbacks",
+    "CostNanInfCallback",
     "CostToDataCallback",
     "CostToInitialCallback",
-    "CostNanInfCallback",
     "MetricsCallback",
 ]
 
