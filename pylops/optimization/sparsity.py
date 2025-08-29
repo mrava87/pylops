@@ -10,8 +10,9 @@ __all__ = [
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 
 from pylops.optimization.callback import (
-    ResidualNormToDataCallback,
-    ResidualNormToInitialCallback,
+    CostNanInfCallback,
+    CostToDataCallback,
+    CostToInitialCallback,
 )
 from pylops.optimization.cls_sparsity import FISTA, IRLS, ISTA, OMP, SPGL1, SplitBregman
 from pylops.utils.decorators import add_ndarray_support_to_solver
@@ -237,15 +238,17 @@ def omp(
     See :class:`pylops.optimization.cls_sparsity.OMP`
 
     """
-    callbacks = []
+    callbacks = [
+        CostNanInfCallback(),
+    ]
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
 
     ompsolve = OMP(
         Op,
-        callbacks=callbacks if len(callbacks) > 0 else None,
+        callbacks=callbacks,
     )
     if callback is not None:
         ompsolve.callback = callback
@@ -321,13 +324,12 @@ def ista(
         Absolute tolerance on model update. Stop iterations if difference between inverted model
         at subsequent iterations is smaller than ``tol``
     rtol : :obj:`float`, optional
-        Relative tolerance on residual norm wrt initial residual norm. Stops
-        the solver when the ratio of the current residual norm to the initial
-        residual norm is below this value.
+        Relative tolerance on total cost function wrt initial total cost
+        function. Stops the solver when the ratio of the current total cost function
+        to the initial total cost function is below this value.
     rtol1 : :obj:`float`, optional
-        Relative tolerance on residual norm wrt to data. Stops the solver
-        when the ratio of the current residual norm to the data norm is
-        below this value.
+        Relative tolerance on total cost function wrt to data. Stops the solver when
+        the ratio of the current total cost function to the data norm is below this value.
     threshkind : :obj:`str`, optional
         Kind of thresholding ('hard', 'soft', 'half', 'hard-percentile',
         'soft-percentile', or 'half-percentile' - 'soft' used as default)
@@ -386,15 +388,17 @@ def ista(
     See :class:`pylops.optimization.cls_sparsity.ISTA`
 
     """
-    callbacks = []
+    callbacks = [
+        CostNanInfCallback(),
+    ]
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
 
     istasolve = ISTA(
         Op,
-        callbacks=callbacks if len(callbacks) > 0 else None,
+        callbacks=callbacks,
     )
     if callback is not None:
         istasolve.callback = callback
@@ -474,9 +478,12 @@ def fista(
         Absolute tolerance on model update. Stop iterations if difference between inverted model
         at subsequent iterations is smaller than ``tol``
     rtol : :obj:`float`, optional
-        Relative tolerance on total cost function. Stops the solver when the
-        ratio of the current cost function to the initial cost function
-        is below this value.
+        Relative tolerance on total cost function wrt initial total cost
+        function. Stops the solver when the ratio of the current total cost function
+        to the initial total cost function is below this value.
+    rtol1 : :obj:`float`, optional
+        Relative tolerance on total cost function wrt to data. Stops the solver when
+        the ratio of the current total cost function to the data norm is below this value.
     threshkind : :obj:`str`, optional
         Kind of thresholding ('hard', 'soft', 'half', 'soft-percentile', or
         'half-percentile' - 'soft' used as default)
@@ -533,15 +540,17 @@ def fista(
     See :class:`pylops.optimization.cls_sparsity.FISTA`
 
     """
-    callbacks = []
+    callbacks = [
+        CostNanInfCallback(),
+    ]
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
 
     fistasolve = FISTA(
         Op,
-        callbacks=callbacks if len(callbacks) > 0 else None,
+        callbacks=callbacks,
     )
     if callback is not None:
         fistasolve.callback = callback
@@ -750,13 +759,12 @@ def splitbregman(
         Tolerance. Stop the solver if difference between inverted model
         at subsequent iterations is smaller than ``tol``
     rtol : :obj:`float`, optional
-        Relative tolerance on residual norm wrt initial residual norm. Stops
-        the solver when the ratio of the current residual norm to the initial
-        residual norm is below this value.
+        Relative tolerance on total cost function wrt initial total cost
+        function. Stops the solver when the ratio of the current total cost function
+        to the initial total cost function is below this value.
     rtol1 : :obj:`float`, optional
-        Relative tolerance on residual norm wrt to data. Stops the solver
-        when the ratio of the current residual norm to the data norm is
-        below this value.
+        Relative tolerance on total cost function wrt to data. Stops the solver when
+        the ratio of the current total cost function to the data norm is below this value.
     tau : :obj:`float`, optional
         Scaling factor in the Bregman update (must be close to 1)
     restart : :obj:`bool`, optional
@@ -793,21 +801,23 @@ def splitbregman(
     itn_out : :obj:`int`
         Iteration number of outer loop upon termination
     cost : :obj:`numpy.ndarray`, optional
-            History of cost function through iterations
+        History of the total cost function through iterations
 
     Notes
     -----
     See :class:`pylops.optimization.cls_sparsity.SplitBregman`
 
     """
-    callbacks = []
+    callbacks = [
+        CostNanInfCallback(),
+    ]
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
     sbsolve = SplitBregman(
         Op,
-        callbacks=callbacks if len(callbacks) > 0 else None,
+        callbacks=callbacks,
     )
     if callback is not None:
         sbsolve.callback = callback

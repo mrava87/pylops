@@ -187,7 +187,7 @@ def test_cg_stopping(par):
 
     y = Aop * x
 
-    # test ResidualNormToInitialCallback callback
+    # test CostToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         _, _, cost = cg(
@@ -196,7 +196,7 @@ def test_cg_stopping(par):
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
 
-    # test ResidualNormToDataCallback callback
+    # test CostToDataCallback callback
     for preallocate in [False, True]:
         ynorm = np.linalg.norm(y)
         rtol = 1e-2
@@ -318,7 +318,7 @@ def test_cgls_stopping(par):
 
     y = Aop * x
 
-    # test ResidualNormToInitialCallback callback
+    # test CostToInitialCallback callback
     for preallocate in [False, True]:
         rtol = 1e-2
         cost = cgls(
@@ -327,7 +327,7 @@ def test_cgls_stopping(par):
         assert cost[-2] / cost[0] >= rtol
         assert cost[-1] / cost[0] < rtol
 
-    # test ResidualNormToDataCallback callback
+    # test CostToDataCallback callback
     for preallocate in [False, True]:
         ynorm = np.linalg.norm(y)
         rtol = 1e-2

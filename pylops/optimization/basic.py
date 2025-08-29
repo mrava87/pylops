@@ -6,10 +6,7 @@ __all__ = [
 
 from typing import TYPE_CHECKING, Callable, Optional, Tuple
 
-from pylops.optimization.callback import (
-    ResidualNormToDataCallback,
-    ResidualNormToInitialCallback,
-)
+from pylops.optimization.callback import CostToDataCallback, CostToInitialCallback
 from pylops.optimization.cls_basic import CG, CGLS, LSQR
 from pylops.utils.decorators import add_ndarray_support_to_solver
 from pylops.utils.typing import NDArray
@@ -88,9 +85,9 @@ def cg(
     """
     callbacks = []
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
 
     cgsolve = CG(
         Op,
@@ -198,9 +195,9 @@ def cgls(
     """
     callbacks = []
     if rtol > 0.0:
-        callbacks.append(ResidualNormToInitialCallback(rtol))
+        callbacks.append(CostToInitialCallback(rtol))
     if rtol1 > 0.0:
-        callbacks.append(ResidualNormToDataCallback(rtol1))
+        callbacks.append(CostToDataCallback(rtol1))
     cgsolve = CGLS(
         Op,
         callbacks=callbacks if len(callbacks) > 0 else None,
