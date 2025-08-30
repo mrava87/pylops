@@ -22,13 +22,7 @@ if pyfftw_message is None:
     import pyfftw
 
 if mkl_fft_message is None:
-    import mkl_fft.interfaces.numpy_fft as mkl_backend
-
-    try:
-        import scipy.fft  # noqa: F811
-        import mkl_fft.interfaces.scipy_fft as mkl_backend  # noqa: F811
-    except ImportError:
-        pass
+    import mkl_fft.interfaces.scipy_fft as mkl_backend
 
 logger = logging.getLogger(__name__)
 
@@ -420,6 +414,21 @@ class _FFT_mklfft(_BaseFFT):
         dtype: DTypeLike = "complex128",
         **kwargs_fft,
     ) -> None:
+        if np.dtype(dtype) == np.float16:
+            warnings.warn(
+                "mkl_fft backend is unavailable with float16 dtype. Will use float32."
+            )
+            dtype = np.float32
+        elif np.dtype(dtype) == np.complex256:
+            warnings.warn(
+                "mkl_fft backend is unavailable with complex256 dtype. Will use complex128."
+            )
+            dtype = np.complex128
+        elif np.dtype(dtype) == np.float128:
+            warnings.warn(
+                "mkl_fft backend is unavailable with float128 dtype. Will use float64."
+            )
+            dtype = np.float64
         super().__init__(
             dims=dims,
             axis=axis,
@@ -443,6 +452,12 @@ class _FFT_mklfft(_BaseFFT):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
+        if x.dtype == np.float16:
+            x = x.astype(np.float32)
+        elif x.dtype == np.float128:
+            x = x.astype(np.float64)
+        elif x.dtype == np.complex256:
+            x = x.astype(np.complex128)
         if self.ifftshift_before:
             x = mkl_backend.ifftshift(x, axes=self.axis)
         if not self.clinear:
@@ -462,6 +477,12 @@ class _FFT_mklfft(_BaseFFT):
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
+        if x.dtype == np.float16:
+            x = x.astype(np.float32)
+        elif x.dtype == np.float128:
+            x = x.astype(np.float64)
+        elif x.dtype == np.complex256:
+            x = x.astype(np.complex128)
         if self.fftshift_after:
             x = mkl_backend.ifftshift(x, axes=self.axis)
         if self.real:

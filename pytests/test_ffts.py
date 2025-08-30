@@ -314,11 +314,9 @@ par_lists_fft_small_real = dict(
     engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
-# Intel mkl fft raises NotImplemented Error on np.float16, npfloat128 and np.complex256
 pars_fft_small_real = [
     dict(zip(par_lists_fft_small_real.keys(), value))
     for value in itertools.product(*par_lists_fft_small_real.values())
-    if (value[3] != "mkl_fft") or (value[0][0] not in (np.float16, np.float128))
 ]
 
 
@@ -392,7 +390,6 @@ par_lists_fft_random_real = dict(
 pars_fft_random_real = [
     dict(zip(par_lists_fft_random_real.keys(), value))
     for value in itertools.product(*par_lists_fft_random_real.values())
-    if (value[3] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -453,7 +450,6 @@ par_lists_fft_small_cpx = dict(
 pars_fft_small_cpx = [
     dict(zip(par_lists_fft_small_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft_small_cpx.values())
-    if (value[4] != "mkl_fft") or (value[0][0] not in (np.complex256,))
 ]
 
 
@@ -526,8 +522,6 @@ par_lists_fft_random_cpx = dict(
 pars_fft_random_cpx = [
     dict(zip(par_lists_fft_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft_random_cpx.values())
-    if (value[4] != "mkl_fft")
-    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -611,7 +605,6 @@ par_lists_fft2d_random_real = dict(
 pars_fft2d_random_real = [
     dict(zip(par_lists_fft2d_random_real.keys(), value))
     for value in itertools.product(*par_lists_fft2d_random_real.values())
-    if (value[3] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -677,8 +670,6 @@ par_lists_fft2d_random_cpx = dict(
 pars_fft2d_random_cpx = [
     dict(zip(par_lists_fft2d_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft2d_random_cpx.values())
-    if (value[4] != "mkl_fft")
-    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -760,7 +751,6 @@ par_lists_fftnd_random_real = dict(
 pars_fftnd_random_real = [
     dict(zip(par_lists_fftnd_random_real.keys(), value))
     for value in itertools.product(*par_lists_fftnd_random_real.values())
-    if (value[2] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -822,8 +812,6 @@ par_lists_fftnd_random_cpx = dict(
 pars_fftnd_random_cpx = [
     dict(zip(par_lists_fftnd_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fftnd_random_cpx.values())
-    if (value[2] != "mkl_fft")
-    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -900,7 +888,6 @@ par_lists_fft2dnd_small_cpx = dict(
 pars_fft2dnd_small_cpx = [
     dict(zip(par_lists_fft2dnd_small_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft2dnd_small_cpx.values())
-    if (value[2] != "mkl_fft") or (value[0][0] not in (np.complex256,))
 ]
 
 
