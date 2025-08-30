@@ -11,6 +11,7 @@ __all__ = [
     "sympy_enabled",
     "torch_enabled",
     "pytensor_enabled",
+    "mkl_fft_enabled",
 ]
 
 import os
@@ -241,6 +242,24 @@ def pytensor_import(message: Optional[str] = None) -> str:
     return pytensor_message
 
 
+def mkl_fft_import(message):
+    if mkl_fft_enabled:
+        try:
+            import_module("mkl_fft")  # noqa: F401
+            mkl_fft_message = None
+        except Exception as e:
+            mkl_fft_message = f"Failed to import mkl_fft (error:{e}), use numpy."
+    else:
+        mkl_fft_message = (
+            "mkl_fft not available, reverting to numpy. "
+            "In order to be able to use "
+            f"{message} run "
+            f'"pip install mkl_fft" or '
+            f'"conda install -c conda-forge mkl_fft".'
+        )
+    return mkl_fft_message
+
+
 # Set package availability booleans
 # cupy and jax: the package is imported to check everything is working correctly,
 # if not the package is disabled. We do this here as these libraries are used as drop-in
@@ -264,3 +283,4 @@ spgl1_enabled = util.find_spec("spgl1") is not None
 sympy_enabled = util.find_spec("sympy") is not None
 torch_enabled = util.find_spec("torch") is not None
 pytensor_enabled = util.find_spec("pytensor") is not None
+mkl_fft_enabled = util.find_spec("mkl_fft") is not None

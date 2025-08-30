@@ -8,9 +8,21 @@ import numpy.typing as npt
 
 from pylops import LinearOperator
 from pylops.signalprocessing._baseffts import _BaseFFTND, _FFTNorms
+from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_sp_fft
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+
+mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
+
+if mkl_fft_message is None:
+    import mkl_fft.interfaces.numpy_fft as mkl_backend
+
+    try:
+        import scipy.fft
+        import mkl_fft.interfaces.scipy_fft as mkl_backend
+    except ImportError:
+        pass
 
 
 class _FFTND_numpy(_BaseFFTND):
@@ -216,6 +228,102 @@ class _FFTND_scipy(_BaseFFTND):
         return self._rmatvec(y)
 
 
+class _FFTND_mklfft(_BaseFFTND):
+    """N-dimensional Fast-Fourier Transform using MKL FFT"""
+
+    def __init__(
+        self,
+        dims: Union[int, InputDimsLike],
+        axes: Union[int, InputDimsLike] = (-3, -2, -1),
+        nffts: Optional[Union[int, InputDimsLike]] = None,
+        sampling: Union[float, Sequence[float]] = 1.0,
+        norm: str = "ortho",
+        real: bool = False,
+        ifftshift_before: bool = False,
+        fftshift_after: bool = False,
+        dtype: DTypeLike = "complex128",
+        **kwargs_fft,
+    ) -> None:
+        super().__init__(
+            dims=dims,
+            axes=axes,
+            nffts=nffts,
+            sampling=sampling,
+            norm=norm,
+            real=real,
+            ifftshift_before=ifftshift_before,
+            fftshift_after=fftshift_after,
+            dtype=dtype,
+        )
+        self._kwargs_fft = kwargs_fft
+        self._norm_kwargs = {"norm": None}  # equivalent to "backward" in Numpy/Scipy
+        if self.norm is _FFTNorms.ORTHO:
+            self._norm_kwargs["norm"] = "ortho"
+        elif self.norm is _FFTNorms.NONE:
+            self._scale = np.prod(self.nffts)
+        elif self.norm is _FFTNorms.ONE_OVER_N:
+            self._scale = 1.0 / np.prod(self.nffts)
+
+    @reshaped
+    def _matvec(self, x: NDArray) -> NDArray:
+        if self.ifftshift_before.any():
+            x = mkl_backend.ifftshift(x, axes=self.axes[self.ifftshift_before])
+        if not self.clinear:
+            x = np.real(x)
+        if self.real:
+            y = mkl_backend.rfftn(
+                x, s=self.nffts, axes=self.axes, **self._norm_kwargs, **self._kwargs_fft
+            )
+            # Apply scaling to obtain a correct adjoint for this operator
+            y = np.swapaxes(y, -1, self.axes[-1])
+            y[..., 1 : 1 + (self.nffts[-1] - 1) // 2] *= np.sqrt(2)
+            y = np.swapaxes(y, self.axes[-1], -1)
+        else:
+            y = mkl_backend.fftn(
+                x, s=self.nffts, axes=self.axes, **self._norm_kwargs, **self._kwargs_fft
+            )
+        if self.norm is _FFTNorms.ONE_OVER_N:
+            y *= self._scale
+        if self.fftshift_after.any():
+            y = mkl_backend.fftshift(y, axes=self.axes[self.fftshift_after])
+        return y
+
+    @reshaped
+    def _rmatvec(self, x: NDArray) -> NDArray:
+        if self.fftshift_after.any():
+            x = mkl_backend.ifftshift(x, axes=self.axes[self.fftshift_after])
+        if self.real:
+            # Apply scaling to obtain a correct adjoint for this operator
+            x = x.copy()
+            x = np.swapaxes(x, -1, self.axes[-1])
+            x[..., 1 : 1 + (self.nffts[-1] - 1) // 2] /= np.sqrt(2)
+            x = np.swapaxes(x, self.axes[-1], -1)
+            y = mkl_backend.irfftn(
+                x, s=self.nffts, axes=self.axes, **self._norm_kwargs, **self._kwargs_fft
+            )
+        else:
+            y = mkl_backend.ifftn(
+                x, s=self.nffts, axes=self.axes, **self._norm_kwargs, **self._kwargs_fft
+            )
+        if self.norm is _FFTNorms.NONE:
+            y *= self._scale
+        for ax, nfft in zip(self.axes, self.nffts):
+            if nfft > self.dims[ax]:
+                y = np.take(y, range(self.dims[ax]), axis=ax)
+        if self.doifftpad:
+            y = np.pad(y, self.ifftpad)
+        if not self.clinear:
+            y = np.real(y)
+        if self.ifftshift_before.any():
+            y = mkl_backend.fftshift(y, axes=self.axes[self.ifftshift_before])
+        return y
+
+    def __truediv__(self, y):
+        if self.norm is not _FFTNorms.ORTHO:
+            return self._rmatvec(y) / self._scale
+        return self._rmatvec(y)
+
+
 def FFTND(
     dims: Union[int, InputDimsLike],
     axes: Union[int, InputDimsLike] = (-3, -2, -1),
@@ -410,7 +518,20 @@ def FFTND(
     for real input signals.
 
     """
-    if engine == "numpy":
+    if engine == "mkl_fft" and mkl_fft_message is None:
+        f = _FFTND_mklfft(
+            dims=dims,
+            axes=axes,
+            nffts=nffts,
+            sampling=sampling,
+            norm=norm,
+            real=real,
+            ifftshift_before=ifftshift_before,
+            fftshift_after=fftshift_after,
+            dtype=dtype,
+            **kwargs_fft,
+        )
+    elif engine == "numpy" or (engine == "mkl_fft" and mkl_fft_message is not None):
         f = _FFTND_numpy(
             dims=dims,
             axes=axes,
@@ -437,6 +558,6 @@ def FFTND(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy or scipy")
+        raise NotImplementedError("engine must be numpy, scipy or mkl_fft")
     f.name = name
     return f

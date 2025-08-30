@@ -227,11 +227,66 @@ par5w = {
     "dtype": np.complex128,
     "kwargs": {},
 }  # nfft<nt, complex input, fftw engine
+par1t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": None,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex128,
+    "kwargs": {},
+}  # nfft=nt, complex input, mkl-fft engine
+par2t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 64,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex64,
+    "kwargs": {},
+}  # nfft>nt, complex input, mkl-fft engine
+par3t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": None,
+    "real": True,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.float64,
+    "kwargs": {},
+}  # nfft=nt, real input, mkl-fft engine
+par4t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 64,
+    "real": True,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.float64,
+    "kwargs": {},
+}  # nfft>nt, real input, mkl-fft engine
+par5t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 16,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex128,
+    "kwargs": {},
+}  # nfft<nt, complex input, mkl-fft engine
 
 np.random.seed(5)
 
 
-@pytest.mark.parametrize("par", [(par1)])
+@pytest.mark.parametrize("par", [par1])
 def test_unknown_engine(par):
     """Check error is raised if unknown engine is passed"""
     with pytest.raises(NotImplementedError):
@@ -256,12 +311,14 @@ par_lists_fft_small_real = dict(
     dtype_precision=dtype_precision,
     norm=["ortho", "none", "1/n"],
     ifftshift_before=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
+# Intel mkl fft raises NotImplemented Error on np.float16, npfloat128 and np.complex256
 pars_fft_small_real = [
     dict(zip(par_lists_fft_small_real.keys(), value))
     for value in itertools.product(*par_lists_fft_small_real.values())
+    if (value[3] != "mkl_fft") or (value[0][0] not in (np.float16, np.float128))
 ]
 
 
@@ -330,11 +387,12 @@ par_lists_fft_random_real = dict(
     ],
     dtype_precision=dtype_precision,
     ifftshift_before=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_random_real = [
     dict(zip(par_lists_fft_random_real.keys(), value))
     for value in itertools.product(*par_lists_fft_random_real.values())
+    if (value[3] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -390,11 +448,12 @@ par_lists_fft_small_cpx = dict(
     norm=["ortho", "none", "1/n"],
     ifftshift_before=[False, True],
     fftshift_after=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_small_cpx = [
     dict(zip(par_lists_fft_small_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft_small_cpx.values())
+    if (value[4] != "mkl_fft") or (value[0][0] not in (np.complex256,))
 ]
 
 
@@ -462,11 +521,13 @@ par_lists_fft_random_cpx = dict(
     dtype_precision=dtype_precision_cpx1,
     ifftshift_before=[False, True],
     fftshift_after=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_random_cpx = [
     dict(zip(par_lists_fft_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft_random_cpx.values())
+    if (value[4] != "mkl_fft")
+    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -545,11 +606,12 @@ par_lists_fft2d_random_real = dict(
     ],
     dtype_precision=dtype_precision,
     ifftshift_before=[False, True],
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fft2d_random_real = [
     dict(zip(par_lists_fft2d_random_real.keys(), value))
     for value in itertools.product(*par_lists_fft2d_random_real.values())
+    if (value[3] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -609,12 +671,14 @@ par_lists_fft2d_random_cpx = dict(
     dtype_precision=dtype_precision_cpx1,
     ifftshift_before=itertools.product([False, True], [False, True]),
     fftshift_after=itertools.product([False, True], [False, True]),
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
 pars_fft2d_random_cpx = [
     dict(zip(par_lists_fft2d_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft2d_random_cpx.values())
+    if (value[4] != "mkl_fft")
+    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -691,11 +755,12 @@ par_lists_fftnd_random_real = dict(
         npp.random.randint(1, 5, size=(4,)),
     ],
     dtype_precision=dtype_precision,
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fftnd_random_real = [
     dict(zip(par_lists_fftnd_random_real.keys(), value))
     for value in itertools.product(*par_lists_fftnd_random_real.values())
+    if (value[2] != "mkl_fft") or (value[1][0] not in (np.float16, np.float128))
 ]
 
 
@@ -751,12 +816,14 @@ par_lists_fftnd_random_cpx = dict(
         npp.random.randint(1, 5, size=(5,)),
     ],
     dtype_precision=dtype_precision_cpx1,
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
 pars_fftnd_random_cpx = [
     dict(zip(par_lists_fftnd_random_cpx.keys(), value))
     for value in itertools.product(*par_lists_fftnd_random_cpx.values())
+    if (value[2] != "mkl_fft")
+    or (value[1][0] not in (np.float16, np.float128, np.complex256))
 ]
 
 
@@ -828,11 +895,12 @@ def test_FFTND_random_complex(par):
 par_lists_fft2dnd_small_cpx = dict(
     dtype_precision=dtype_precision_cpx,
     norm=["ortho", "none", "1/n"],
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fft2dnd_small_cpx = [
     dict(zip(par_lists_fft2dnd_small_cpx.keys(), value))
     for value in itertools.product(*par_lists_fft2dnd_small_cpx.values())
+    if (value[2] != "mkl_fft") or (value[0][0] not in (np.complex256,))
 ]
 
 
@@ -955,6 +1023,11 @@ def test_FFTND_small_complex(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_1dsignal(par):
@@ -1064,6 +1137,11 @@ def test_FFT_1dsignal(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_2dsignal(par):
@@ -1274,6 +1352,11 @@ def test_FFT_2dsignal(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_3dsignal(par):
@@ -1496,6 +1579,12 @@ def test_FFT_3dsignal(par):
         (par3s),
         (par4s),
         (par5s),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
+        (par5t),
     ],
 )
 def test_FFT2D(par):
@@ -1626,6 +1715,11 @@ def test_FFT2D(par):
         (par3s),
         (par4s),
         (par5s),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT3D(par):
