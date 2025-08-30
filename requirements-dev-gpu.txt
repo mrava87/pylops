@@ -24,5 +24,3 @@ isort
 black
 flake8
 mypy
-mkl-fft; sys_platform != "darwin"
-
