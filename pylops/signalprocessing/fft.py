@@ -25,8 +25,8 @@ if mkl_fft_message is None:
     import mkl_fft.interfaces.numpy_fft as mkl_backend
 
     try:
-        import scipy.fft  # noqa: F401
-        import mkl_fft.interfaces.scipy_fft as mkl_backend
+        import scipy.fft  # noqa: F811
+        import mkl_fft.interfaces.scipy_fft as mkl_backend  # noqa: F811
     except ImportError:
         pass
 
