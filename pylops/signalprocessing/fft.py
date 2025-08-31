@@ -502,7 +502,6 @@ def FFT(
     **kwargs_fft
         Arbitrary keyword arguments to be passed to the selected fft method
 
-
     Attributes
     ----------
     dimsd : :obj:`tuple`
@@ -540,7 +539,6 @@ def FFT(
     --------
     FFT2D: Two-dimensional FFT
     FFTND: N-dimensional FFT
-
 
     Notes
     -----

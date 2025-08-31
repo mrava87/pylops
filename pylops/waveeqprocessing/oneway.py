@@ -80,6 +80,8 @@ def PhaseShift(
     ky: Optional[NDArray] = None,
     dtype: DTypeLike = "float64",
     name: str = "P",
+    fftengine: str = "numpy",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Phase shift operator
 
@@ -110,6 +112,15 @@ def PhaseShift(
         .. versionadded:: 2.0.0
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    fftengine : :obj:`str`, optional
+        .. versionadded:: 2.6.0
+
+        Engine used for fft computation (``numpy``, ``scipy``, or ``fftw``). Choose
+        ``numpy`` when working with CuPy arrays.
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the selected fft method
 
     Returns
     -------
@@ -170,7 +181,9 @@ def PhaseShift(
             nfft=ky.size,
             real=False,
             ifftshift_before=True,
+            engine=fftengine,
             dtype=dtypefft,
+            **kwargs_fft,
         )
     Pop = _PhaseShift(vel, dz, freq, kx, ky, dtypefft)
     if ky is None:
@@ -204,7 +217,7 @@ def Deghosting(
     solver: Callable = lsqr,
     dottest: bool = False,
     dtype: DTypeLike = "complex128",
-    **kwargs_solver
+    **kwargs_solver,
 ) -> Tuple[NDArray, NDArray]:
     r"""Wavefield deghosting.
 
