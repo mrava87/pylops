@@ -1,7 +1,7 @@
 __all__ = ["Marchenko"]
 
 import logging
-from typing import Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import numpy as np
 from scipy.signal import filtfilt
@@ -246,6 +246,7 @@ class Marchenko:
         prescaled: bool = False,
         fftengine: str = "numpy",
         dtype: DTypeLike = "float64",
+        kwargs_fft: Optional[Dict[str, Any]] = None,
     ) -> None:
         # Save inputs into class
         self.dt = dt
@@ -257,6 +258,7 @@ class Marchenko:
         self.prescaled = prescaled
         self.fftengine = fftengine
         self.dtype = dtype
+        self.kwargs_fft = {} if kwargs_fft is None else kwargs_fft
         self.explicit = False
         self.ncp = get_array_module(R)
 
@@ -384,6 +386,7 @@ class Marchenko:
             saveGt=self.saveRt,
             prescaled=self.prescaled,
             usematmul=usematmul,
+            **self.kwargs_fft,
         )
         R1op = MDC(
             self.Rtwosided_fft,
@@ -397,6 +400,7 @@ class Marchenko:
             saveGt=self.saveRt,
             prescaled=self.prescaled,
             usematmul=usematmul,
+            **self.kwargs_fft,
         )
         Rollop = Roll(
             (self.nt2, self.ns),
@@ -592,6 +596,7 @@ class Marchenko:
             fftengine=self.fftengine,
             prescaled=self.prescaled,
             usematmul=usematmul,
+            **self.kwargs_fft,
         )
         R1op = MDC(
             self.Rtwosided_fft,
@@ -604,6 +609,7 @@ class Marchenko:
             fftengine=self.fftengine,
             prescaled=self.prescaled,
             usematmul=usematmul,
+            **self.kwargs_fft,
         )
         Rollop = Roll(
             (self.nt2, self.ns, nvs),

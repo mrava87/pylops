@@ -97,7 +97,7 @@ def _MDC(
         real=True,
         ifftshift_before=twosided,
         dtype=rdtype,
-        **args_FFT
+        **args_FFT,
     )
     F1op = _FFT(
         dims=(nt, ns, nv),
@@ -105,7 +105,7 @@ def _MDC(
         real=True,
         ifftshift_before=False,
         dtype=rdtype,
-        **args_FFT1
+        **args_FFT1,
     )
 
     # create Identity operator to extract only relevant frequencies
@@ -140,6 +140,7 @@ def MDC(
     usematmul: bool = False,
     prescaled: bool = False,
     name: str = "M",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Multi-dimensional convolution.
 
@@ -188,6 +189,10 @@ def MDC(
         .. versionadded:: 2.0.0
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the selected fft method
 
     Raises
     ------
@@ -243,8 +248,8 @@ def MDC(
         saveGt=saveGt,
         conj=conj,
         prescaled=prescaled,
-        args_FFT={"engine": fftengine},
-        args_FFT1={"engine": fftengine},
+        args_FFT={**{"engine": fftengine}, **kwargs_fft},
+        args_FFT1={**{"engine": fftengine}, **kwargs_fft},
         args_Fredholm1={"usematmul": usematmul},
     )
     MOp.name = name
@@ -267,7 +272,7 @@ def MDD(
     add_negative: bool = True,
     smooth_precond: int = 0,
     fftengine: str = "numpy",
-    **kwargs_solver
+    **kwargs_solver,
 ) -> Union[
     Tuple[NDArray, NDArray],
     Tuple[NDArray, NDArray, NDArray],
@@ -483,7 +488,7 @@ def MDD(
                 MDCop,
                 d.ravel(),
                 ncp.zeros(int(MDCop.shape[1]), dtype=MDCop.dtype),
-                **kwargs_solver
+                **kwargs_solver,
             )[0]
     minv = ncp.squeeze(minv.reshape(nt2, nr, nv))
     minv = ncp.moveaxis(minv, 0, -1)
@@ -502,7 +507,7 @@ def MDD(
                 PSFop,
                 G.ravel(),
                 ncp.zeros(int(PSFop.shape[1]), dtype=PSFop.dtype),
-                **kwargs_solver
+                **kwargs_solver,
             )[0]
         psfinv = ncp.squeeze(psfinv.reshape(nt2, nr, nr))
         psfinv = ncp.moveaxis(psfinv, 0, -1)
