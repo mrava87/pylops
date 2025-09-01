@@ -32,7 +32,8 @@ def test_TorchOperator(par):
     """
     # temporarily, skip tests on mac as torch seems not to recognized
     # numpy when v2 is installed
-    if platform.system() == "darwin":
+    if platform.system() == "Darwin":
+        print("here")
         pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
@@ -62,7 +63,7 @@ def test_TorchOperator_batch(par):
     """Apply forward for input with multiple samples (= batch) and flattened arrays"""
     # temporarily, skip tests on mac as torch seems not to recognized
     # numpy when v2 is installed
-    if platform.system() == "darwin":
+    if platform.system() == "Darwin":
         pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
@@ -84,7 +85,7 @@ def test_TorchOperator_batch_nd(par):
     """Apply forward for input with multiple samples (= batch) and nd-arrays"""
     # temporarily, skip tests on mac as torch seems not to recognized
     # numpy when v2 is installed
-    if platform.system() == "darwin":
+    if platform.system() == "Darwin":
         pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
