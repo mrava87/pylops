@@ -358,11 +358,11 @@ Install it via ``pip`` with
 
 FFTW
 ----
-Three different "engines" are provided by the :py:class:`pylops.signalprocessing.FFT` operator:
-``engine="numpy"`` (default), ``engine="scipy"`` and ``engine="fftw"``.
+Four different "engines" are provided by the :py:class:`pylops.signalprocessing.FFT` operator:
+``engine="numpy"`` (default), ``engine="scipy"``, ``engine="fftw"`` and ``engine="mkl_fft"``.
 
 The first two engines are part of the required PyLops dependencies.
-The latter implements the well-known `FFTW <http://www.fftw.org>`_
+The third implements the well-known `FFTW <http://www.fftw.org>`_
 via the Python wrapper :py:class:`pyfftw.FFTW`. While this optimized FFT tends to
 outperform the other two in many cases, it is not included by default.
 To use this library, install it manually either via ``conda``:
@@ -381,9 +381,24 @@ or via pip:
    FFTW is only available for :py:class:`pylops.signalprocessing.FFT`,
    not :py:class:`pylops.signalprocessing.FFT2D` or :py:class:`pylops.signalprocessing.FFTND`.
 
-.. warning::
-   Intel MKL FFT is not supported.
+The fourth implements Intel MKL FFT via the Python interface `mkl_fft <https://github.com/IntelPython/mkl_fft>`_.
+This provides access to Intel’s oneMKL Fourier Transform routines, enabling efficient FFT computations with performance
+close to native C/Intel® oneMKL
 
+To use this library, you can install it using ``conda``:
+
+.. code-block:: bash
+
+   >> conda install --channel https://software.repos.intel.com/python/conda --channel conda-forge mkl_fft
+
+or via pip:
+
+.. code-block:: bash
+
+   >> pip install --index-url https://software.repos.intel.com/python/pypi --extra-index-url https://pypi.org/simple mkl_fft
+
+.. note::
+   `mkl_fft` is not supported on macOS
 
 Numba
 -----

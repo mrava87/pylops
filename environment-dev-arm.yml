@@ -23,7 +23,6 @@ dependencies:
   - autopep8
   - isort
   - black
-  - mkl_fft
   - pip:
     - torch
     - devito

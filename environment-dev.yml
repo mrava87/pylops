@@ -1,5 +1,6 @@
 name: pylops
 channels:
+  - https://software.repos.intel.com/python/conda
   - defaults
   - conda-forge
   - numba
