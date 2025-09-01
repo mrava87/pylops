@@ -1,3 +1,6 @@
+--index-url https://software.repos.intel.com/python/pypi
+--extra-index-url https://pypi.org/simple
+mkl_fft; sys_platform != "darwin"
 numpy>=2.0.0
 scipy>=1.13.0
 jax
@@ -30,4 +33,3 @@ black
 flake8
 mypy
 pytensor>=2.28.0
-mkl-fft; sys_platform != "darwin"

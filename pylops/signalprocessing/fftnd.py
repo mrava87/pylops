@@ -16,7 +16,7 @@ from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
 
 if mkl_fft_message is None:
-    import mkl_fft.interfaces.scipy_fft as mkl_backend
+    import mkl_fft.interfaces.numpy_fft as mkl_backend
 
 
 class _FFTND_numpy(_BaseFFTND):
@@ -238,21 +238,6 @@ class _FFTND_mklfft(_BaseFFTND):
         dtype: DTypeLike = "complex128",
         **kwargs_fft,
     ) -> None:
-        if np.dtype(dtype) == np.float16:
-            warnings.warn(
-                "mkl_fft backend is unavailable with float16 dtype. Will use float32."
-            )
-            dtype = np.float32
-        elif np.dtype(dtype) == np.complex256:
-            warnings.warn(
-                "mkl_fft backend is unavailable with complex256 dtype. Will use complex128."
-            )
-            dtype = np.complex128
-        elif np.dtype(dtype) == np.float128:
-            warnings.warn(
-                "mkl_fft backend is unavailable with float128 dtype. Will use float64."
-            )
-            dtype = np.float64
         super().__init__(
             dims=dims,
             axes=axes,
@@ -275,12 +260,6 @@ class _FFTND_mklfft(_BaseFFTND):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
-        if x.dtype == np.float16:
-            x = x.astype(np.float32)
-        elif x.dtype == np.float128:
-            x = x.astype(np.float64)
-        elif x.dtype == np.complex256:
-            x = x.astype(np.complex128)
         if self.ifftshift_before.any():
             x = mkl_backend.ifftshift(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
@@ -305,12 +284,6 @@ class _FFTND_mklfft(_BaseFFTND):
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
-        if x.dtype == np.float16:
-            x = x.astype(np.float32)
-        elif x.dtype == np.float128:
-            x = x.astype(np.float64)
-        elif x.dtype == np.complex256:
-            x = x.astype(np.complex128)
         if self.fftshift_after.any():
             x = mkl_backend.ifftshift(x, axes=self.axes[self.fftshift_after])
         if self.real:
