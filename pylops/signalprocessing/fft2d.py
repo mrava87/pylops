@@ -16,7 +16,8 @@ from pylops.utils.typing import DTypeLike, InputDimsLike
 mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
 
 if mkl_fft_message is None:
-    import mkl_fft.interfaces.numpy_fft as mkl_backend
+    import mkl_fft.interfaces.scipy_fft as mkl_backend
+    from mkl_fft.interfaces import _float_utils
 
 
 class _FFT2D_numpy(_BaseFFTND):
@@ -290,8 +291,10 @@ class _FFT2D_mklfft(_BaseFFTND):
 
     @reshaped
     def _matvec(self, x):
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.ifftshift_before.any():
-            x = mkl_backend.ifftshift(x, axes=self.axes[self.ifftshift_before])
+            x = scipy.fft.ifftshift(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
             x = np.real(x)
         if self.real:
@@ -309,13 +312,15 @@ class _FFT2D_mklfft(_BaseFFTND):
             y *= self._scale
         y = y.astype(self.cdtype)
         if self.fftshift_after.any():
-            y = mkl_backend.fftshift(y, axes=self.axes[self.fftshift_after])
+            y = scipy.fft.fftshift(y, axes=self.axes[self.fftshift_after])
         return y
 
     @reshaped
     def _rmatvec(self, x):
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.fftshift_after.any():
-            x = mkl_backend.ifftshift(x, axes=self.axes[self.fftshift_after])
+            x = scipy.fft.ifftshift(x, axes=self.axes[self.fftshift_after])
         if self.real:
             x = x.copy()
             x = np.swapaxes(x, -1, self.axes[-1])
@@ -330,7 +335,6 @@ class _FFT2D_mklfft(_BaseFFTND):
             )
         if self.norm is _FFTNorms.NONE:
             y *= self._scale
-        print(y.shape, self.dims[self.axes[0]])
         if self.nffts[0] > self.dims[self.axes[0]]:
             y = np.take(y, np.arange(self.dims[self.axes[0]]), axis=self.axes[0])
         if self.nffts[1] > self.dims[self.axes[1]]:
@@ -341,7 +345,7 @@ class _FFT2D_mklfft(_BaseFFTND):
             y = np.real(y)
         y = y.astype(self.rdtype)
         if self.ifftshift_before.any():
-            y = np.fft.fftshift(y, axes=self.axes[self.ifftshift_before])
+            y = scipy.fft.fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
     def __truediv__(self, y):

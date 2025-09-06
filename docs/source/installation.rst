@@ -356,8 +356,8 @@ Install it via ``pip`` with
    >> pip install devito
 
 
-FFTW
-----
+FFTW and MKL-FFT
+----------------
 Four different "engines" are provided by the :py:class:`pylops.signalprocessing.FFT` operator:
 ``engine="numpy"`` (default), ``engine="scipy"``, ``engine="fftw"`` and ``engine="mkl_fft"``.
 

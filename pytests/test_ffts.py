@@ -1,6 +1,5 @@
 import itertools
 import os
-import sys
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
@@ -17,7 +16,7 @@ import pytest
 
 from pylops.optimization.basic import lsqr
 from pylops.signalprocessing import FFT, FFT2D, FFTND
-from pylops.utils import dottest
+from pylops.utils import dottest, mkl_fft_enabled
 
 
 # Utility function
@@ -323,8 +322,8 @@ pars_fft_small_real = [
 
 @pytest.mark.parametrize("par", pars_fft_small_real)
 def test_FFT_small_real(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
 
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
@@ -402,8 +401,8 @@ pars_fft_random_real = [
 )
 @pytest.mark.parametrize("par", pars_fft_random_real)
 def test_FFT_random_real(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
 
     shape = par["shape"]
@@ -460,8 +459,8 @@ pars_fft_small_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft_small_cpx)
 def test_FFT_small_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -534,8 +533,8 @@ pars_fft_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft_random_cpx)
 def test_FFT_random_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -623,8 +622,8 @@ pars_fft2d_random_real = [
 )
 @pytest.mark.parametrize("par", pars_fft2d_random_real)
 def test_FFT2D_random_real(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -686,8 +685,8 @@ pars_fft2d_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft2d_random_cpx)
 def test_FFT2D_random_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -769,8 +768,8 @@ pars_fftnd_random_real = [
 
 @pytest.mark.parametrize("par", pars_fftnd_random_real)
 def test_FFTND_random_real(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -832,8 +831,8 @@ pars_fftnd_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fftnd_random_cpx)
 def test_FFTND_random_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     shape = par["shape"]
     dtype, decimal = par["dtype_precision"]
@@ -910,8 +909,8 @@ pars_fft2dnd_small_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft2dnd_small_cpx)
 def test_FFT2D_small_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -962,8 +961,8 @@ def test_FFT2D_small_complex(par):
 
 @pytest.mark.parametrize("par", pars_fft2dnd_small_cpx)
 def test_FFTND_small_complex(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -1039,8 +1038,8 @@ def test_FFTND_small_complex(par):
     ],
 )
 def test_FFT_1dsignal(par):
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     """Dot-test and inversion for FFT operator for 1d signal"""
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
@@ -1158,8 +1157,8 @@ def test_FFT_2dsignal(par):
     """Dot-test and inversion for fft operator for 2d signal
     (fft on single dimension)
     """
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1375,8 +1374,8 @@ def test_FFT_3dsignal(par):
     """Dot-test and inversion for fft operator for 3d signal
     (fft on single dimension)
     """
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1603,8 +1602,8 @@ def test_FFT_3dsignal(par):
 )
 def test_FFT2D(par):
     """Dot-test and inversion for FFT2D operator for 2d signal"""
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1740,8 +1739,8 @@ def test_FFT2D(par):
 )
 def test_FFT3D(par):
     """Dot-test and inversion for FFTND operator for 3d signal"""
-    if par["engine"] == "mkl_fft" and sys.platform == "darwin":
-        pytest.skip("mkl_fft not supported on macOS")
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 

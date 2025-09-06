@@ -1,10 +1,11 @@
 name: pylops
 channels:
-  - defaults
+  - https://software.repos.intel.com/python/conda
   - conda-forge
+  - defaults
   - numba
 dependencies:
-  - python>=3.11.0
+  - python==3.12.8
   - pip
   - numpy>=2.0.0
   - scipy>=1.13.0
@@ -24,6 +25,7 @@ dependencies:
   - autopep8
   - isort
   - black
+  - mkl_fft
   - pip:
     - torch
     - devito

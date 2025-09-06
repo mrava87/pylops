@@ -5,6 +5,7 @@ from typing import Optional, Sequence, Union
 
 import numpy as np
 import numpy.typing as npt
+import scipy.fft
 
 from pylops import LinearOperator
 from pylops.signalprocessing._baseffts import _BaseFFTND, _FFTNorms
@@ -16,7 +17,8 @@ from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
 
 if mkl_fft_message is None:
-    import mkl_fft.interfaces.numpy_fft as mkl_backend
+    import mkl_fft.interfaces.scipy_fft as mkl_backend
+    from mkl_fft.interfaces import _float_utils
 
 
 class _FFTND_numpy(_BaseFFTND):
@@ -260,8 +262,10 @@ class _FFTND_mklfft(_BaseFFTND):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.ifftshift_before.any():
-            x = mkl_backend.ifftshift(x, axes=self.axes[self.ifftshift_before])
+            x = scipy.fft.ifftshift(x, axes=self.axes[self.ifftshift_before])
         if not self.clinear:
             x = np.real(x)
         if self.real:
@@ -279,13 +283,15 @@ class _FFTND_mklfft(_BaseFFTND):
         if self.norm is _FFTNorms.ONE_OVER_N:
             y *= self._scale
         if self.fftshift_after.any():
-            y = mkl_backend.fftshift(y, axes=self.axes[self.fftshift_after])
+            y = scipy.fft.fftshift(y, axes=self.axes[self.fftshift_after])
         return y
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.fftshift_after.any():
-            x = mkl_backend.ifftshift(x, axes=self.axes[self.fftshift_after])
+            x = scipy.fft.ifftshift(x, axes=self.axes[self.fftshift_after])
         if self.real:
             # Apply scaling to obtain a correct adjoint for this operator
             x = x.copy()
@@ -309,7 +315,7 @@ class _FFTND_mklfft(_BaseFFTND):
         if not self.clinear:
             y = np.real(y)
         if self.ifftshift_before.any():
-            y = mkl_backend.fftshift(y, axes=self.axes[self.ifftshift_before])
+            y = scipy.fft.fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
     def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:

@@ -22,7 +22,8 @@ if pyfftw_message is None:
     import pyfftw
 
 if mkl_fft_message is None:
-    import mkl_fft.interfaces.numpy_fft as mkl_backend
+    import mkl_fft.interfaces.scipy_fft as mkl_backend
+    from mkl_fft.interfaces import _float_utils
 
 logger = logging.getLogger(__name__)
 
@@ -437,8 +438,10 @@ class _FFT_mklfft(_BaseFFT):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.ifftshift_before:
-            x = mkl_backend.ifftshift(x, axes=self.axis)
+            x = scipy.fft.ifftshift(x, axes=self.axis)
         if not self.clinear:
             x = np.real(x)
         if self.real:
@@ -451,13 +454,15 @@ class _FFT_mklfft(_BaseFFT):
         if self.norm is _FFTNorms.ONE_OVER_N:
             y *= self._scale
         if self.fftshift_after:
-            y = mkl_backend.fftshift(y, axes=self.axis)
+            y = scipy.fft.fftshift(y, axes=self.axis)
         return y
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
         if self.fftshift_after:
-            x = mkl_backend.ifftshift(x, axes=self.axis)
+            x = scipy.fft.ifftshift(x, axes=self.axis)
         if self.real:
             x = x.copy()
             x = np.swapaxes(x, -1, self.axis)
@@ -477,7 +482,7 @@ class _FFT_mklfft(_BaseFFT):
         if not self.clinear:
             y = np.real(y)
         if self.ifftshift_before:
-            y = mkl_backend.fftshift(y, axes=self.axis)
+            y = scipy.fft.fftshift(y, axes=self.axis)
         return y
 
     def __truediv__(self, y):
