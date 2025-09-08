@@ -230,8 +230,7 @@ These are an option for an environment without ``conda`` that needs Intel MKL wi
 .. warning::
 
    ``intel-numpy`` and ``intel-scipy`` not only link against Intel MKL, but also substitute NumPy and
-   SciPy FFTs for `Intel MKL FFT <https://pypi.org/project/mkl-fft/>`_. **MKL FFT is not supported
-   and may break PyLops**.
+   SciPy FFTs for `Intel MKL FFT <https://pypi.org/project/mkl-fft/>`_.
 
 
 Multithreading
@@ -399,6 +398,27 @@ or via pip:
 
 .. note::
    `mkl_fft` is not supported on macOS
+
+While the library will work without NumPy with MKL and Intel Python, for maximum performance it is recommended to use
+NumPy built with Intel’s Math Kernel Library (MKL) together with Intel Python.
+
+.. warning::
+
+   ``pyFFTW`` may not work correctly with NumPy + MKL. To avoid issues, it is recommended to build ``pyFFTW`` from
+   source after setting the ``STATIC_FFTW_DIR`` environment variable to the absolute path of the static FFTW
+   libraries.
+
+   If the following environment variables are set before installing ``pyFFTW``, compatibility problems with MKL
+   should not occur:
+
+   1. ``export STATIC_FFTW_DIR=${PREFIX}/lib``
+      (where ``${PREFIX}`` is the base of the current Anaconda environment with
+      the ``fftw`` package installed)
+
+   2. ``export CFLAGS="$CFLAGS -Wl,-Bsymbolic"``
+
+   Alternatively, you can install ``pyFFTW`` directly with ``conda``, since the updated recipe is already available
+   and works without any manual adjustments.
 
 Numba
 -----
