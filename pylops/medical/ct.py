@@ -77,7 +77,7 @@ class CT2D(LinearOperator):
     where :math:`l(r,\theta)` is the summation line and :math:`i(x, y)`
     is the intensity map of the model. Here, :math:`\theta` refers to the angle
     between the y-axis (:math:`y`) and the summation line and :math:`r` is
-     the distance from the origin of the summation line.
+    the distance from the origin of the summation line.
 
     .. [1] http://people.compute.dtu.dk/pcha/HDtomo/astra-introduction.pdf
 

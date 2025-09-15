@@ -1,3 +1,5 @@
+import platform
+
 import numpy as np
 import pytest
 
@@ -35,8 +37,11 @@ par3 = {
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_CT2D(par):
     """Dot-test for CT2D operator"""
-    theta = np.linspace(0.0, np.pi, par["ntheta"], endpoint=False)
+    # skip tests on mac as astra-toolbox cannot be installed
+    if platform.system() == "Darwin":
+        pytest.skip("astra-toolbox not available on macOS")
 
+    theta = np.linspace(0.0, np.pi, par["ntheta"], endpoint=False)
     Cop = CT2D(
         (par["ny"], par["nx"]),
         1.0,
