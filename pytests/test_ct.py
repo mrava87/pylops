@@ -38,14 +38,12 @@ par3 = {
 @pytest.mark.skipif(
     int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
 )
+@pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_CT2D(par):
     """Dot-test for CT2D operator"""
-    # skip tests on mac as astra-toolbox cannot be installed
-    if platform.system() == "Darwin":
-        pytest.skip("astra-toolbox not available on macOS")
-
     theta = np.linspace(0.0, np.pi, par["ntheta"], endpoint=False)
+
     Cop = CT2D(
         (par["ny"], par["nx"]),
         1.0,
