@@ -1,3 +1,4 @@
+import os
 import platform
 
 import numpy as np
@@ -34,6 +35,9 @@ par3 = {
 }  # fanflat, strip
 
 
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
 @pytest.mark.parametrize("par", [(par1), (par2)])
 def test_CT2D(par):
     """Dot-test for CT2D operator"""
