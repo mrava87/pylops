@@ -94,7 +94,8 @@ def astra_import(message):
         astra_message = (
             f"ASTRA not available. "
             f"In order to be able to use "
-            f'{message} run "pip install astra-toolbox".'
+            f'{message} run "pip install astra-toolbox" or '
+            f'"conda install -c astra-toolbox astra-toolbox".'
         )
     return astra_message
 
