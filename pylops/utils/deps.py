@@ -254,8 +254,11 @@ def mkl_fft_import(message):
             "mkl_fft not available, reverting to numpy. "
             "In order to be able to use "
             f"{message} run "
-            f'"pip install mkl_fft" or '
-            f'"conda install -c conda-forge mkl_fft".'
+            '"pip install --index-url '
+            "https://software.repos.intel.com/python/pypi "
+            '--extra-index-url https://pypi.org/simple mkl_fft" '
+            'or "conda install -c https://software.repos.intel.com/python/conda '
+            '-c conda-forge mkl_fft".'
         )
     return mkl_fft_message
 
