@@ -276,10 +276,10 @@ class _FFT2D_mklfft(_BaseFFTND):
         if self.naxes != 2:
             raise ValueError("FFT2D must be applied along exactly two dimensions")
 
-        self._kwargs_fft = kwargs_fft
         self.f1, self.f2 = self.fs
         del self.fs
 
+        self._kwargs_fft = kwargs_fft
         self._norm_kwargs: Dict[str, Union[None, str]] = {"norm": None}
         if self.norm is _FFTNorms.ORTHO:
             self._norm_kwargs["norm"] = "ortho"

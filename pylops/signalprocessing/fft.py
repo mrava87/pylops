@@ -340,7 +340,7 @@ class _FFT_fftw(_BaseFFT):
         elif self.doifftpad:
             x = np.take(x, range(0, self.nfft), axis=self.axis)
 
-        # self.fftplan() always uses byte-alligned self.x as input array and
+        # self.fftplan() always uses byte-aligned self.x as input array and
         # returns self.y as output array. As such, self.x must be copied so as
         # not to be overwritten on a subsequent call to _matvec.
         np.copyto(self.x, x)
@@ -362,7 +362,7 @@ class _FFT_fftw(_BaseFFT):
         if self.fftshift_after:
             x = np.fft.ifftshift(x, axes=self.axis)
 
-        # self.ifftplan() always uses byte-alligned self.y as input array.
+        # self.ifftplan() always uses byte-aligned self.y as input array.
         # We copy here so we don't need to copy again in the case of `real=True`,
         # which only performs operations that preserve byte-allignment.
         np.copyto(self.y, x)
