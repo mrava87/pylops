@@ -359,6 +359,9 @@ FFTW and MKL-FFT
 ----------------
 Four different "engines" are provided by the :py:class:`pylops.signalprocessing.FFT` operator:
 ``engine="numpy"`` (default), ``engine="scipy"``, ``engine="fftw"`` and ``engine="mkl_fft"``.
+Similarly, the :py:class:`pylops.signalprocessing.FFT2D` and 
+the :py:class:`pylops.signalprocessing.FFTND` operators come with three "engines", namely
+``engine="numpy"`` (default), ``engine="scipy"``, and ``engine="mkl_fft"``.
 
 The first two engines are part of the required PyLops dependencies.
 The third implements the well-known `FFTW <http://www.fftw.org>`_
@@ -375,10 +378,6 @@ or via pip:
 .. code-block:: bash
 
    >> pip install pyfftw
-
-.. note::
-   FFTW is only available for :py:class:`pylops.signalprocessing.FFT`,
-   not :py:class:`pylops.signalprocessing.FFT2D` or :py:class:`pylops.signalprocessing.FFTND`.
 
 The fourth implements Intel MKL FFT via the Python interface `mkl_fft <https://github.com/IntelPython/mkl_fft>`_.
 This provides access to Intel’s oneMKL Fourier Transform routines, enabling efficient FFT computations with performance

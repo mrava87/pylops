@@ -16,7 +16,7 @@ from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 pyfftw_message = deps.pyfftw_import("the fft module")
-mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
+mkl_fft_message = deps.mkl_fft_import("the fft module")
 
 if pyfftw_message is None:
     import pyfftw
@@ -696,6 +696,8 @@ def FFT(
     ):
         if engine == "fftw" and pyfftw_message is not None:
             logger.warning(pyfftw_message)
+        if engine == "mkl_fft" and mkl_fft_message is not None:
+            logger.warning(mkl_fft_message)
         f = _FFT_numpy(
             dims,
             axis=axis,
@@ -722,6 +724,6 @@ def FFT(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, fftw, scipy or mkl_fft")
+        raise NotImplementedError("engine must be numpy, scipy, fftw, or mkl_fft")
     f.name = name
     return f

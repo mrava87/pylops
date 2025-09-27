@@ -67,7 +67,7 @@ axs[1].set_xlim([0, 3 * f0])
 plt.tight_layout()
 
 ###############################################################################
-# PyLops also has a third FFT engine (engine='mkl_fft') that uses the well-known
+# PyLops also has a third FFT engine (``engine='mkl_fft'``) that uses the well-known
 # `Intel MKL FFT <https://github.com/IntelPython/mkl_fft>`_. This is a Python wrapper around
 # the `Intel® oneAPI Math Kernel Library (oneMKL) <https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2025-2/fourier-transform-functions.html>`_
 # Fourier Transform functions. It lets PyLops run discrete Fourier transforms faster

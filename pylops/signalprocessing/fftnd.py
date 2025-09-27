@@ -425,7 +425,7 @@ def FFTND(
     engine : :obj:`str`, optional
         .. versionadded:: 1.17.0
 
-        Engine used for fft computation (``numpy`` or ``scipy``). Choose
+        Engine used for fft computation (``numpy`` or ``scipy`` or ``mkl_fft``). Choose
         ``numpy`` when working with cupy and jax arrays.
     dtype : :obj:`str`, optional
         Type of elements in input array. Note that the ``dtype`` of the operator
@@ -483,7 +483,7 @@ def FFTND(
           the same dimension ``axes``.
         - If ``norm`` is not one of "ortho", "none", or "1/n".
     NotImplementedError
-        If ``engine`` is neither ``numpy``, nor ``scipy``.
+        If ``engine`` is neither ``numpy``, ``scipy`` nor ``mkl_fft``.
 
     Notes
     -----
