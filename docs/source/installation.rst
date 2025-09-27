@@ -335,6 +335,7 @@ To use this library, install it manually either via ``conda``:
 
 .. code-block:: bash
    >> conda install --channel astra-toolbox astra-toolbox
+
 or via pip:
 
 .. code-block:: bash
@@ -356,12 +357,12 @@ Install it via ``pip`` with:
    ``dtcwt`` does not support NumPy 2 yet, so make sure you use NumPy 1.x 
    to be able to use the ``DTCWT`` operator.
 
+
 Devito
 ------
 `Devito <https://github.com/devitocodes/devito>`_ is a library used to solve PDEs via
 the finite-difference method. It is used in PyLops to compute wavefields
 :py:class:`pylops.waveeqprocessing.AcousticWave2D`
-
 
 Install it via ``pip`` with
 
@@ -477,6 +478,7 @@ or via ``pip`` with
 .. warning::
    OSX users may experience a ``CompileError`` error when using PyTensor. This can be solved by adding 
    ``pytensor.config.gcc__cxxflags = "-Wno-c++11-narrowing"`` after ``import pytensor``.
+
 
 PyWavelets
 ----------
