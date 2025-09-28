@@ -6,6 +6,7 @@ This example shows how to use the :py:class:`pylops.signalprocessing.FFT`,
 and :py:class:`pylops.signalprocessing.FFTND` operators to apply the Fourier
 Transform to the model and the inverse Fourier Transform to the data.
 """
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -15,7 +16,7 @@ plt.close("all")
 
 ###############################################################################
 # Let's start by applying the one dimensional FFT to a one dimensional
-# sinusoidal signal :math:`d(t)=sin(2 \pi f_0t)` using a time axis of
+# sinusoidal signal :math:`d(t)=\sin(2 \pi f_0t)` using a time axis of
 # lenght :math:`nt` and sampling :math:`dt`
 dt = 0.005
 nt = 100
@@ -91,7 +92,7 @@ axs[1].set_xlim([0, 3 * f0])
 plt.tight_layout()
 
 ###############################################################################
-# We can also apply the one dimensional FFT to to a two-dimensional
+# We can also apply the one dimensional FFT to a two-dimensional
 # signal (along one of the first axis)
 dt = 0.005
 nt, nx = 100, 20
@@ -124,7 +125,7 @@ axs[1][1].axis("tight")
 fig.tight_layout()
 
 ###############################################################################
-# We can also apply the two dimensional FFT to to a two-dimensional signal
+# We can also apply the two dimensional FFT to a two-dimensional signal
 dt, dx = 0.005, 5
 nt, nx = 100, 201
 t = np.arange(nt) * dt
@@ -161,7 +162,7 @@ fig.tight_layout()
 
 
 ###############################################################################
-# Finally can apply the three dimensional FFT to to a three-dimensional signal
+# Finally can apply the three dimensional FFT to a three-dimensional signal
 dt, dx, dy = 0.005, 5, 3
 nt, nx, ny = 30, 21, 11
 t = np.arange(nt) * dt
@@ -200,3 +201,15 @@ axs[1][1].imshow(d[:, :, ny // 2] - dinv[:, :, ny // 2], vmin=-20, vmax=20, cmap
 axs[1][1].set_title("Error")
 axs[1][1].axis("tight")
 fig.tight_layout()
+
+###############################################################################
+# Supported Backends
+# ~~~~~~~~~~~~~~~~~~
+# =======  ====================  =========
+# Backend  Supported Dimensions  Dependecy
+# =======  ====================  =========
+# Numpy    1D, 2D, ND            ``numpy`` (included)
+# Scipy    1D, 2D, ND            ``scipy`` (included)
+# FFTW     1D                    ``pyfftw``
+# MKL      1D, 2D, ND            ``mkl_fft``, or ``intel-numpy``/``intel-scipy`` via standard "numpy"/"scipy" engines
+# =======  ====================  =========
