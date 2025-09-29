@@ -205,11 +205,11 @@ fig.tight_layout()
 ###############################################################################
 # Supported Backends
 # ~~~~~~~~~~~~~~~~~~
-# =======  ====================  =========
-# Backend  Supported Dimensions  Dependecy
-# =======  ====================  =========
-# Numpy    1D, 2D, ND            ``numpy`` (included)
-# Scipy    1D, 2D, ND            ``scipy`` (included)
-# FFTW     1D                    ``pyfftw``
-# MKL      1D, 2D, ND            ``mkl_fft``, or ``intel-numpy``/``intel-scipy`` via standard "numpy"/"scipy" engines
-# =======  ====================  =========
+# ==========  ====================  =========
+# Backend     Supported Dimensions  Dependecy
+# ==========  ====================  =========
+# Numpy/CuPy  1D, 2D, ND            ``numpy`` (included)
+# Scipy       1D, 2D, ND            ``scipy`` (included)
+# FFTW        1D                    ``pyfftw``
+# MKL         1D, 2D, ND            ``mkl_fft``, or ``intel-numpy``/``intel-scipy`` via standard "numpy"/"scipy" engines
+# ==========  ====================  =========
