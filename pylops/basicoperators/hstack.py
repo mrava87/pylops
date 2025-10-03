@@ -17,7 +17,7 @@ else:
         LinearOperator as spLinearOperator,
     )
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 from pylops import LinearOperator
 from pylops.basicoperators import MatrixMult
@@ -37,10 +37,20 @@ class HStack(LinearOperator):
 
     Parameters
     ----------
-    ops : :obj:`list`
-        Linear operators to be stacked. Alternatively,
-        :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices can be passed
-        in place of one or more operators.
+    ops : :obj:`list` or :obj:`tuple`
+        Linear operators to be stacked. They can be of type:
+
+        - :obj:`pylops.LinearOperator`: simply added to the stack;
+        - :obj:`numpy.ndarray` or :obj:`scipy.sparse`: converted to
+          :obj:`pylops.MatrixMult` and added to the stack;
+        - :obj:`int`: interpreted as a zero-operator of size ``(nops, int)``,
+          where the number of columns is equivalent to the provided value and
+          ``nops`` is inferred from the number of rows of the other operators
+          in the stack. Whilst a PyLops :obj:`pylops.Zero` operator could
+          be used instead, this option is more efficient as it simply skips
+          any computation.
+
+        Note that the last option is not allowed when ``nproc>1``.
     nproc : :obj:`int`, optional
         Number of processes used to evaluate the N operators in parallel
         using ``multiprocessing``. If ``nproc=1``, work in serial mode.
@@ -69,6 +79,8 @@ class HStack(LinearOperator):
     ------
     ValueError
         If ``ops`` have different number of columns
+    NotImplementedError
+        If any of the elements in ``ops`` is a integer and ``nproc>1``
 
     Notes
     -----
@@ -115,33 +127,51 @@ class HStack(LinearOperator):
 
     def __init__(
         self,
-        ops: Sequence[LinearOperator],
+        ops: Sequence[Union[LinearOperator, NDArray, int]],
         nproc: int = 1,
         forceflat: bool = None,
         inoutengine: Optional[tuple] = None,
         dtype: Optional[str] = None,
     ) -> None:
         self.ops = ops
+
+        # Scan through operators, convert to None if int, and to
+        # MatrixMult if ndarray or sparse matrix, and record number
+        # of columns
         mops = np.zeros(len(ops), dtype=int)
         for iop, oper in enumerate(ops):
-            if not isinstance(oper, (LinearOperator, spLinearOperator)):
-                self.ops[iop] = MatrixMult(oper, dtype=oper.dtype)
-            mops[iop] = self.ops[iop].shape[1]
+            if isinstance(oper, int):
+                if nproc > 1:
+                    raise NotImplementedError(
+                        "Integer operators not allowed when nproc>1"
+                    )
+                self.ops[iop] = None
+                mops[iop] = oper
+            else:
+                if not isinstance(oper, (LinearOperator, spLinearOperator)):
+                    self.ops[iop] = MatrixMult(oper, dtype=oper.dtype)
+                mops[iop] = self.ops[iop].shape[1]
         self.mops = int(mops.sum())
-        nops = [oper.shape[0] for oper in self.ops]
+
+        # Check that all operators have the same number of rows
+        # and set nops
+        nops = [oper.shape[0] for oper in self.ops if oper is not None]
         if len(set(nops)) > 1:
             raise ValueError("operators have different number of rows")
         self.nops = int(nops[0])
         self.mmops = np.insert(np.cumsum(mops), 0, 0)
-        # define dimsd (check if all operators have the same,
+
+        # Define dimsd (check if all operators have the same,
         # otherwise make same as self.nops and forceflat=True)
-        dimsd = [op.dimsd for op in self.ops]
+        dimsd = [op.dimsd for op in self.ops if op is not None]
+
         if len(set(dimsd)) == 1:
             dimsd = dimsd[0]
         else:
             dimsd = (self.nops,)
             forceflat = True
-        # create pool for multiprocessing
+
+        # Create pool for multiprocessing
         self._nproc = nproc
         self.pool = None
         if self.nproc > 1:
@@ -178,11 +208,12 @@ class HStack(LinearOperator):
         )
         y = ncp.zeros(self.nops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_add(
-                oper.matvec(x[self.mmops[iop] : self.mmops[iop + 1]]).squeeze(),
-                y,
-                slice(None, None),
-            )
+            if oper is not None:
+                y = inplace_add(
+                    oper.matvec(x[self.mmops[iop] : self.mmops[iop + 1]]).squeeze(),
+                    y,
+                    slice(None, None),
+                )
         return y
 
     def _rmatvec_serial(self, x: NDArray) -> NDArray:
@@ -193,11 +224,12 @@ class HStack(LinearOperator):
         )
         y = ncp.zeros(self.mops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_set(
-                oper.rmatvec(x).squeeze(),
-                y,
-                slice(self.mmops[iop], self.mmops[iop + 1]),
-            )
+            if oper is not None:
+                y = inplace_set(
+                    oper.rmatvec(x).squeeze(),
+                    y,
+                    slice(self.mmops[iop], self.mmops[iop + 1]),
+                )
         return y
 
     def _matvec_multiproc(self, x: NDArray) -> NDArray:
