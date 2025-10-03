@@ -58,7 +58,7 @@ plt.tight_layout()
 plt.subplots_adjust(top=0.8)
 
 ###############################################################################
-# We now want to *vertically stack* three operators
+# We now want to *vertically stack* two operators
 #
 #    .. math::
 #       \mathbf{D_{Vstack}} =
@@ -90,6 +90,41 @@ axs[1].set_title(r"$y$")
 plt.colorbar(im, ax=axs[1])
 plt.tight_layout()
 plt.subplots_adjust(top=0.8)
+
+###############################################################################
+# If one or more operators in the stack are of type :py:class:`pylops.Zero`,
+# one can alternatively and more efficiently use integer values to define the
+# number of rows of the operator. For example,
+#
+#    .. math::
+#       \mathbf{D_{Vstack}} =
+#        \begin{bmatrix}
+#          \mathbf{D_v}    \\
+#          \mathbf{Z}      \\
+#          \mathbf{D_h}
+#        \end{bmatrix}, \qquad
+#       \mathbf{y} =
+#        \begin{bmatrix}
+#          \mathbf{D_v}\mathbf{x}    \\
+#          \mathbf{0}                \\
+#          \mathbf{D_h}\mathbf{x}
+#        \end{bmatrix}
+#
+# Note that this feature will become very handy when defining :py:class:`pylops.Block`
+# operators with large zero blocks.
+
+# With Zero operator
+Zop = pylops.Zero(Nv * Nh)
+Dstack = pylops.VStack([D2vop, Zop, D2hop])
+
+Y = np.reshape(Dstack * X.ravel(), (Nv * 3, Nh))
+
+# With integer
+D1stack = pylops.VStack([D2vop, Nv * Nh, D2hop])
+
+Y1 = np.reshape(D1stack * X.ravel(), (Nv * 3, Nh))
+
+print("Y == Y1:", np.allclose(Y, Y1))
 
 ###############################################################################
 # Similarly we can now *horizontally stack* three operators

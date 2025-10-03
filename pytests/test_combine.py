@@ -39,6 +39,18 @@ def test_VStack_incosistent_columns(par):
 
 
 @pytest.mark.parametrize("par", [(par1)])
+def test_VStack_integer_multiprocess(par):
+    """Check error is raised if operators with different number of columns
+    are passed to VStack
+    """
+    G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
+    with pytest.raises(NotImplementedError):
+        VStack(
+            [MatrixMult(G1, dtype=par["dtype"]), par["nx"]], dtype=par["dtype"], nproc=2
+        )
+
+
+@pytest.mark.parametrize("par", [(par1)])
 def test_HStack_incosistent_columns(par):
     """Check error is raised if operators with different number of rows
     are passed to VStack
@@ -49,6 +61,18 @@ def test_HStack_incosistent_columns(par):
         HStack(
             [MatrixMult(G1, dtype=par["dtype"]), MatrixMult(G2, dtype=par["dtype"])],
             dtype=par["dtype"],
+        )
+
+
+@pytest.mark.parametrize("par", [(par1)])
+def test_HStack_integer_multiprocess(par):
+    """Check error is raised if operators with different number of columns
+    are passed to VStack
+    """
+    G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
+    with pytest.raises(NotImplementedError):
+        HStack(
+            [MatrixMult(G1, dtype=par["dtype"]), par["ny"]], dtype=par["dtype"], nproc=2
         )
 
 
@@ -105,6 +129,16 @@ def test_VStack(par):
         backend=backend,
     )
 
+    # use integer directly in the definition of the operator
+    V3op = VStack([G1, par["ny"]], dtype=par["dtype"])
+    assert dottest(
+        V3op,
+        2 * par["ny"],
+        par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
 
 @pytest.mark.parametrize("par", [(par2), (par2j)])
 def test_HStack(par):
@@ -147,6 +181,17 @@ def test_HStack(par):
     # use scipy matrix directly in the definition of the operator
     G1 = sp_random(par["ny"], par["nx"], density=0.4).astype("float32")
     H2op = HStack([G1, MatrixMult(G2, dtype=par["dtype"])], dtype=par["dtype"])
+    assert dottest(
+        H2op,
+        par["ny"],
+        2 * par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
+    # use integer directly in the definition of the operator
+    G1 = sp_random(par["ny"], par["nx"], density=0.4).astype("float32")
+    H2op = HStack([G1, par["nx"]], dtype=par["dtype"])
     assert dottest(
         H2op,
         par["ny"],
@@ -216,6 +261,22 @@ def test_Block(par):
         [
             [G11, MatrixMult(G12, dtype=par["dtype"])],
             [MatrixMult(G21, dtype=par["dtype"]), G22],
+        ],
+        dtype=par["dtype"],
+    )
+    assert dottest(
+        B2op,
+        2 * par["ny"],
+        2 * par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
+    # use integer directly in the definition of the operator
+    B2op = Block(
+        [
+            [G11, par["nx"]],
+            [par["nx"], G22],
         ],
         dtype=par["dtype"],
     )
