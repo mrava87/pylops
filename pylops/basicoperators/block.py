@@ -57,9 +57,19 @@ class Block(_Block):
     Parameters
     ----------
     ops : :obj:`list`
-        List of lists of operators to be combined in block fashion.
-        Alternatively, :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices
-        can be passed in place of one or more operators.
+        Linear operators to be stacked. They can be of type:
+
+        - :obj:`pylops.LinearOperator`: simply added to the stack;
+        - :obj:`numpy.ndarray` or :obj:`scipy.sparse`: converted to
+          :obj:`pylops.MatrixMult` and added to the stack;
+        - :obj:`int`: interpreted as a zero-operator of size ``(nops, int)``,
+          where the number of columns is equivalent to the provided value and
+          ``nops`` is inferred from the number of rows of the other operators
+          in the row of the block. Whilst a PyLops :obj:`pylops.Zero` operator
+          could be used instead, this option is more efficient as it simply
+          skips any computation.
+
+        Note that the last option is not allowed when ``nproc>1``.
     nproc : :obj:`int`, optional
         Number of processes used to evaluate the N operators in parallel using
         ``multiprocessing``. If ``nproc=1``, work in serial mode.
