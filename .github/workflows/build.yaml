@@ -25,6 +25,7 @@ jobs:
         python -m pip install --upgrade pip setuptools
         pip install flake8 pytest
         pip install -r requirements-dev.txt
+        pip install -r requirements-pyfftw.txt
         pip install -r requirements-torch.txt
     - name: Install pylops
       run: |

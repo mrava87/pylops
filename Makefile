@@ -22,6 +22,7 @@ install:
 dev-install:
 	make pipcheck
 	$(PIP) install -r requirements-dev.txt &&\
+	$(PIP) install -r requirements-pyfftw.txt &&\
 	$(PIP) install -r requirements-torch.txt && $(PIP) install -e .
 
 dev-install_intel_mkl:
