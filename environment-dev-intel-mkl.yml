@@ -5,7 +5,7 @@ channels:
   - defaults
   - numba
 dependencies:
-  - python==3.12.8
+  - python>=3.10.0
   - pip
   - numpy>=2.0.0
   - scipy>=1.13.0
