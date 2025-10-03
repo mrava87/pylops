@@ -379,7 +379,7 @@ or via pip:
 
    >> pip install pyfftw
 
-The fourth implements Intel MKL FFT via the Python interface `mkl_fft <https://github.com/IntelPython/mkl_fft>`_.
+The fourth implements **Intel MKL FFT** via the Python interface `mkl_fft <https://github.com/IntelPython/mkl_fft>`_.
 This provides access to Intel’s oneMKL Fourier Transform routines, enabling efficient FFT computations with performance
 close to native C/Intel® oneMKL
 
@@ -398,8 +398,12 @@ or via pip:
 .. note::
    `mkl_fft` is not supported on macOS
 
-While the library will work without NumPy with MKL and Intel Python, for maximum performance it is recommended to use
-NumPy built with Intel’s Math Kernel Library (MKL) together with Intel Python.
+Installing ``mkl-fft`` triggers the installation of Intel-optimized versions of `NumPy <https://pypi.org/project/intel-numpy/>`__ and
+`SciPy <https://pypi.org/project/intel-scipy/>`__, which redirects ``numpy.fft`` and ``scipy.fft`` to use MKL FFT routines.
+As a result, all FFT operations and computational backends leverage Intel MKL for optimal performance.
+
+Although the library can run without Intel-optimized NumPy and SciPy, maximum performance is achieved when using NumPy and
+SciPy built with Intel’s Math Kernel Library (MKL) alongside Intel Python.
 
 .. warning::
 
