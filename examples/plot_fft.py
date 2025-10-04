@@ -203,11 +203,17 @@ axs[1][1].axis("tight")
 fig.tight_layout()
 
 ###############################################################################
+# To conclude, we provide a summary table of the different backends
+# supported by :py:class:`pylops.signalprocessing.FFT`,
+# :py:class:`pylops.signalprocessing.FFT2D`
+# and :py:class:`pylops.signalprocessing.FFTND` operators and
+# third-party dependencies are required to be able to use them.
+#
 # Supported Backends
 # ~~~~~~~~~~~~~~~~~~
-# ==========  ====================  =========
-# Backend     Supported Dimensions  Dependecy
-# ==========  ====================  =========
+# ==========  ====================  ==========
+# Backend     Supported Dimensions  Dependency
+# ==========  ====================  ==========
 # Numpy/CuPy  1D, 2D, ND            ``numpy`` (included)
 # Scipy       1D, 2D, ND            ``scipy`` (included)
 # FFTW        1D                    ``pyfftw``
