@@ -16,7 +16,7 @@ import pytest
 
 from pylops.optimization.basic import lsqr
 from pylops.signalprocessing import FFT, FFT2D, FFTND
-from pylops.utils import dottest
+from pylops.utils import dottest, mkl_fft_enabled
 
 
 # Utility function
@@ -227,11 +227,66 @@ par5w = {
     "dtype": np.complex128,
     "kwargs": {},
 }  # nfft<nt, complex input, fftw engine
+par1t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": None,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex128,
+    "kwargs": {},
+}  # nfft=nt, complex input, mkl-fft engine
+par2t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 64,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex64,
+    "kwargs": {},
+}  # nfft>nt, complex input, mkl-fft engine
+par3t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": None,
+    "real": True,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.float64,
+    "kwargs": {},
+}  # nfft=nt, real input, mkl-fft engine
+par4t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 64,
+    "real": True,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.float64,
+    "kwargs": {},
+}  # nfft>nt, real input, mkl-fft engine
+par5t = {
+    "nt": 41,
+    "nx": 31,
+    "ny": 10,
+    "nfft": 16,
+    "real": False,
+    "engine": "mkl_fft",
+    "ifftshift_before": False,
+    "dtype": np.complex128,
+    "kwargs": {},
+}  # nfft<nt, complex input, mkl-fft engine
 
 np.random.seed(5)
 
 
-@pytest.mark.parametrize("par", [(par1)])
+@pytest.mark.parametrize("par", [par1])
 def test_unknown_engine(par):
     """Check error is raised if unknown engine is passed"""
     with pytest.raises(NotImplementedError):
@@ -256,7 +311,7 @@ par_lists_fft_small_real = dict(
     dtype_precision=dtype_precision,
     norm=["ortho", "none", "1/n"],
     ifftshift_before=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
 pars_fft_small_real = [
@@ -267,6 +322,8 @@ pars_fft_small_real = [
 
 @pytest.mark.parametrize("par", pars_fft_small_real)
 def test_FFT_small_real(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
 
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
@@ -330,7 +387,7 @@ par_lists_fft_random_real = dict(
     ],
     dtype_precision=dtype_precision,
     ifftshift_before=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_random_real = [
     dict(zip(par_lists_fft_random_real.keys(), value))
@@ -344,6 +401,8 @@ pars_fft_random_real = [
 )
 @pytest.mark.parametrize("par", pars_fft_random_real)
 def test_FFT_random_real(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
 
     shape = par["shape"]
@@ -390,7 +449,7 @@ par_lists_fft_small_cpx = dict(
     norm=["ortho", "none", "1/n"],
     ifftshift_before=[False, True],
     fftshift_after=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_small_cpx = [
     dict(zip(par_lists_fft_small_cpx.keys(), value))
@@ -400,6 +459,8 @@ pars_fft_small_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft_small_cpx)
 def test_FFT_small_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -462,7 +523,7 @@ par_lists_fft_random_cpx = dict(
     dtype_precision=dtype_precision_cpx1,
     ifftshift_before=[False, True],
     fftshift_after=[False, True],
-    engine=["numpy", "fftw", "scipy"],
+    engine=["numpy", "fftw", "scipy", "mkl_fft"],
 )
 pars_fft_random_cpx = [
     dict(zip(par_lists_fft_random_cpx.keys(), value))
@@ -472,6 +533,8 @@ pars_fft_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft_random_cpx)
 def test_FFT_random_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -545,7 +608,7 @@ par_lists_fft2d_random_real = dict(
     ],
     dtype_precision=dtype_precision,
     ifftshift_before=[False, True],
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fft2d_random_real = [
     dict(zip(par_lists_fft2d_random_real.keys(), value))
@@ -559,6 +622,8 @@ pars_fft2d_random_real = [
 )
 @pytest.mark.parametrize("par", pars_fft2d_random_real)
 def test_FFT2D_random_real(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -609,7 +674,7 @@ par_lists_fft2d_random_cpx = dict(
     dtype_precision=dtype_precision_cpx1,
     ifftshift_before=itertools.product([False, True], [False, True]),
     fftshift_after=itertools.product([False, True], [False, True]),
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
 pars_fft2d_random_cpx = [
@@ -620,6 +685,8 @@ pars_fft2d_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft2d_random_cpx)
 def test_FFT2D_random_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -691,7 +758,7 @@ par_lists_fftnd_random_real = dict(
         npp.random.randint(1, 5, size=(4,)),
     ],
     dtype_precision=dtype_precision,
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fftnd_random_real = [
     dict(zip(par_lists_fftnd_random_real.keys(), value))
@@ -701,6 +768,8 @@ pars_fftnd_random_real = [
 
 @pytest.mark.parametrize("par", pars_fftnd_random_real)
 def test_FFTND_random_real(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     if backend == "numpy" or (backend == "cupy" and par["engine"] == "numpy"):
         shape = par["shape"]
@@ -751,7 +820,7 @@ par_lists_fftnd_random_cpx = dict(
         npp.random.randint(1, 5, size=(5,)),
     ],
     dtype_precision=dtype_precision_cpx1,
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 # Generate all combinations of the above parameters
 pars_fftnd_random_cpx = [
@@ -762,6 +831,8 @@ pars_fftnd_random_cpx = [
 
 @pytest.mark.parametrize("par", pars_fftnd_random_cpx)
 def test_FFTND_random_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     shape = par["shape"]
     dtype, decimal = par["dtype_precision"]
@@ -828,7 +899,7 @@ def test_FFTND_random_complex(par):
 par_lists_fft2dnd_small_cpx = dict(
     dtype_precision=dtype_precision_cpx,
     norm=["ortho", "none", "1/n"],
-    engine=["numpy", "scipy"],
+    engine=["numpy", "scipy", "mkl_fft"],
 )
 pars_fft2dnd_small_cpx = [
     dict(zip(par_lists_fft2dnd_small_cpx.keys(), value))
@@ -838,6 +909,8 @@ pars_fft2dnd_small_cpx = [
 
 @pytest.mark.parametrize("par", pars_fft2dnd_small_cpx)
 def test_FFT2D_small_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -888,6 +961,8 @@ def test_FFT2D_small_complex(par):
 
 @pytest.mark.parametrize("par", pars_fft2dnd_small_cpx)
 def test_FFTND_small_complex(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     dtype, decimal = par["dtype_precision"]
     norm = par["norm"]
@@ -955,9 +1030,16 @@ def test_FFTND_small_complex(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_1dsignal(par):
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     """Dot-test and inversion for FFT operator for 1d signal"""
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
@@ -1064,12 +1146,19 @@ def test_FFT_1dsignal(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_2dsignal(par):
     """Dot-test and inversion for fft operator for 2d signal
     (fft on single dimension)
     """
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1274,12 +1363,19 @@ def test_FFT_2dsignal(par):
         (par3w),
         (par4w),
         (par5w),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT_3dsignal(par):
     """Dot-test and inversion for fft operator for 3d signal
     (fft on single dimension)
     """
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1496,10 +1592,18 @@ def test_FFT_3dsignal(par):
         (par3s),
         (par4s),
         (par5s),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
+        (par5t),
     ],
 )
 def test_FFT2D(par):
     """Dot-test and inversion for FFT2D operator for 2d signal"""
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 
@@ -1626,10 +1730,17 @@ def test_FFT2D(par):
         (par3s),
         (par4s),
         (par5s),
+        (par1t),
+        (par2t),
+        (par3t),
+        (par4t),
+        (par5t),
     ],
 )
 def test_FFT3D(par):
     """Dot-test and inversion for FFTND operator for 3d signal"""
+    if par["engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(5)
     decimal = 3 if np.real(np.ones(1, par["dtype"])).dtype == np.float32 else 8
 

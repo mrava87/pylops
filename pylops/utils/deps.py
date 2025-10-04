@@ -11,6 +11,7 @@ __all__ = [
     "sympy_enabled",
     "torch_enabled",
     "pytensor_enabled",
+    "mkl_fft_enabled",
 ]
 
 import os
@@ -19,7 +20,7 @@ from typing import Optional
 
 
 # error message at import of available package
-def cupy_import(message: Optional[str] = None) -> str:
+def cupy_import(message: Optional[str] = None) -> str | None:
     # detect if cupy is available and the user is expecting to be used
     cupy_test = (
         util.find_spec("cupy") is not None and int(os.getenv("CUPY_PYLOPS", 1)) == 1
@@ -53,7 +54,7 @@ def cupy_import(message: Optional[str] = None) -> str:
     return cupy_message
 
 
-def jax_import(message: Optional[str] = None) -> str:
+def jax_import(message: Optional[str] = None) -> str | None:
     jax_test = (
         util.find_spec("jax") is not None and int(os.getenv("JAX_PYLOPS", 1)) == 1
     )
@@ -81,7 +82,7 @@ def jax_import(message: Optional[str] = None) -> str:
     return jax_message
 
 
-def devito_import(message: Optional[str] = None) -> str:
+def devito_import(message: Optional[str] = None) -> str | None:
     if devito_enabled:
         try:
             import_module("devito")  # noqa: F401
@@ -98,7 +99,7 @@ def devito_import(message: Optional[str] = None) -> str:
     return devito_message
 
 
-def dtcwt_import(message: Optional[str] = None) -> str:
+def dtcwt_import(message: Optional[str] = None) -> str | None:
     if dtcwt_enabled:
         try:
             import dtcwt  # noqa: F401
@@ -115,7 +116,7 @@ def dtcwt_import(message: Optional[str] = None) -> str:
     return dtcwt_message
 
 
-def numba_import(message: Optional[str] = None) -> str:
+def numba_import(message: Optional[str] = None) -> str | None:
     if numba_enabled:
         try:
             import_module("numba")  # noqa: F401
@@ -134,7 +135,7 @@ def numba_import(message: Optional[str] = None) -> str:
     return numba_message
 
 
-def pyfftw_import(message: Optional[str] = None) -> str:
+def pyfftw_import(message: Optional[str] = None) -> str | None:
     if pyfftw_enabled:
         try:
             import_module("pyfftw")  # noqa: F401
@@ -153,7 +154,7 @@ def pyfftw_import(message: Optional[str] = None) -> str:
     return pyfftw_message
 
 
-def pywt_import(message: Optional[str] = None) -> str:
+def pywt_import(message: Optional[str] = None) -> str | None:
     if pywt_enabled:
         try:
             import_module("pywt")  # noqa: F401
@@ -172,7 +173,7 @@ def pywt_import(message: Optional[str] = None) -> str:
     return pywt_message
 
 
-def skfmm_import(message: Optional[str] = None) -> str:
+def skfmm_import(message: Optional[str] = None) -> str | None:
     if skfmm_enabled:
         try:
             import_module("skfmm")  # noqa: F401
@@ -190,7 +191,7 @@ def skfmm_import(message: Optional[str] = None) -> str:
     return skfmm_message
 
 
-def spgl1_import(message: Optional[str] = None) -> str:
+def spgl1_import(message: Optional[str] = None) -> str | None:
     if spgl1_enabled:
         try:
             import_module("spgl1")  # noqa: F401
@@ -207,7 +208,7 @@ def spgl1_import(message: Optional[str] = None) -> str:
     return spgl1_message
 
 
-def sympy_import(message: Optional[str] = None) -> str:
+def sympy_import(message: Optional[str] = None) -> str | None:
     if sympy_enabled:
         try:
             import_module("sympy")  # noqa: F401
@@ -224,7 +225,7 @@ def sympy_import(message: Optional[str] = None) -> str:
     return sympy_message
 
 
-def pytensor_import(message: Optional[str] = None) -> str:
+def pytensor_import(message: Optional[str] = None) -> str | None:
     if pytensor_enabled:
         try:
             import_module("pytensor")  # noqa: F401
@@ -239,6 +240,27 @@ def pytensor_import(message: Optional[str] = None) -> str:
             f'"pip install pytensor" or "conda install -c conda-forge pytensor".'
         )
     return pytensor_message
+
+
+def mkl_fft_import(message: Optional[str]) -> str | None:
+    if mkl_fft_enabled:
+        try:
+            import_module("mkl_fft")  # noqa: F401
+            mkl_fft_message = None
+        except Exception as e:
+            mkl_fft_message = f"Failed to import mkl_fft (error:{e}), use numpy."
+    else:
+        mkl_fft_message = (
+            "mkl_fft not available, reverting to numpy. "
+            "In order to be able to use "
+            f"{message} run "
+            '"pip install --index-url '
+            "https://software.repos.intel.com/python/pypi "
+            '--extra-index-url https://pypi.org/simple mkl_fft" '
+            'or "conda install -c https://software.repos.intel.com/python/conda '
+            '-c conda-forge mkl_fft".'
+        )
+    return mkl_fft_message
 
 
 # Set package availability booleans
@@ -264,3 +286,4 @@ spgl1_enabled = util.find_spec("spgl1") is not None
 sympy_enabled = util.find_spec("sympy") is not None
 torch_enabled = util.find_spec("torch") is not None
 pytensor_enabled = util.find_spec("pytensor") is not None
+mkl_fft_enabled = util.find_spec("mkl_fft") is not None

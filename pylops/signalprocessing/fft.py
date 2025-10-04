@@ -16,9 +16,14 @@ from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 pyfftw_message = deps.pyfftw_import("the fft module")
+mkl_fft_message = deps.mkl_fft_import("the fft module")
 
 if pyfftw_message is None:
     import pyfftw
+
+if mkl_fft_message is None:
+    import mkl_fft.interfaces.scipy_fft as mkl_backend
+    from mkl_fft.interfaces import _float_utils
 
 logger = logging.getLogger(__name__)
 
@@ -335,7 +340,7 @@ class _FFT_fftw(_BaseFFT):
         elif self.doifftpad:
             x = np.take(x, range(0, self.nfft), axis=self.axis)
 
-        # self.fftplan() always uses byte-alligned self.x as input array and
+        # self.fftplan() always uses byte-aligned self.x as input array and
         # returns self.y as output array. As such, self.x must be copied so as
         # not to be overwritten on a subsequent call to _matvec.
         np.copyto(self.x, x)
@@ -357,7 +362,7 @@ class _FFT_fftw(_BaseFFT):
         if self.fftshift_after:
             x = np.fft.ifftshift(x, axes=self.axis)
 
-        # self.ifftplan() always uses byte-alligned self.y as input array.
+        # self.ifftplan() always uses byte-aligned self.y as input array.
         # We copy here so we don't need to copy again in the case of `real=True`,
         # which only performs operations that preserve byte-allignment.
         np.copyto(self.y, x)
@@ -392,6 +397,98 @@ class _FFT_fftw(_BaseFFT):
         if self.norm is _FFTNorms.ORTHO:
             return self._rmatvec(y)
         return self._rmatvec(y) / self._scale
+
+
+class _FFT_mklfft(_BaseFFT):
+    """One-dimensional Fast-Fourier Transform using mkl_fft"""
+
+    def __init__(
+        self,
+        dims: Union[int, InputDimsLike],
+        axis: int = -1,
+        nfft: Optional[int] = None,
+        sampling: float = 1.0,
+        norm: str = "ortho",
+        real: bool = False,
+        ifftshift_before: bool = False,
+        fftshift_after: bool = False,
+        dtype: DTypeLike = "complex128",
+        **kwargs_fft,
+    ) -> None:
+        super().__init__(
+            dims=dims,
+            axis=axis,
+            nfft=nfft,
+            sampling=sampling,
+            norm=norm,
+            real=real,
+            ifftshift_before=ifftshift_before,
+            fftshift_after=fftshift_after,
+            dtype=dtype,
+        )
+        self._kwargs_fft = kwargs_fft
+        self._norm_kwargs = {"norm": None}
+        if self.norm is _FFTNorms.ORTHO:
+            self._norm_kwargs["norm"] = "ortho"
+            self._scale = np.sqrt(1 / self.nfft)
+        elif self.norm is _FFTNorms.NONE:
+            self._scale = self.nfft
+        elif self.norm is _FFTNorms.ONE_OVER_N:
+            self._scale = 1.0 / self.nfft
+
+    @reshaped
+    def _matvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
+        if self.ifftshift_before:
+            x = scipy.fft.ifftshift(x, axes=self.axis)
+        if not self.clinear:
+            x = np.real(x)
+        if self.real:
+            y = mkl_backend.rfft(x, n=self.nfft, axis=self.axis, **self._norm_kwargs)
+            y = np.swapaxes(y, -1, self.axis)
+            y[..., 1 : 1 + (self.nfft - 1) // 2] *= np.sqrt(2)
+            y = np.swapaxes(y, self.axis, -1)
+        else:
+            y = mkl_backend.fft(x, n=self.nfft, axis=self.axis, **self._norm_kwargs)
+        if self.norm is _FFTNorms.ONE_OVER_N:
+            y *= self._scale
+        if self.fftshift_after:
+            y = scipy.fft.fftshift(y, axes=self.axis)
+        return y
+
+    @reshaped
+    def _rmatvec(self, x: NDArray) -> NDArray:
+        x = _float_utils._downcast_float128_array(x)
+        x = _float_utils._upcast_float16_array(x)
+        if self.fftshift_after:
+            x = scipy.fft.ifftshift(x, axes=self.axis)
+        if self.real:
+            x = x.copy()
+            x = np.swapaxes(x, -1, self.axis)
+            x[..., 1 : 1 + (self.nfft - 1) // 2] /= np.sqrt(2)
+            x = np.swapaxes(x, self.axis, -1)
+            y = mkl_backend.irfft(x, n=self.nfft, axis=self.axis, **self._norm_kwargs)
+        else:
+            y = mkl_backend.ifft(x, n=self.nfft, axis=self.axis, **self._norm_kwargs)
+        if self.norm is _FFTNorms.NONE:
+            y *= self._scale
+
+        if self.nfft > self.dims[self.axis]:
+            y = np.take(y, range(0, self.dims[self.axis]), axis=self.axis)
+        elif self.nfft < self.dims[self.axis]:
+            y = np.pad(y, self.ifftpad)
+
+        if not self.clinear:
+            y = np.real(y)
+        if self.ifftshift_before:
+            y = scipy.fft.fftshift(y, axes=self.axis)
+        return y
+
+    def __truediv__(self, y):
+        if self.norm is not _FFTNorms.ORTHO:
+            return self._rmatvec(y) / self._scale
+        return self._rmatvec(y)
 
 
 def FFT(
@@ -481,7 +578,7 @@ def FFT(
         frequencies are arranged from zero to largest positive, and then from negative
         Nyquist to the frequency bin before zero.
     engine : :obj:`str`, optional
-        Engine used for fft computation (``numpy``, ``fftw``, or ``scipy``). Choose
+        Engine used for fft computation (``numpy``, ``fftw``, ``scipy`` or ``mkl_fft``). Choose
         ``numpy`` when working with cupy and jax arrays.
 
         .. note:: Since version 1.17.0, accepts "scipy".
@@ -534,7 +631,7 @@ def FFT(
         - If ``dims`` is provided and ``axis`` is bigger than ``len(dims)``.
         - If ``norm`` is not one of "ortho", "none", or "1/n".
     NotImplementedError
-        If ``engine`` is neither ``numpy``, ``fftw``, nor ``scipy``.
+        If ``engine`` is neither ``numpy``, ``fftw``, ``scipy`` nor ``mkl_fft``.
 
     See Also
     --------
@@ -579,9 +676,28 @@ def FFT(
             dtype=dtype,
             **kwargs_fft,
         )
-    elif engine == "numpy" or (engine == "fftw" and pyfftw_message is not None):
+    elif engine == "mkl_fft" and mkl_fft_message is None:
+        f = _FFT_mklfft(
+            dims,
+            axis=axis,
+            nfft=nfft,
+            sampling=sampling,
+            norm=norm,
+            real=real,
+            ifftshift_before=ifftshift_before,
+            fftshift_after=fftshift_after,
+            dtype=dtype,
+            **kwargs_fft,
+        )
+    elif (
+        engine == "numpy"
+        or (engine == "fftw" and pyfftw_message is not None)
+        or (engine == "mkl_fft" and mkl_fft_message is not None)
+    ):
         if engine == "fftw" and pyfftw_message is not None:
             logger.warning(pyfftw_message)
+        if engine == "mkl_fft" and mkl_fft_message is not None:
+            logger.warning(mkl_fft_message)
         f = _FFT_numpy(
             dims,
             axis=axis,
@@ -608,6 +724,6 @@ def FFT(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, fftw or scipy")
+        raise NotImplementedError("engine must be numpy, scipy, fftw, or mkl_fft")
     f.name = name
     return f
