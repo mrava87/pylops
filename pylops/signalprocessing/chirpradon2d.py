@@ -22,11 +22,11 @@ class ChirpRadon2D(LinearOperator):
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    haxis : :obj:`np.ndarray`
+    haxis : :obj:`numpy.ndarray`
         Spatial axis
-    pmax : :obj:`np.ndarray`
+    pmax : :obj:`numpy.ndarray`
         Maximum slope defined as :math:`\tan` of maximum stacking angle in
         :math:`x` direction :math:`p_\text{max} = \tan(\alpha_{x, \text{max}})`.
         If one operates in terms of minimum velocity :math:`c_0`, set

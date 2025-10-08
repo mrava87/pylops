@@ -41,9 +41,9 @@ def _slidingsteps(
 
     Returns
     -------
-    starts : :obj:`np.ndarray`
+    starts : :obj:`numpy.ndarray`
         Start indices
-    ends : :obj:`np.ndarray`
+    ends : :obj:`numpy.ndarray`
         End indices
 
     """

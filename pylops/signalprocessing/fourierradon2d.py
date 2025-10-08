@@ -32,11 +32,11 @@ class FourierRadon2D(LinearOperator):
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    haxis : :obj:`np.ndarray`
+    haxis : :obj:`numpy.ndarray`
         Spatial axis
-    pxaxis : :obj:`np.ndarray`
+    pxaxis : :obj:`numpy.ndarray`
         Axis of scanning variable :math:`p_x` of parametric curve
     nfft : :obj:`int`
         Number of samples in Fourier transform

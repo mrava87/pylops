@@ -68,9 +68,9 @@ def _indices_3d(
     ----------
     f : :obj:`func`
         Function computing values of parametric line for stacking
-    y : :obj:`np.ndarray`
+    y : :obj:`numpy.ndarray`
         Slow spatial axis (must be symmetrical around 0 and with sampling 1)
-    x : :obj:`np.ndarray`
+    x : :obj:`numpy.ndarray`
         Fast spatial axis (must be symmetrical around 0 and with sampling 1)
     py : :obj:`float`
         Slowness/curvature in slow axis
@@ -86,11 +86,11 @@ def _indices_3d(
 
     Returns
     -------
-    sscan : :obj:`np.ndarray`
+    sscan : :obj:`numpy.ndarray`
         Spatial indices
-    tscan : :obj:`np.ndarray`
+    tscan : :obj:`numpy.ndarray`
         Time indices
-    dtscan : :obj:`np.ndarray`
+    dtscan : :obj:`numpy.ndarray`
         Decimal time variations for interpolation
 
     """
@@ -184,15 +184,15 @@ def Radon3D(
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    hyaxis : :obj:`np.ndarray`
+    hyaxis : :obj:`numpy.ndarray`
         Slow spatial axis
-    hxaxis : :obj:`np.ndarray`
+    hxaxis : :obj:`numpy.ndarray`
         False spatial axis
-    pyaxis : :obj:`np.ndarray`
+    pyaxis : :obj:`numpy.ndarray`
         Axis of scanning variable :math:`p_y` of parametric curve
-    pxaxis : :obj:`np.ndarray`
+    pxaxis : :obj:`numpy.ndarray`
         Axis of scanning variable :math:`p_x` of parametric curve
     kind : :obj:`str`, optional
         Curve to be used for stacking/spreading (``linear``, ``parabolic``,

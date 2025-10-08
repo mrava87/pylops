@@ -28,13 +28,13 @@ class ChirpRadon3D(LinearOperator):
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    hxaxis : :obj:`np.ndarray`
+    hxaxis : :obj:`numpy.ndarray`
         Fast patial axis
-    hyaxis : :obj:`np.ndarray`
+    hyaxis : :obj:`numpy.ndarray`
         Slow spatial axis
-    pmax : :obj:`np.ndarray`
+    pmax : :obj:`numpy.ndarray`
         Two element array :math:`(p_{y,\text{max}}, p_{x,\text{max}})` of :math:`\tan`
         of maximum stacking angles in :math:`y` and :math:`x` directions
         :math:`(\tan(\alpha_{y,\text{max}}), \tan(\alpha_{x,\text{max}}))`. If one operates
