@@ -152,7 +152,7 @@ def PoststackLinearModelling(
 
     Parameters
     ----------
-    wav : :obj:`np.ndarray`
+    wav : :obj:`numpy.ndarray`
         Wavelet in time domain (must have odd number of elements
         and centered to zero). If 1d, assume stationary wavelet for the entire
         time axis. If 2d, use as non-stationary wavelet (user must provide
@@ -244,15 +244,15 @@ def PoststackInversion(
 
     Parameters
     ----------
-    data : :obj:`np.ndarray`
+    data : :obj:`numpy.ndarray`
         Band-limited seismic post-stack data of size
         :math:`[n_{t_0}\,(\times n_x \times n_y)]`
-    wav : :obj:`np.ndarray`
+    wav : :obj:`numpy.ndarray`
         Wavelet in time domain (must have odd number of elements
         and centered to zero). If 1d, assume stationary wavelet for the entire
         time axis. If 2d of size :math:`[n_{t_0} \times n_h]` use as
         non-stationary wavelet
-    m0 : :obj:`np.ndarray`, optional
+    m0 : :obj:`numpy.ndarray`, optional
         Background model of size :math:`[n_{t_0}\,(\times n_x \times n_y)]`
     explicit : :obj:`bool`, optional
         Create a chained linear operator (``False``, preferred for large data)
@@ -279,9 +279,9 @@ def PoststackInversion(
 
     Returns
     -------
-    minv : :obj:`np.ndarray`
+    minv : :obj:`numpy.ndarray`
         Inverted model of size :math:`[n_{t_0}\,(\times n_x \times n_y)]`
-    datar : :obj:`np.ndarray`
+    datar : :obj:`numpy.ndarray`
         Residual data (i.e., data - background data) of
         size :math:`[n_{t_0}\,(\times n_x \times n_y)]`
 
