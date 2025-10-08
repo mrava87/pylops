@@ -399,7 +399,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         nouter : :obj:`int`, optional
             Number of outer iterations
@@ -599,7 +599,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
         engine : :obj:`str`, optional
             .. versionadded:: 2.6.0
@@ -618,7 +618,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
 
         """
@@ -651,7 +651,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS. Provide
             ``None`` to initialize internally as zero vector
         nouter : :obj:`int`, optional
@@ -677,7 +677,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -748,9 +748,9 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[N \times 1]`. If ``None``, initialize
             internally as zero vector
         nouter : :obj:`int`, optional
@@ -795,7 +795,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[N \times 1]`
 
         """
@@ -971,7 +971,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         niter_outer : :obj:`int`, optional
             Number of iterations of outer loop
@@ -1047,7 +1047,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1066,7 +1066,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
         cols : :obj:`list`
             Current list of chosen elements
@@ -1170,7 +1170,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1187,7 +1187,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         cols : :obj:`list`
             Current list of chosen elements
@@ -1222,7 +1222,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1231,7 +1231,7 @@ class OMP(Solver):
 
         Returns
         -------
-        xfin : :obj:`np.ndarray`
+        xfin : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1265,7 +1265,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         niter_outer : :obj:`int`, optional
             Number of iterations of outer loop
@@ -1307,7 +1307,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         niter_outer : :obj:`int`
             Number of effective outer iterations
@@ -1501,7 +1501,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]` or :math:`[N \times R]` where
             a solution for multiple right-hand-side is found when ``R>1``.
         x0: :obj:`numpy.ndarray`, optional
@@ -1546,7 +1546,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial model vector
 
         """
@@ -1698,14 +1698,14 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
         xupdate : :obj:`float`
             Norm of the update
@@ -1814,7 +1814,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -1828,7 +1828,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1894,7 +1894,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         x0: :obj:`numpy.ndarray`, optional
             Initial guess
@@ -1942,7 +1942,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         niter : :obj:`int`
             Number of effective iterations
@@ -2069,18 +2069,18 @@ class FISTA(ISTA):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
-        z : :obj:`np.ndarray`
+        z : :obj:`numpy.ndarray`
             Current auxiliary model vector to be updated by a step of ISTA
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
-        z : :obj:`np.ndarray`
+        z : :obj:`numpy.ndarray`
             Updated auxiliary model vector
         xupdate : :obj:`float`
             Norm of the update
@@ -2198,7 +2198,7 @@ class FISTA(ISTA):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -2212,7 +2212,7 @@ class FISTA(ISTA):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -2325,7 +2325,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         SOp : :obj:`pylops.LinearOperator`, optional
             Sparsifying transform
@@ -2369,7 +2369,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver.
             If ``None``, x is assumed to be a zero vector
         show : :obj:`bool`, optional
@@ -2454,7 +2454,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         x0 : :obj:`numpy.ndarray`, optional
             Initial guess
@@ -2701,11 +2701,11 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         RegsL1 : :obj:`list`
             :math:`L_1` regularization operators
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter_outer : :obj:`int`, optional
@@ -2751,7 +2751,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial guess of size :math:`[N \times 1]`
 
         """
@@ -2827,7 +2827,7 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         engine : :obj:`str`, optional
             Solver to use (``scipy`` or ``pylops``)
@@ -2844,7 +2844,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
 
         """
@@ -2936,7 +2936,7 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS
         engine : :obj:`str`, optional
             Solver to use (``scipy`` or ``pylops``)
@@ -2955,7 +2955,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -2992,7 +2992,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        xfin : :obj:`np.ndarray`
+        xfin : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -3029,11 +3029,11 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         RegsL1 : :obj:`list`
             :math:`L_1` regularization operators
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter_outer : :obj:`int`, optional
@@ -3091,7 +3091,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         iiter : :obj:`int`
             Iteration number of outer loop upon termination

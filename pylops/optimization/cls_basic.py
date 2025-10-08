@@ -34,6 +34,32 @@ class CG(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times N]`
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        True if the input data is a JAX array. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    r : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    c : :obj:`numpy.ndarray`
+        Conjugate direction vector of size :math:`[N \times 1]`. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    c1 : :obj:`numpy.ndarray`
+        Pre-allocated vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    kold : :obj:`float`
+        Squared norm of the residual at previous iteration. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+
     Notes
     -----
     Solve the :math:`\mathbf{y} = \mathbf{Op}\,\mathbf{x}` problem using conjugate gradient
@@ -113,9 +139,9 @@ class CG(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[N \times 1]`. If ``None``, initialize
             internally as zero vector
         niter : :obj:`int`, optional
@@ -136,7 +162,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial guess of size :math:`[N \times 1]`
 
         """
@@ -181,14 +207,14 @@ class CG(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of CG
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
 
         """
@@ -228,7 +254,7 @@ class CG(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -242,7 +268,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -297,9 +323,9 @@ class CG(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[N \times 1]`. If ``None``, initialize
             internally as zero vector
         niter : :obj:`int`, optional
@@ -322,7 +348,7 @@ class CG(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[N \times 1]`
         iit : :obj:`int`
             Number of executed iterations
@@ -348,6 +374,47 @@ class CGLS(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        True if the input data is a JAX array. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    s : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[N \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    c : :obj:`numpy.ndarray`
+        Conjugate direction vector of size :math:`[N \times 1]`. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    q : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    c1 : :obj:`numpy.ndarray`
+        Pre-allocated vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    x1 : :obj:`numpy.ndarray`
+        Pre-allocated vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    r : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    kold : :obj:`float`
+        Squared norm of the residual at previous iteration. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    cost1 : :obj:`list`
+        History of the L2 norm of the entire objective function (residual
+        plus regularization). Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Notes
     -----
@@ -436,9 +503,9 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter : :obj:`int`, optional
@@ -460,12 +527,12 @@ class CGLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial guess of size :math:`[N \times 1]`
 
         """
         self.y = y
-        self.damp = damp**2
+        self.damp = damp**2.0
         self.tol = tol
         self.niter = niter
 
@@ -505,7 +572,9 @@ class CGLS(Solver):
         self.cost.append(float(self.ncp.linalg.norm(self.s)))
         self.cost1.append(
             float(
-                self.ncp.sqrt(self.cost[0] ** 2 + damp * self.ncp.abs(x.dot(x.conj())))
+                self.ncp.sqrt(
+                    self.cost[0] ** 2.0 + damp * self.ncp.abs(x.dot(x.conj()))
+                )
             )
         )
         self.iiter = 0
@@ -520,7 +589,7 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of CG
         show : :obj:`bool`, optional
             Display iteration log
@@ -562,7 +631,7 @@ class CGLS(Solver):
         self.cost1.append(
             self.ncp.sqrt(
                 float(
-                    self.cost[self.iiter] ** 2
+                    self.cost[self.iiter] ** 2.0
                     + self.damp * self.ncp.abs(x.dot(x.conj()))
                 )
             )
@@ -582,7 +651,7 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CGLS
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -596,7 +665,7 @@ class CGLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -661,9 +730,9 @@ class CGLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`
+        x0 : :obj:`numpy.ndarray`
             Initial guess  of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter : :obj:`int`, optional
@@ -689,7 +758,7 @@ class CGLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
         Estimated model of size :math:`[M \times 1]`
         istop : :obj:`int`
             Gives the reason for termination
@@ -743,6 +812,89 @@ class LSQR(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        True if the input data is a JAX array. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    var : :obj:`numpy.ndarray` or :obj:`None`
+        Variance vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``. Set to
+        ``None`` if ``calc_var=False``.
+    istop : :obj:`int`
+        Gives the reason for termination. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    ctol : :obj:`float`
+        Tolerance on the condition number of the augmented system (defined as
+        reciprocal of ``conlim`). Available only after ``setup`` is called
+        and updated at each call to ``step``.
+    anorm : :obj:`float`
+        Estimate of Frobenius norm of :math:`\overline{\mathbf{Op}} =
+        [\mathbf{Op} \; \epsilon \mathbf{I}]`. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    acond : :obj:`float`
+        Estimate of :math:`\cond(\overline{\mathbf{Op}})`. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    arnorm : :obj:`float`
+        Estimate of norm of :math:`\cond(\mathbf{Op}^H\mathbf{r}-
+        \epsilon^2\mathbf{x})`. Available only after ``step`` is
+        called for the first time and updated at each subsequent call to ``step``.
+    xnorm : :obj:`float`
+        :math:`||\mathbf{x}||_2`. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    u : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[N \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    v : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    w : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    dk : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    w1 : :obj:`numpy.ndarray`
+        Temporary vector of size :math:`[M \times 1]`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    alfa : :obj:`float`
+        :math:`\alpha` parameter of the bidiagonalization process. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    beta : :obj:`float`
+        :math:`\beta` parameter of the bidiagonalization process. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    arnorm0 : :obj:`float`
+        Initial value of ``arnorm``. Available only after ``setup`` is
+        called.
+    rhobar : :obj:`float`
+        Parameter of the QR factorization of the bidiagonal matrix.
+        Available only after ``setup`` is called and updated at each
+        call to ``step``.
+    phibar : :obj:`float`
+        Parameter of the QR factorization of the bidiagonal matrix.
+        Available only after ``setup`` is called and updated at each
+        call to ``step``.
+    bnorm : :obj:`float`
+        :math:`||\mathbf{y}||_2`. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    rnorm : :obj:`float`
+        :math:`||\mathbf{r}||_2`. Available only after ``setup`` is
+        called and updated at each call to ``step``.
+    r1norm : :obj:`float`
+        :math:`||\mathbf{r}||_2`, where
+        :math:`\mathbf{r} = \mathbf{y} - \mathbf{Op}\,\mathbf{x}`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    r2norm : :obj:`float`
+        :math:`\sqrt{\mathbf{r}^T\mathbf{r}  + \epsilon^2 \mathbf{x}^T\mathbf{x}}`.
+        Equal to ``r1norm`` if :math:`\epsilon=0`. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`numpy.ndarray`, optional
+        History of r1norm through iterations
 
     Notes
     -----
@@ -871,9 +1023,9 @@ class LSQR(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         damp : :obj:`float`, optional
@@ -906,7 +1058,7 @@ class LSQR(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial guess of size :math:`[N \times 1]`
 
         """
@@ -922,7 +1074,7 @@ class LSQR(Solver):
         self.isjax = get_module_name(self.ncp) == "jax"
         self._setpreallocate(preallocate)
 
-        m, n = self.Op.shape
+        _, n = self.Op.shape
 
         # initialize solver
         self.var = None
@@ -936,7 +1088,7 @@ class LSQR(Solver):
             self.ctol = 1.0 / conlim
         self.anorm = 0
         self.acond = 0
-        self.dampsq = damp**2
+        self.dampsq = damp**2.0
         self.ddnorm = 0
         self.res2 = 0
         self.xnorm = 0
@@ -1011,14 +1163,14 @@ class LSQR(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of CG
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1084,7 +1236,7 @@ class LSQR(Solver):
             self.ncp.add(x, self.w1, out=x)
             self.ncp.multiply(self.w, self.t2, out=self.w)
             self.ncp.add(self.v, self.w, out=self.w)
-        self.ddnorm = self.ddnorm + self.ncp.linalg.norm(self.dk) ** 2
+        self.ddnorm = self.ddnorm + self.ncp.linalg.norm(self.dk) ** 2.0
         if self.calc_var:
             self.var = self.var + to_numpy_conditional(
                 self.var, self.ncp.dot(self.dk, self.dk)
@@ -1097,7 +1249,7 @@ class LSQR(Solver):
         self.gambar = -self.cs2 * self.rho
         self.rhs = self.phi - self.delta * self.z
         self.zbar = self.rhs / self.gambar
-        self.xnorm = self.ncp.sqrt(self.xxnorm + self.zbar**2)
+        self.xnorm = self.ncp.sqrt(self.xxnorm + self.zbar**2.0)
         self.gamma = np.linalg.norm([self.gambar, to_numpy(self.theta)])
         self.cs2 = self.gambar / self.gamma
         self.sn2 = self.theta / self.gamma
@@ -1107,8 +1259,8 @@ class LSQR(Solver):
         # test for convergence. First, estimate the condition of the matrix
         # Opbar, and the norms of rbar and Opbar'rbar
         self.acond = self.anorm * self.ncp.sqrt(self.ddnorm)
-        self.res1 = self.phibar**2
-        self.res2 = self.res2 + self.psi**2
+        self.res1 = self.phibar**2.0
+        self.res2 = self.res2 + self.psi**2.0
         self.rnorm = self.ncp.sqrt(self.res1 + self.res2)
         self.arnorm = self.alfa * abs(self.tau)
 
@@ -1116,7 +1268,7 @@ class LSQR(Solver):
         # r2norm = sqrt(r1norm^2 + damp^2*||x||^2).
         # Estimate r1norm = sqrt(r2norm^2 - damp^2*||x||^2).
         # Although there is cancellation, it might be accurate enough.
-        self.r1sq = self.rnorm**2 - self.dampsq * self.xxnorm
+        self.r1sq = self.rnorm**2.0 - self.dampsq * self.xxnorm
         self.r1norm = self.ncp.sqrt(self.ncp.abs(self.r1sq))
         self.cost.append(float(self.r1norm))
         if self.r1sq < 0:
@@ -1168,7 +1320,7 @@ class LSQR(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of LSQR
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -1182,7 +1334,7 @@ class LSQR(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1252,9 +1404,9 @@ class LSQR(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         damp : :obj:`float`, optional
@@ -1291,7 +1443,7 @@ class LSQR(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         istop : :obj:`int`
             Gives the reason for termination

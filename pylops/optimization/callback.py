@@ -72,7 +72,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x0 : :obj:`np.ndarray`
+        x0 : :obj:`numpy.ndarray`
             Initial guess (when present as one of the inputs of the solver
             setup method)
 
@@ -86,7 +86,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector
 
         """
@@ -99,7 +99,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector
 
         """
@@ -112,7 +112,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector
 
         """
@@ -125,7 +125,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector
 
         """
@@ -138,7 +138,7 @@ class Callbacks:
         ----------
         solver : :obj:`pylops.optimization.basesolver.Solver`
             Solver object
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector
 
         """
@@ -230,7 +230,7 @@ class MetricsCallback(Callbacks):
 
     Parameters
     ----------
-    xtrue : :obj:`np.ndarray`
+    xtrue : :obj:`numpy.ndarray`
         True model vector
     Op : :obj:`pylops.LinearOperator`, optional
         Operator to apply to the solution prior to comparing it with `xtrue`
