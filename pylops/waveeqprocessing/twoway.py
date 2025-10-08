@@ -229,7 +229,9 @@ class AcousticWave2D(LinearOperator):
             time_range=self.geometry.time_axis,
         )
 
-    def _srcillumination_oneshot(self, solver: AcousticWaveSolverType, isrc: int) -> Tuple[NDArray, NDArray]:
+    def _srcillumination_oneshot(
+        self, solver: AcousticWaveSolverType, isrc: int
+    ) -> Tuple[NDArray, NDArray]:
         """Source wavefield and illumination for one shot
 
         Parameters
@@ -241,9 +243,9 @@ class AcousticWave2D(LinearOperator):
 
         Returns
         -------
-        u0 : :obj:`np.ndarray`
+        u0 : :obj:`numpy.ndarray`
             Source wavefield
-        src_ill : :obj:`np.ndarray`
+        src_ill : :obj:`numpy.ndarray`
             Source illumination
 
         """
@@ -302,12 +304,12 @@ class AcousticWave2D(LinearOperator):
         ----------
         solver : :obj:`AcousticWaveSolver`
             Devito's solver object.
-        dm : :obj:`np.ndarray`
+        dm : :obj:`numpy.ndarray`
             Model perturbation
 
         Returns
         -------
-        d : :obj:`np.ndarray`
+        d : :obj:`numpy.ndarray`
             Data
 
         """
@@ -331,12 +333,12 @@ class AcousticWave2D(LinearOperator):
 
         Parameters
         -----------
-        dm : :obj:`np.ndarray`
+        dm : :obj:`numpy.ndarray`
             Model perturbation
 
         Returns
         -------
-        dtot : :obj:`np.ndarray`
+        dtot : :obj:`numpy.ndarray`
             Data for all shots
 
         """
@@ -373,12 +375,12 @@ class AcousticWave2D(LinearOperator):
             Devito's solver object.
         isrc : :obj:`float`
             Index of source to model
-        dobs : :obj:`np.ndarray`
+        dobs : :obj:`numpy.ndarray`
             Observed data to inject
 
         Returns
         -------
-        model : :obj:`np.ndarray`
+        model : :obj:`numpy.ndarray`
             Model
 
         """
@@ -409,12 +411,12 @@ class AcousticWave2D(LinearOperator):
 
         Parameters
         ----------
-        dobs : :obj:`np.ndarray`
+        dobs : :obj:`numpy.ndarray`
             Observed data to inject
 
         Returns
         -------
-        model : :obj:`np.ndarray`
+        model : :obj:`numpy.ndarray`
             Model
 
         """

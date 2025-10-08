@@ -159,7 +159,7 @@ class LSM:
 
         Returns
         -------
-        minv : :obj:`np.ndarray`
+        minv : :obj:`numpy.ndarray`
             Inverted reflectivity model of size :math:`\lbrack (n_y \times)
             n_x \times n_z \rbrack`
 

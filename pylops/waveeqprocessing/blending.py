@@ -31,7 +31,7 @@ class BlendingContinuous(LinearOperator):
         Number of sources
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source
     shiftall : :obj:`bool`, optional
         Shift all shots together (``True``) or one at the time (``False``). Defaults to ``shiftall=False`` (original
@@ -240,7 +240,7 @@ def BlendingGroup(
         Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
         :math:`group_{size} \times n_{groups}`, where each column contains the
         firing times for every group.
@@ -332,7 +332,7 @@ def BlendingHalf(
         Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
         :math:`group_{size} \times n_{groups}`, where each column contains the
         firing times for every group.
