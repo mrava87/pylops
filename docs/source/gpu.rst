@@ -579,6 +579,22 @@ Geophysical subsurface characterization:
      - |:white_check_mark:|
      - |:warning:|
 
+
+Medical:
+
+.. list-table::
+   :widths: 50 25 25 25
+   :header-rows: 1
+
+   * - Operator/method
+     - CPU
+     - GPU with CuPy
+     - GPU/TPU with JAX
+   * - :class:`pylops.medical.ct.CT2D`
+     - |:white_check_mark:|
+     - |:red_circle:|
+     - |:red_circle:|
+
 .. warning::
 
    1. The JAX backend of the :class:`pylops.signalprocessing.Convolve1D` operator

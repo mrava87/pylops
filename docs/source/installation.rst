@@ -329,6 +329,21 @@ More details about the installation process for the different optional dependenc
 in the following (an asterisc is used to indicate those dependencies that are automatically installed
 when installing PyLops from conda-forge or via ``pip install pylops[advanced]``):
 
+ASTRA
+-----
+`ASTRA <https://www.astra-toolbox.com>`_ is library used to perform computerized
+tomography. It is used in PyLops in the operator :py:class:`pylops.medical.CT2D`
+
+To use this library, install it manually either via ``conda``:
+
+.. code-block:: bash
+   >> conda install --channel astra-toolbox astra-toolbox
+
+or via pip:
+
+.. code-block:: bash
+   >> pip install astra-toolbox
+
 
 dtcwt*
 ------
@@ -345,12 +360,12 @@ Install it via ``pip`` with:
    ``dtcwt`` does not support NumPy 2 yet, so make sure you use NumPy 1.x 
    to be able to use the ``DTCWT`` operator.
 
+
 Devito
 ------
 `Devito <https://github.com/devitocodes/devito>`_ is a library used to solve PDEs via
 the finite-difference method. It is used in PyLops to compute wavefields
 :py:class:`pylops.waveeqprocessing.AcousticWave2D`
-
 
 Install it via ``pip`` with
 

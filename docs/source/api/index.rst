@@ -158,6 +158,17 @@ Geophysical subsurface characterization
     prestack.PrestackWaveletModelling
 
 
+Medical imaging
+~~~~~~~~~~~~~~~
+
+.. currentmodule:: pylops.medical
+
+.. autosummary::
+   :toctree: generated/
+
+    CT2D
+
+
 Solvers
 -------
 Template

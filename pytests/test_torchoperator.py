@@ -23,16 +23,13 @@ par2 = {"ny": 21, "nx": 11, "dtype": np.float32}  # overdetermined
 np.random.seed(0)
 
 
+@pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
 @pytest.mark.parametrize("par", [(par1)])
 def test_TorchOperator(par):
     """Apply forward and gradient. As for linear operators the gradient
     must equal the adjoint of operator applied to the same vector, the two
     results are also checked to be the same.
     """
-    # temporarily, skip tests on mac as torch seems not to recognized
-    # numpy when v2 is installed
-    if platform.system() == "Darwin":
-        pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
     Dop = MatrixMult(np.random.normal(0.0, 1.0, (par["ny"], par["nx"])))
@@ -56,13 +53,10 @@ def test_TorchOperator(par):
     assert_array_equal(xadj, xt.grad.cpu().numpy())
 
 
+@pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
 @pytest.mark.parametrize("par", [(par1)])
 def test_TorchOperator_batch(par):
     """Apply forward for input with multiple samples (= batch) and flattened arrays"""
-    # temporarily, skip tests on mac as torch seems not to recognized
-    # numpy when v2 is installed
-    if platform.system() == "Darwin":
-        pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
     Dop = MatrixMult(np.random.normal(0.0, 1.0, (par["ny"], par["nx"])))
@@ -78,13 +72,10 @@ def test_TorchOperator_batch(par):
     assert_array_equal(y, yt.detach().cpu().numpy())
 
 
+@pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
 @pytest.mark.parametrize("par", [(par1)])
 def test_TorchOperator_batch_nd(par):
     """Apply forward for input with multiple samples (= batch) and nd-arrays"""
-    # temporarily, skip tests on mac as torch seems not to recognized
-    # numpy when v2 is installed
-    if platform.system() == "Darwin":
-        pytest.skip("torch not recognized on macOS with numpy v2")
     device = "cpu" if backend == "numpy" else "cuda"
 
     Dop = MatrixMult(np.random.normal(0.0, 1.0, (par["ny"], par["nx"])), otherdims=(2,))

@@ -24,8 +24,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools
         pip install flake8 pytest
-        pip install -r requirements-dev.txt
-        pip install -r requirements-pyfftw.txt
+
+        if [[ "${{ matrix.platform }}" == ubuntu* ]]; then
+          pip install -r requirements-dev.txt
+          pip install -r requirements-pyfftw.txt
+        else
+          pip install -r requirements-dev-arm.txt
+          pip install -r requirements-pyfftw.txt
+        fi
         pip install -r requirements-torch.txt
     - name: Install pylops
       run: |

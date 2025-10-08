@@ -2,13 +2,14 @@ numpy>=2.0.0
 scipy>=1.13.0
 jax
 numba
+pyfftw
 PyWavelets
 spgl1
 scikit-fmm
 sympy
 devito
 # dtcwt (until numpy>=2.0.0 is supported)
-astra-toolbox
+# astra-toolbox (not available on arm-osx)
 matplotlib
 ipython
 pytest
