@@ -51,7 +51,7 @@ class Spread(LinearOperator):
         Dimensions of data vector (vector will be reshaped internal into
         a two-dimensional array of size :math:`[n_x \times n_t]`,
         where the first dimension is the stacking direction)
-    table : :obj:`np.ndarray`, optional
+    table : :obj:`numpy.ndarray`, optional
         Look-up table of indices of size
         :math:`[n_{x_0} \times n_{t_0} \times n_x]` (if ``None`` use function
         handle ``fh``). When ``dtable`` is not provided, the  ``data`` will be created
@@ -65,7 +65,7 @@ class Spread(LinearOperator):
             When using ``table`` without ``dtable``, its elements must be
             between 0 and :math:`n_{t_0} - 1` (or ``numpy.nan``).
 
-    dtable : :obj:`np.ndarray`, optional
+    dtable : :obj:`numpy.ndarray`, optional
         Look-up table of decimals remainders for linear interpolation of size
         :math:`[n_{x_0} \times n_{t_0} \times n_x]` (if ``None`` use function
         handle ``fh``). When provided, the ``data`` will be created as follows
@@ -119,11 +119,12 @@ class Spread(LinearOperator):
 
     Attributes
     ----------
+    usetable : :obj:`bool`
+        Use look-up table if provided (``True``) or not if
+        function handle is provided instead (``False``)
+
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
 
     Raises
     ------

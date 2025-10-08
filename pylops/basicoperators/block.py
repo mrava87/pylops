@@ -22,22 +22,22 @@ class _Block(LinearOperator):
         dtype: Optional[DTypeLike] = None,
         _HStack=HStack,
         _VStack=VStack,
-        args_HStack: Optional[dict] = None,
-        args_VStack: Optional[dict] = None,
+        _args_HStack: Optional[dict] = None,
+        _args_VStack: Optional[dict] = None,
         name: str = "B",
     ):
-        if args_HStack is None:
-            self.args_HStack = {}
+        if _args_HStack is None:
+            self._args_HStack = {}
         else:
-            self.args_HStack = args_HStack
-        if args_VStack is None:
-            self.args_VStack = {}
+            self._args_HStack = _args_HStack
+        if _args_VStack is None:
+            self._args_VStack = {}
         else:
-            self.args_VStack = args_VStack
-        hblocks = [_HStack(hblock, dtype=dtype, **self.args_HStack) for hblock in ops]
+            self._args_VStack = _args_VStack
+        hblocks = [_HStack(hblock, dtype=dtype, **self._args_HStack) for hblock in ops]
         super().__init__(
             Op=_VStack(
-                ops=hblocks, forceflat=forceflat, dtype=dtype, **self.args_VStack
+                ops=hblocks, forceflat=forceflat, dtype=dtype, **self._args_VStack
             ),
             name=name,
         )
@@ -74,9 +74,6 @@ class Block(_Block):
     ----------
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
 
     Notes
     -----
@@ -148,5 +145,5 @@ class Block(_Block):
         if nproc > 1:
             self.pool = mp.Pool(processes=nproc)
         super().__init__(
-            ops=ops, forceflat=forceflat, dtype=dtype, args_VStack={"nproc": nproc}
+            ops=ops, forceflat=forceflat, dtype=dtype, _args_VStack={"nproc": nproc}
         )

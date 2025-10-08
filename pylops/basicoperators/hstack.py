@@ -59,11 +59,26 @@ class HStack(LinearOperator):
 
     Attributes
     ----------
+    nops : :obj:`int`
+        Number of rows of the full operator (rows of each block).
+    mops : :obj:`int`
+        Number of columns of the full operator (sum of columns of each block).
+    mmops : :obj:`numpy.ndarray`
+        Cumulative sum of columns of each block, with a leading zero.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    pool : :obj:`multiprocessing.Pool` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel using
+        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
+        ``pool=None``).
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Raises
     ------

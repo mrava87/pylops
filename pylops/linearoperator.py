@@ -714,7 +714,7 @@ class LinearOperator(_LinearOperator):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data
         niter : :obj:`int`, optional
             Number of iterations (to be used only when ``explicit=False``)
@@ -723,7 +723,7 @@ class LinearOperator(_LinearOperator):
 
         Returns
         -------
-        xest : :obj:`np.ndarray`
+        xest : :obj:`numpy.ndarray`
             Estimated model
 
         """

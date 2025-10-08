@@ -41,21 +41,34 @@ class MatrixMult(LinearOperator):
     name : :obj:`str`, optional
         .. versionadded:: 2.0.0
 
-        Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`).
 
     Attributes
     ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
     dimsd : :obj:`tuple`
-        Shape of the array after the forward, but before linearization.
+        Shape of the array after the forward, but before flattening.
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    dimsflatten : :obj:`tuple`
+        Same as ``dims`` but with first dimension flattened (i.e.,
+        defined as the product of ``otherdims``).
+    dimsdflatten : :obj:`tuple`
+        Same as ``dimsd`` but with first dimension flattened (i.e.,
+        defined as the product of ``otherdims``).
+    reshape : :obj:`bool`
+        Whether to reshape the input prior to applying the matrix ``A``
+        (when ``otherdims`` is provided) or not (when ``otherdims=None``).
+    complex : :obj:`bool`
+        Matrix has complex numbers (``True``) or not (``False``).
     shape : :obj:`tuple`
         Operator shape
     explicit : :obj:`bool`
         Operator contains a matrix that can be solved explicitly
-        (``True``) or not (``False``)
-    complex : :obj:`bool`
-        Matrix has complex numbers (``True``) or not (``False``)
+        (``True``) or not (``False``).
 
     """
 

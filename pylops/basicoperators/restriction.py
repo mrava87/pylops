@@ -68,11 +68,20 @@ class Restriction(LinearOperator):
 
     Attributes
     ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    iavamask : :obj:`numpy.ndarray`
+        Mask of indices used in adjoint when ``iava`` is a CuPy array.
+    iavareshape : :obj:`numpy.ndarray`
+        Shape used to reshape ``iava`` to be compatible with ``dims``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved
-        explicitly (``True``) or not (``False``)
 
     See Also
     --------
