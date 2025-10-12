@@ -63,13 +63,10 @@ def Shift(
     **kwargs_fft
         Arbitrary keyword arguments to be passed to the selected fft method
 
-    Attributes
-    ----------
-    shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly
-        (``True``) or not (``False``)
+    Returns
+    -------
+    Op : :obj:`pylops.LinearOperator`
+        Shift operator.
 
     Raises
     ------

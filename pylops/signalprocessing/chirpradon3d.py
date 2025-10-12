@@ -54,11 +54,28 @@ class ChirpRadon3D(LinearOperator):
 
     Attributes
     ----------
+    ny : :obj:`int`
+        Number of samples in the first spatial axis.
+    nx : :obj:`int`
+        Number of samples in the second spatial axis.
+    nt : :obj:`int`
+        Number of samples in time axis.
+    dy : :obj:`int`
+        Sampling step in the first spatial axis.
+    dx : :obj:`int`
+        Sampling step in the second spatial axis.
+    dt : :obj:`float`
+        Sampling step in time axis.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening. In
+        this case, same as ``dims``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+
 
     Notes
     -----

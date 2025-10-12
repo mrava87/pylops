@@ -45,14 +45,6 @@ class MatrixMult(LinearOperator):
 
     Attributes
     ----------
-    dims : :obj:`tuple`
-        Shape of the array after the adjoint, but before flattening.
-
-        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
-    dimsd : :obj:`tuple`
-        Shape of the array after the forward, but before flattening.
-
-        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     dimsflatten : :obj:`tuple`
         Same as ``dims`` but with first dimension flattened (i.e.,
         defined as the product of ``otherdims``).
@@ -64,6 +56,14 @@ class MatrixMult(LinearOperator):
         (when ``otherdims`` is provided) or not (when ``otherdims=None``).
     complex : :obj:`bool`
         Matrix has complex numbers (``True``) or not (``False``).
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
     explicit : :obj:`bool`

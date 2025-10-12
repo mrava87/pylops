@@ -52,11 +52,28 @@ class Bilinear(LinearOperator):
 
     Attributes
     ----------
+    iava_t : :obj:`numpy.ndarray`
+        Indices of points above `iava` for bilinear interpolation.
+    iava_b : :obj:`numpy.ndarray`
+        Indices of points below `iava` for bilinear interpolation.
+    iava_l : :obj:`numpy.ndarray`
+        Indices of points left of `iava` for bilinear interpolation.
+    iava_r : :obj:`numpy.ndarray`
+        Indices of points right of `iava` for bilinear interpolation.
+    weights_tb : :obj:`numpy.ndarray`
+        Weights for top/bottom points for bilinear interpolation.
+    weights_lr : :obj:`numpy.ndarray`
+        Weights for left/right points for bilinear interpolation.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
 
     Raises
     ------

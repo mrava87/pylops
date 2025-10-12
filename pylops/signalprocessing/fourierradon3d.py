@@ -62,11 +62,54 @@ class FourierRadon3D(LinearOperator):
 
     Attributes
     ----------
+    hyaxis : :obj:`numpy.ndarray`
+        Slow spatial axis (or squared axis when ``kind='parabolic'``)
+    hxaxis : :obj:`numpy.ndarray`
+        Fast spatial axis (or squared axis when ``kind='parabolic'``)
+    nhy : :obj:`int`
+        Number of samples in slow spatial axis.
+    nhx : :obj:`int`
+        Number of samples in fast spatial axis.
+    nt : :obj:`int`
+        Number of samples in time axis.
+    dhy : :obj:`float`
+        Sampling step in slow spatial axis.
+    dhx : :obj:`float`
+        Sampling step in fast spatial axis.
+    dt : :obj:`float`
+        Sampling step in time axis.
+    py : :obj:`numpy.ndarray`
+        Axis of scanning variable :math:`p_y` of parametric curve
+    px : :obj:`numpy.ndarray`
+        Axis of scanning variable :math:`p_x` of parametric curve
+    npy : :obj:`int`
+        Number of samples in :math:`p_y` axis.
+    npx : :obj:`int`
+        Number of samples in :math:`p_x` axis.
+    f : :obj:`numpy.ndarray`
+        Fourier axis.
+    nfft2 : :obj:`int`
+        Number of samples in positive Fourier axis.
+    cdtype : :obj:`str`
+        Complex type associated with ``dtype``.
+    flims : :obj:`tuple`
+        Indices of lower and upper limits of Fourier axis to be used in
+    num_blocks_matvec : :obj:`tuple`
+        Number of blocks in each dimension for ``matvec`` (only when
+        ``engine=cuda``)
+    num_blocks_rmatvec : :obj:`tuple`
+        Number of blocks in each dimension for ``rmatvec`` (only when
+        ``engine=cuda``)
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
 
     Raises
     ------

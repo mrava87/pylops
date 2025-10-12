@@ -52,6 +52,27 @@ class DTCWT(LinearOperator):
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
+    Attributes
+    ----------
+    otherdims : :obj:`int`
+        Product of dimensions other than dimension at ``axis`` index.
+    dims_swapped : :obj:`tuple`
+        Shape of the model array after swapping the dimension at ``axis`` index to
+        the front.
+    dimsd_swapped : :obj:`tuple`
+        Shape of the data array after swapping the dimension at ``axis`` index to
+        the front.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape
+
     Notes
     -----
     The DTCWT operator applies the dual-tree complex wavelet transform
