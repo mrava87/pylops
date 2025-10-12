@@ -14,7 +14,15 @@ else:
     backend = "numpy"
 import pytest
 
-from pylops.basicoperators import Block, BlockDiag, HStack, MatrixMult, Real, VStack
+from pylops.basicoperators import (
+    Block,
+    BlockDiag,
+    HStack,
+    MatrixMult,
+    Real,
+    VStack,
+    Zero,
+)
 from pylops.optimization.basic import lsqr
 from pylops.utils import dottest
 
@@ -105,6 +113,23 @@ def test_VStack(par):
         backend=backend,
     )
 
+    # use Zero operator directly in the definition of the operator
+    G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
+    V3op = VStack(
+        [
+            MatrixMult(G1, dtype=par["dtype"]),
+            Zero(par["ny"], par["nx"], dtype=par["dtype"]),
+        ],
+        dtype=par["dtype"],
+    )
+    assert dottest(
+        V3op,
+        2 * par["ny"],
+        par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
 
 @pytest.mark.parametrize("par", [(par2), (par2j)])
 def test_HStack(par):
@@ -114,7 +139,10 @@ def test_HStack(par):
     G2 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32")
     x = np.ones(2 * par["nx"]) + par["imag"] * np.ones(2 * par["nx"])
 
-    Hop = HStack([G1, MatrixMult(G2, dtype=par["dtype"])], dtype=par["dtype"])
+    Hop = HStack(
+        [MatrixMult(G1, dtype=par["dtype"]), MatrixMult(G2, dtype=par["dtype"])],
+        dtype=par["dtype"],
+    )
     assert dottest(
         Hop,
         par["ny"],
@@ -149,6 +177,23 @@ def test_HStack(par):
     H2op = HStack([G1, MatrixMult(G2, dtype=par["dtype"])], dtype=par["dtype"])
     assert dottest(
         H2op,
+        par["ny"],
+        2 * par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
+    # use Zero operator directly in the definition of the operator
+    G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype("float32")
+    H3op = HStack(
+        [
+            MatrixMult(G1, dtype=par["dtype"]),
+            Zero(par["ny"], par["nx"], dtype=par["dtype"]),
+        ],
+        dtype=par["dtype"],
+    )
+    assert dottest(
+        H3op,
         par["ny"],
         2 * par["nx"],
         complexflag=0 if par["imag"] == 0 else 3,
@@ -216,6 +261,26 @@ def test_Block(par):
         [
             [G11, MatrixMult(G12, dtype=par["dtype"])],
             [MatrixMult(G21, dtype=par["dtype"]), G22],
+        ],
+        dtype=par["dtype"],
+    )
+    assert dottest(
+        B2op,
+        2 * par["ny"],
+        2 * par["nx"],
+        complexflag=0 if par["imag"] == 0 else 3,
+        backend=backend,
+    )
+
+    # use Zero operator directly in the definition of the operator
+    G11 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
+    B2op = Block(
+        [
+            [
+                MatrixMult(G11, dtype=par["dtype"]),
+                Zero(par["ny"], par["nx"], dtype=par["dtype"]),
+            ],
+            [Zero(par["ny"], par["nx"], dtype=par["dtype"]), G22],
         ],
         dtype=par["dtype"],
     )

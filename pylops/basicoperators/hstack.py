@@ -20,7 +20,7 @@ else:
 from typing import Optional, Sequence
 
 from pylops import LinearOperator
-from pylops.basicoperators import MatrixMult
+from pylops.basicoperators import MatrixMult, Zero
 from pylops.utils.backend import get_array_module, get_module, inplace_add, inplace_set
 from pylops.utils.typing import NDArray
 
@@ -178,11 +178,12 @@ class HStack(LinearOperator):
         )
         y = ncp.zeros(self.nops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_add(
-                oper.matvec(x[self.mmops[iop] : self.mmops[iop + 1]]).squeeze(),
-                y,
-                slice(None, None),
-            )
+            if not isinstance(oper, Zero):
+                y = inplace_add(
+                    oper.matvec(x[self.mmops[iop] : self.mmops[iop + 1]]).squeeze(),
+                    y,
+                    slice(None, None),
+                )
         return y
 
     def _rmatvec_serial(self, x: NDArray) -> NDArray:
@@ -193,11 +194,12 @@ class HStack(LinearOperator):
         )
         y = ncp.zeros(self.mops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_set(
-                oper.rmatvec(x).squeeze(),
-                y,
-                slice(self.mmops[iop], self.mmops[iop + 1]),
-            )
+            if not isinstance(oper, Zero):
+                y = inplace_set(
+                    oper.rmatvec(x).squeeze(),
+                    y,
+                    slice(self.mmops[iop], self.mmops[iop + 1]),
+                )
         return y
 
     def _matvec_multiproc(self, x: NDArray) -> NDArray:
