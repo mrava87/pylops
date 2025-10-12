@@ -604,11 +604,23 @@ class AVOLinearModelling(LinearOperator):
 
     Attributes
     ----------
+    ntheta : :obj:`int`
+        Number of angles.
+    G : :obj:`numpy.ndarray`
+        AVO coefficients of shape :math:`[n_{\theta}  \times  N \times  1 \times
+        \ldots \times 1]` where :math:`N=2,\, 3` is the number of elastic
+        parameters and the remaining dimensions are singleton dimensions
+        to account for spatial axes.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly
-        (``True``) or not (``False``)
 
     Raises
     ------
