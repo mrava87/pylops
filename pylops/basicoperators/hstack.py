@@ -33,7 +33,12 @@ def _matvec_rmatvec_map(op, x: NDArray) -> NDArray:
 class HStack(LinearOperator):
     r"""Horizontal stacking.
 
-    Stack a set of N linear operators horizontally.
+    Stack a set of N linear operators horizontally. Note that in case
+    one or more operators are filled with zeros, it is recommended to use
+    the :py:class:`pylops.Zero` operator instead of e.g.,
+    :py:class:`pylops.MatrixMult` with a matrix of zeros, as the former will
+    be simply by-passed both in the forward and adjoint steps.
+
 
     Parameters
     ----------
