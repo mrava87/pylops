@@ -66,11 +66,22 @@ class AcousticWave2D(LinearOperator):
 
     Attributes
     ----------
+    space_order : :obj:`int`
+        Spatial ordering of FD stencil.
+    model : :obj:`examples.seismic.Model`
+        Devito model object.
+    geometry : :obj:`examples.seismic.AcquisitionGeometry`
+        Devito acquisition geometry object.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
 
     """
 

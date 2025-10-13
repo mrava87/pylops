@@ -194,6 +194,11 @@ def MDC(
 
         Arbitrary keyword arguments to be passed to the selected fft method
 
+    Returns
+    -------
+    MOp : :obj:`pylops.LinearOperator`
+        Multi-dimensional convolution operator.
+
     Raises
     ------
     ValueError

@@ -41,6 +41,29 @@ class BlendingContinuous(LinearOperator):
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
+    Attributes
+    ----------
+    ntot : :obj:`int`
+        Total number of time samples in blended data (based on the
+        the maximum ignition time in ``times``)
+    PadOp : :obj:`pylops.basicoperators.Pad`
+        Padding operator used to add one zero at the end of each
+        shot gather to avoid boundary effects when shifting
+    shifts : :obj:`list` or :obj:`numpy.ndarray`
+        Integer part of the time shifts (in number of samples)
+    ShiftOps : :obj:`list` of :obj:`pylops.signalprocessing.Shift` or :obj:`pylops.signalprocessing.Shift`
+        Shift operator(s) used to apply the fractional part of the time shifts
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape
+
     Notes
     -----
     Simultaneous shooting or blending is the process of acquiring seismic data firing consecutive sources
