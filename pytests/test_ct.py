@@ -30,7 +30,9 @@ par3 = {
     "nx": 30,
     "ntheta": 20,
     "proj_geom_type": "fanflat",
-    "projector_type": "strip",
+    "source_origin_dist": 100,
+    "origin_detector_dist": 0,
+    "projector_type": "strip_fanflat",
     "dtype": "float64",
 }  # fanflat, strip
 
@@ -39,7 +41,7 @@ par3 = {
     int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
 )
 @pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3)])
 def test_CT2D(par):
     """Dot-test for CT2D operator"""
     theta = np.linspace(0.0, np.pi, par["ntheta"], endpoint=False)
@@ -51,6 +53,8 @@ def test_CT2D(par):
         theta,
         proj_geom_type=par["proj_geom_type"],
         projector_type=par["projector_type"],
+        source_origin_dist=par.get("source_origin_dist", None),
+        origin_detector_dist=par.get("origin_detector_dist", None)
     )
     assert dottest(
         Cop,
