@@ -86,8 +86,8 @@ class CT2D(LinearOperator):
     def __init__(
         self,
         dims: InputDimsLike,
-        det_width: int,
-        det_count: float,
+        det_width: float,
+        det_count: int,
         thetas: NDArray,
         proj_geom_type: Optional[str] = "parallel",
         source_origin_dist: float = None,
