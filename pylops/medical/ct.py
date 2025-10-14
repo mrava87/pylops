@@ -136,4 +136,5 @@ class CT2D(LinearOperator):
         return y
 
     def __del__(self):
-        astra.projector.delete(self.proj_id)
+        if hasattr(self, "proj_id"):
+            astra.projector.delete(self.proj_id)
