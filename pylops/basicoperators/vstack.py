@@ -20,7 +20,7 @@ else:
 from typing import Callable, Optional, Sequence
 
 from pylops import LinearOperator
-from pylops.basicoperators import MatrixMult
+from pylops.basicoperators import MatrixMult, Zero
 from pylops.utils.backend import get_array_module, get_module, inplace_add, inplace_set
 from pylops.utils.typing import DTypeLike, NDArray
 
@@ -33,7 +33,11 @@ def _matvec_rmatvec_map(op: Callable, x: NDArray) -> NDArray:
 class VStack(LinearOperator):
     r"""Vertical stacking.
 
-    Stack a set of N linear operators vertically.
+    Stack a set of N linear operators vertically. Note that in case
+    one or more operators are filled with zeros, it is recommended to use
+    the :py:class:`pylops.Zero` operator instead of e.g.,
+    :py:class:`pylops.MatrixMult` with a matrix of zeros, as the former will
+    be simply by-passed both in the forward and adjoint steps.
 
     Parameters
     ----------
@@ -178,9 +182,12 @@ class VStack(LinearOperator):
         )
         y = ncp.zeros(self.nops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_set(
-                oper.matvec(x).squeeze(), y, slice(self.nnops[iop], self.nnops[iop + 1])
-            )
+            if not isinstance(oper, Zero):
+                y = inplace_set(
+                    oper.matvec(x).squeeze(),
+                    y,
+                    slice(self.nnops[iop], self.nnops[iop + 1]),
+                )
         return y
 
     def _rmatvec_serial(self, x: NDArray) -> NDArray:
@@ -191,11 +198,12 @@ class VStack(LinearOperator):
         )
         y = ncp.zeros(self.mops, dtype=self.dtype)
         for iop, oper in enumerate(self.ops):
-            y = inplace_add(
-                oper.rmatvec(x[self.nnops[iop] : self.nnops[iop + 1]]).squeeze(),
-                y,
-                slice(None, None),
-            )
+            if not isinstance(oper, Zero):
+                y = inplace_add(
+                    oper.rmatvec(x[self.nnops[iop] : self.nnops[iop + 1]]).squeeze(),
+                    y,
+                    slice(None, None),
+                )
         return y
 
     def _matvec_multiproc(self, x: NDArray) -> NDArray:
