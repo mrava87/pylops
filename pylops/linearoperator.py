@@ -101,6 +101,21 @@ class LinearOperator(_LinearOperator):
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
+    Attributes
+    ----------
+    matvec_count : :obj:`int`
+        Counter tracking the number of ``matvec``
+        operations performed since the operator was instantiated.
+    rmatvec_count : :obj:`int`
+        Counter tracking the number of ``rmatvec``
+        operations performed since the operator was instantiated.
+    matmat_count : :obj:`int`
+        Counter tracking the number of ``matmat``
+        operations performed since the operator was instantiated.
+    rmatmat_count : :obj:`int`
+        Counter tracking the number of ``rmatmat``
+        operations performed since the operator was instantiated.
+
     """
 
     def __init__(
