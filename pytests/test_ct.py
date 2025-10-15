@@ -14,47 +14,46 @@ import pytest
 from pylops.medical import CT2D
 from pylops.utils import dottest
 
-par1 = {
-    "ny": 51,
-    "nx": 30,
-    "ntheta": 20,
-    "proj_geom_type": "parallel",
-    "projector_type": "strip",
-    "dtype": "float64",
-}  # parallel, strip
-
-par2 = {
-    "ny": 51,
-    "nx": 30,
-    "ntheta": 20,
-    "proj_geom_type": "parallel",
-    "projector_type": "line",
-    "dtype": "float64",
-}  # parallel, line
-
-par3 = {
-    "ny": 51,
-    "nx": 30,
-    "ntheta": 20,
-    "proj_geom_type": "fanflat",
-    "source_origin_dist": 100,
-    "origin_detector_dist": 0,
-    "projector_type": "strip_fanflat",
-    "dtype": "float64",
-}  # fanflat, strip
-
-par4 = {
-    "ny": 51,
-    "nx": 30,
-    "ntheta": 20,
-    "proj_geom_type": "parallel",
-    "projector_type": "cuda",
-    "dtype": "float64",
-}  # execute using CUDA
+par = {
+    "parallel_strip": {
+        "ny": 51,
+        "nx": 30,
+        "ntheta": 20,
+        "proj_geom_type": "parallel",
+        "projector_type": "strip",
+        "dtype": "float64",
+    },
+    "parallel_line": {
+        "ny": 51,
+        "nx": 30,
+        "ntheta": 20,
+        "proj_geom_type": "parallel",
+        "projector_type": "line",
+        "dtype": "float64",
+    },
+    "fanflat_strip": {
+        "ny": 51,
+        "nx": 30,
+        "ntheta": 20,
+        "proj_geom_type": "fanflat",
+        "source_origin_dist": 100,
+        "origin_detector_dist": 0,
+        "projector_type": "strip_fanflat",
+        "dtype": "float64",
+    },
+    "cuda": {
+        "ny": 51,
+        "nx": 30,
+        "ntheta": 20,
+        "proj_geom_type": "parallel",
+        "projector_type": "cuda",
+        "dtype": "float64",
+    },
+}
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
-@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
+@pytest.mark.parametrize("par", par.values(), ids=par.keys())
 def test_CT2D(par):
     """Dot-test for CT2D operator"""
     if backend == "cupy" or par["projector_type"] == "cuda":
