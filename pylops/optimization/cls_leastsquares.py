@@ -46,6 +46,22 @@ class NormalEquationsInversion(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    OpH : :obj:`pylops.LinearOperator`
+        Adjoint of ``Op``.
+    y_normal : :obj:`numpy.ndarray`
+        Data term projected in the model space (``Op.H @ y`` or
+        ``Op.H @ W @ y`` if ``Weight`` is provided).
+    Op_normal : :obj:`pylops.LinearOperator`
+        Sum of the product of the adjoint and forward operator
+        (``Op.H @ Op`` or ``Op.H @ W @ Op`` if ``Weight``
+        is provided) and that of the regularization terms.
+
     See Also
     --------
     RegularizedInversion: Regularized inversion
@@ -438,6 +454,20 @@ class RegularizedInversion(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    RegOp : :obj:`pylops.LinearOperator`
+        Augmented operator with regularization terms stack to
+        the main operator.
+    datatot : :obj:`numpy.ndarray`
+        Stack of the data term (``y``) or weighed data terms
+        (``W @ y`` if ``Weight`` is provided) and regularization
+        data terms.
+
     See Also
     --------
     RegularizedOperator: Regularized operator
@@ -775,6 +805,15 @@ class PreconditionedInversion(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    POp : :obj:`pylops.LinearOperator`
+        Product of operator and preconditioner (``Op @ P``)
 
     See Also
     --------
