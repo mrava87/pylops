@@ -243,6 +243,30 @@ class IRLS(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    r : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called.
+    rw : :obj:`numpy.ndarray`
+        Weigthing vector of size :math:`[N \times 1]` for ``kind=data``
+        or ``kind=datamodel`` or of size :math:`[M \times 1]` for ``kind=model``
+        used in the solver when ``preallocate=True``. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+
     Raises
     ------
     NotImplementedError
@@ -837,6 +861,28 @@ class OMP(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    norms : :obj:`numpy.ndarray`
+        Vector of size :math:`[Nbasis \times 1]` containing the
+        norms of each column of the ``Opbasis`` operator. Available
+        only after ``setup`` is called.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]`. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+
     See Also
     --------
     ISTA: Iterative Shrinkage-Thresholding Algorithm (ISTA).
@@ -1345,6 +1391,61 @@ class ISTA(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    Opmatvec : :obj:`callable`
+        Function handle to ``Op.matvec`` or ``Op.matmat``
+        depending on the number of dimensions of ``y``.
+    Oprmatvec : :obj:`callable`
+        Function handle to ``Op.rmatvec`` or ``Op.rmatmat``
+        depending on the number of dimensions of ``y``.
+    SOpmatvec : :obj:`callable`
+        Function handle to ``SOp.matvec`` or ``SOp.matmat``
+        depending on the number of dimensions of ``y``.
+    SOprmatvec : :obj:`callable`
+        Function handle to ``SOp.rmatvec`` or ``SOp.rmatmat``
+        depending on the number of dimensions of ``y``.
+    threshf : :obj:`callable`
+        Function handle to the chosen thresholding method.
+    thresh : :obj:`float`
+        Threshold.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    grad : :obj:`numpy.ndarray`
+        Gradient vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    x_unthesh : :obj:`numpy.ndarray`
+        Unthresholded model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    xold : :obj:`numpy.ndarray`
+        Old model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    SOpx_unthesh : :obj:`numpy.ndarray`
+        Old model vector pre-multiplied by the regularization operator
+        of size :math:`[M_S \times 1]` used in the solver when ``preallocate=True``.
+        Available only after ``setup`` is called and updated at each call to ``step``.
+    normresold : :obj:`float`
+        Old norm of the residual.
+    t : :obj:`float`
+        FISTA auxiliary coefficient (not used in ISTA).
+    cost : :obj:`list`
+        History of the L2 norm of the total objectiv function. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Raises
     ------
@@ -1984,6 +2085,62 @@ class FISTA(ISTA):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
 
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    Opmatvec : :obj:`callable`
+        Function handle to ``Op.matvec`` or ``Op.matmat``
+        depending on the number of dimensions of ``y``.
+    Oprmatvec : :obj:`callable`
+        Function handle to ``Op.rmatvec`` or ``Op.rmatmat``
+        depending on the number of dimensions of ``y``.
+    SOpmatvec : :obj:`callable`
+        Function handle to ``SOp.matvec`` or ``SOp.matmat``
+        depending on the number of dimensions of ``y``.
+    SOprmatvec : :obj:`callable`
+        Function handle to ``SOp.rmatvec`` or ``SOp.rmatmat``
+        depending on the number of dimensions of ``y``.
+    threshf : :obj:`callable`
+        Function handle to the chosen thresholding method.
+    thresh : :obj:`float`
+        Threshold.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    grad : :obj:`numpy.ndarray`
+        Gradient vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    x_unthesh : :obj:`numpy.ndarray`
+        Unthresholded model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    xold : :obj:`numpy.ndarray`
+        Old model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    SOpx_unthesh : :obj:`numpy.ndarray`
+        Old model vector pre-multiplied by the regularization operator
+        of size :math:`[M_S \times 1]` used in the solver when ``preallocate=True``.
+        Available only after ``setup`` is called and updated at each call to ``step``.
+    normresold : :obj:`float`
+        Old norm of the residual.
+    t : :obj:`float`
+        FISTA auxiliary coefficient (not used in ISTA).
+    cost : :obj:`list`
+        History of the L2 norm of the total objectiv function. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+
     Raises
     ------
     NotImplementedError
@@ -2263,6 +2420,13 @@ class SPGL1(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+
     Raises
     ------
     ModuleNotFoundError
@@ -2540,6 +2704,32 @@ class SplitBregman(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    nregsL1 : :obj:`int`
+        Number of L1 regularization terms.
+    b : :obj:`numpy.ndarray`
+        Bregman update vector.
+    d : :obj:`numpy.ndarray`
+        Shrinked vector.
+    nregsL1 : :obj:`int`
+        Number of L2 regularization terms.
+    Regs : :obj:`list`
+        List of L1 and L2 regularization terms.
+    epsRs : :obj:`list`
+        List of L1 and L2 regularization dampings.
+    cost : :obj:`numpy.ndarray`, optional
+        History of total cost function through iterations.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Notes
     -----
@@ -3096,7 +3286,7 @@ class SplitBregman(Solver):
         iiter : :obj:`int`
             Iteration number of outer loop upon termination
         cost : :obj:`numpy.ndarray`
-            History of cost function through iterations
+            History of total cost function through iterations
 
         """
         x = self.setup(

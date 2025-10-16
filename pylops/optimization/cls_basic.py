@@ -59,6 +59,9 @@ class CG(Solver):
     cost : :obj:`list`
         History of the L2 norm of the residual. Available only after
         ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Notes
     -----
@@ -414,6 +417,9 @@ class CGLS(Solver):
     cost1 : :obj:`list`
         History of the L2 norm of the entire objective function (residual
         plus regularization). Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
         ``setup`` is called and updated at each call to ``step``.
 
     Notes
@@ -895,6 +901,9 @@ class LSQR(Solver):
         ``setup`` is called and updated at each call to ``step``.
     cost : :obj:`numpy.ndarray`, optional
         History of r1norm through iterations
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Notes
     -----
