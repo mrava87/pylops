@@ -152,7 +152,7 @@ class LSM:
         d : :obj:`numpy.ndarray`
             Input data of size :math:`\lbrack n_s \times n_r
             \times n_t \rbrack`
-        solver : :obj:`func`, optional
+        solver : :obj:`callable`, optional
             Solver to be used for inversion
         **kwargs_solver
             Arbitrary keyword arguments for chosen ``solver``

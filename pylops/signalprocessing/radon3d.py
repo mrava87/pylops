@@ -66,7 +66,7 @@ def _indices_3d(
 
     Parameters
     ----------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function computing values of parametric line for stacking
     y : :obj:`numpy.ndarray`
         Slow spatial axis (must be symmetrical around 0 and with sampling 1)

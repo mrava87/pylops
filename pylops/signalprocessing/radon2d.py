@@ -58,7 +58,7 @@ def _indices_2d(
 
     Parameters
     ----------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function computing values of parametric line for stacking
     x : :obj:`numpy.ndarray`
         Spatial axis (must be symmetrical around 0 and with sampling 1)
