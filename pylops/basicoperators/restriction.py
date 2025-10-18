@@ -77,11 +77,12 @@ class Restriction(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     iavamask : :obj:`numpy.ndarray`
-        Mask of indices used in adjoint when ``iava`` is a CuPy array.
+        Mask of indices used in adjoint mode when ``iava`` is a
+        CuPy array.
     iavareshape : :obj:`numpy.ndarray`
         Shape used to reshape ``iava`` to be compatible with ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     See Also
     --------

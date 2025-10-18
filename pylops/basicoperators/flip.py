@@ -40,7 +40,7 @@ class Flip(LinearOperator):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

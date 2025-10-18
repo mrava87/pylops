@@ -61,7 +61,7 @@ class NonStationaryConvolve1D(LinearOperator):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------
@@ -255,7 +255,7 @@ class NonStationaryFilters1D(LinearOperator):
     Attributes
     ----------
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
     explicit : :obj:`bool`
         Operator contains a matrix that can be solved explicitly (``True``) or
         not (``False``)

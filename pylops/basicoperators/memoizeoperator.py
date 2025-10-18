@@ -27,11 +27,11 @@ class MemoizeOperator(LinearOperator):
     Attributes
     ----------
     store : :obj:`list`
-        List of stored (x, y) pairs
+        List of stored (x, y) pairs.
     neval : :obj:`int`
-        Number of evaluations of the operator
+        Number of evaluations of the operator.
     shape : :obj:`tuple`
-        Operator shape :math:`[n \times m]`
+        Operator shape. :math:`[n \times m]`.
 
     """
 

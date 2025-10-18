@@ -80,7 +80,7 @@ class BlockDiag(LinearOperator):
         ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
         ``pool=None``).
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

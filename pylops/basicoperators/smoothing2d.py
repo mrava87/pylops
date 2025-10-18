@@ -17,7 +17,8 @@ class Smoothing2D(Convolve2D):
     Parameters
     ----------
     nsmooth : :obj:`tuple` or :obj:`list`
-        Length of smoothing operator in 1st and 2nd dimensions (must be odd)
+        Length of smoothing operator in 1st and 2nd dimensions
+        (must be odd, if even it will be increased by 1).
     dims : :obj:`tuple`
         Number of samples for each dimension
     axes : :obj:`int`, optional
@@ -43,7 +44,7 @@ class Smoothing2D(Convolve2D):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     See Also
     --------

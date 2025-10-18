@@ -46,7 +46,7 @@ class Fredholm1(LinearOperator):
 
     Attributes
     ----------
-    nsl : :obj:`int`
+    nsl :pylops/signalprocessing/fredholm1.py  :obj:`int`
         Number of slices (first dimension of ``G``)
     nx : :obj:`int`
         Number of samples in ``x`` (second dimension of ``G``)
@@ -63,7 +63,7 @@ class Fredholm1(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

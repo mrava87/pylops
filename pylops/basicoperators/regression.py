@@ -33,7 +33,7 @@ class Regression(LinearOperator):
     Attributes
     ----------
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------

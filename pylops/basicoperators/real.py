@@ -38,7 +38,7 @@ class Real(LinearOperator):
     rdtype : :obj:`numpy.dtype`
         Real dtype corresponding to ``dtype``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

@@ -25,7 +25,7 @@ class LinearRegression(Regression):
     Attributes
     ----------
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
 
     Raises

@@ -65,7 +65,7 @@ class Identity(LinearOperator):
         ``model`` for :math:`N > M,
         and ``data`` for :math:`M > N`.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------

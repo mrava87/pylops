@@ -37,7 +37,7 @@ class FirstDerivative(LinearOperator):
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``). This is currently only available
-         for centered derivative
+        for centered derivative
     order : :obj:`int`, optional
         .. versionadded:: 2.0.0
 
@@ -60,7 +60,7 @@ class FirstDerivative(LinearOperator):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

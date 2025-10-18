@@ -72,8 +72,12 @@ class Block(_Block):
 
     Attributes
     ----------
+    pool : :obj:`multiprocessing.Pool` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel using
+        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
+        ``pool=None``).
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

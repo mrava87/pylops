@@ -186,7 +186,8 @@ class Patch3D(LinearOperator):
         Shape of the array after the forward, but before flattening.
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
-
+    shape : :obj:`tuple`
+        Operator shape.
 
     Raises
     ------

@@ -614,7 +614,7 @@ def FFT(
     cdtype : :obj:`bool`
         Output type of the forward. Complex equivalent to ``rdtype``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
     clinear : :obj:`bool`
         .. versionadded:: 1.17.0
 

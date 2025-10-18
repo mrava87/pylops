@@ -43,8 +43,7 @@ class Transpose(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
-       (``True``) or not (``False``)
+        Operator shape.
 
     Raises
     ------

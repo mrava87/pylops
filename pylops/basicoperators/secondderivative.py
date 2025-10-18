@@ -38,7 +38,7 @@ class SecondDerivative(LinearOperator):
     edge : :obj:`bool`, optional
         Use shifted derivatives at edges (``True``) or
         ignore them (``False``). This is currently only available
-         for centered derivative
+        for centered derivative
     dtype : :obj:`str`, optional
         Type of elements in input array.
     name : :obj:`str`, optional
@@ -56,7 +56,7 @@ class SecondDerivative(LinearOperator):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

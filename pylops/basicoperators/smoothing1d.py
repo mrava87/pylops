@@ -17,7 +17,8 @@ class Smoothing1D(Convolve1D):
     Parameters
     ----------
     nsmooth : :obj:`int`
-        Length of smoothing operator (must be odd)
+        Length of smoothing operator (must be odd, if even it will be
+        increased by 1).
     dims : :obj:`tuple` or :obj:`int`
         Number of samples for each dimension
     axis : :obj:`int`, optional
@@ -30,11 +31,11 @@ class Smoothing1D(Convolve1D):
     Attributes
     ----------
     nh : :obj:`int`
-        Length of the filter
+        Length of the filter.
     hstar : :obj:`numpy.ndarray`
-        Time-reversed filter used in adjoint
+        Time-reversed filter used in adjoint.
     convfunc : :obj:`callable`
-        Function handler used to perform convolution
+        Function handler used to perform convolution.
     dims : :obj:`tuple`
         Shape of the array after the adjoint, but before flattening.
 
@@ -43,7 +44,7 @@ class Smoothing1D(Convolve1D):
         Shape of the array after the forward, but before flattening. In
         this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

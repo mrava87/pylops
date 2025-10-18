@@ -71,7 +71,7 @@ class DTCWT(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----
@@ -81,6 +81,7 @@ class DTCWT(LinearOperator):
 
     The ``dtcwt`` library uses a Pyramid object to represent the signal in the transformed domain,
     which is composed of:
+
         - `lowpass` (coarsest scale lowpass signal);
         - `highpasses` (complex subband coefficients for corresponding scales);
         - `scales` (lowpass signal for corresponding scales finest to coarsest).

@@ -34,7 +34,7 @@ class Kronecker(LinearOperator):
     Op2H : :obj:`pylops.LinearOperator`
         Adjoint of second operator
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

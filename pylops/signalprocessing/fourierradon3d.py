@@ -50,7 +50,7 @@ class FourierRadon3D(LinearOperator):
     kind : :obj:`tuple`, optional
         Curves to be used for stacking/spreading along the y- and x- axes
         (``("linear", "linear")``, ``("linear", "parabolic")``,
-         ``("parabolic", "linear")``, or  ``("parabolic", "parabolic")``)
+        ``("parabolic", "linear")``, or  ``("parabolic", "parabolic")``)
     engine : :obj:`str`, optional
         Engine used for computation (``numpy`` or ``numba`` or ``cuda``)
     num_threads_per_blocks : :obj:`tuple`, optional
@@ -109,7 +109,7 @@ class FourierRadon3D(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------

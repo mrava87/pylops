@@ -38,7 +38,7 @@ class Laplacian(LinearOperator):
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
-        Attributes
+    Attributes
     ----------
     dims : :obj:`tuple`
         Shape of the array after the adjoint, but before flattening.
@@ -49,7 +49,7 @@ class Laplacian(LinearOperator):
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------

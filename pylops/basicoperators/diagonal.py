@@ -53,7 +53,7 @@ class Diagonal(LinearOperator):
         Vector to be used for element-wise multiplication has complex numbers
         (``True``) or not (``False``).
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Notes
     -----

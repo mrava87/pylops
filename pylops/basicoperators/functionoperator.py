@@ -48,7 +48,7 @@ class FunctionOperator(LinearOperator):
     Attributes
     ----------
     shape : :obj:`tuple`
-        Operator shape :math:`[n \times m]`
+        Operator shape. :math:`[n \times m]`
 
     Examples
     --------

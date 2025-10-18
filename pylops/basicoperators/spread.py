@@ -121,10 +121,9 @@ class Spread(LinearOperator):
     ----------
     usetable : :obj:`bool`
         Use look-up table if provided (``True``) or not if
-        function handle is provided instead (``False``)
-
+        function handle is provided instead (``False``).
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
 
     Raises
     ------
