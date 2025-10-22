@@ -52,8 +52,8 @@ class CT2D(LinearOperator):
         Distance between origin and detector along the source-origin line
         (only for "proj_geom_type=fanflat")
     projector_type : :obj:`int`, optional
-        Type of projection kernel (``strip``, or ``line``, or ``linear``).
-        For ``cuda`` computation engine, only ``cuda`` (hardware-accelerated ``linear``)
+        Type of projection kernel: ``strip``, or ``line``, or ``linear`` for ``engine=cpu``,
+        and ``cuda`` (i.e., hardware-accelerated ``linear``) for ``engine=cuda``.
         type is supported.
     engine : :obj:`str`, optional
         Engine used for computation (``cpu`` or ``cuda``).
