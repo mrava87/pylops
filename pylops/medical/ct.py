@@ -129,6 +129,8 @@ class CT2D(LinearOperator):
                 raise ValueError(
                     "Only 'cuda' projector type is supported for 'cuda' engine."
                 )
+        else:
+            raise NotImplementedError("Engine must be 'cpu' or 'cuda'")
 
         # create create volume and projection geometries as well as projector
         self._init_geometries()
