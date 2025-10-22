@@ -99,7 +99,7 @@ class CT2D(LinearOperator):
         source_origin_dist: float = None,
         origin_detector_dist: float = None,
         projector_type: Optional[str] = None,
-        engine="cpu",
+        engine: str = "cpu",
         dtype: DTypeLike = "float64",
         name: str = "C",
     ) -> None:
