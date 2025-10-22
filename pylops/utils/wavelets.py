@@ -75,7 +75,7 @@ def klauder(
         Time axis (positive part including zero sample)
     f : :obj:`tuple`, optional
         Frequency sweep
-    taper : :obj:`func`, optional
+    taper : :obj:`callable`, optional
         Taper to apply to wavelet (must be a function that
         takes the size of the window as input
 
@@ -123,7 +123,7 @@ def ormsby(
         Time axis (positive part including zero sample)
     f : :obj:`tuple`, optional
         Frequency range
-    taper : :obj:`func`, optional
+    taper : :obj:`callable`, optional
         Taper to apply to wavelet (must be a function that
         takes the size of the window as input
 
@@ -179,7 +179,7 @@ def ricker(
         Time axis (positive part including zero sample)
     f0 : :obj:`float`, optional
         Central frequency
-    taper : :obj:`func`, optional
+    taper : :obj:`callable`, optional
         Taper to apply to wavelet (must be a function that
         takes the size of the window as input
 

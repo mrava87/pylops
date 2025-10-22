@@ -46,6 +46,22 @@ class NormalEquationsInversion(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    OpH : :obj:`pylops.LinearOperator`
+        Adjoint of ``Op``.
+    y_normal : :obj:`numpy.ndarray`
+        Data term projected in the model space (``Op.H @ y`` or
+        ``Op.H @ W @ y`` if ``Weight`` is provided).
+    Op_normal : :obj:`pylops.LinearOperator`
+        Sum of the product of the adjoint and forward operator
+        (``Op.H @ Op`` or ``Op.H @ W @ Op`` if ``Weight``
+        is provided) and that of the regularization terms.
+
     See Also
     --------
     RegularizedInversion: Regularized inversion
@@ -147,7 +163,7 @@ class NormalEquationsInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         Regs : :obj:`list`
             Regularization operators (``None`` to avoid adding regularization)
@@ -248,7 +264,7 @@ class NormalEquationsInversion(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver.
             If ``None``, x is assumed to be a zero vector
         engine : :obj:`str`, optional
@@ -316,11 +332,11 @@ class NormalEquationsInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         Regs : :obj:`list`
             Regularization operators (``None`` to avoid adding regularization)
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         Weight : :obj:`pylops.LinearOperator`, optional
@@ -349,7 +365,7 @@ class NormalEquationsInversion(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[N \times 1]`
         istop : :obj:`int`
         Convergence information (only when using :py:func:`scipy.sparse.linalg.cg`):
@@ -437,6 +453,20 @@ class RegularizedInversion(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    RegOp : :obj:`pylops.LinearOperator`
+        Augmented operator with regularization terms stack to
+        the main operator.
+    datatot : :obj:`numpy.ndarray`
+        Stack of the data term (``y``) or weighed data terms
+        (``W @ y`` if ``Weight`` is provided) and regularization
+        data terms.
 
     See Also
     --------
@@ -554,7 +584,7 @@ class RegularizedInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         Regs : :obj:`list`
             Regularization operators (``None`` to avoid adding regularization)
@@ -637,7 +667,7 @@ class RegularizedInversion(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver.
             If ``None``, x is assumed to be a zero vector
         engine : :obj:`str`, optional
@@ -708,7 +738,7 @@ class RegularizedInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         Regs : :obj:`list`
             Regularization operators (``None`` to avoid adding regularization)
@@ -775,6 +805,15 @@ class PreconditionedInversion(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    POp : :obj:`pylops.LinearOperator`
+        Product of operator and preconditioner (``Op @ P``)
 
     See Also
     --------
@@ -862,7 +901,7 @@ class PreconditionedInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         P : :obj:`pylops.LinearOperator`
             Preconditioner
@@ -899,7 +938,7 @@ class PreconditionedInversion(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver.
             If ``None``, x is assumed to be a zero vector
         engine : :obj:`str`, optional
@@ -973,11 +1012,11 @@ class PreconditionedInversion(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         P : :obj:`pylops.LinearOperator`
             Preconditioner
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         engine : :obj:`str`, optional

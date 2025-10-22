@@ -13,7 +13,7 @@ def _chirp_radon_2d(
 
     Parameters
     ----------
-    data : :obj:`np.ndarray`
+    data : :obj:`numpy.ndarray`
         2D input data of size :math:`[n_x \times n_t]`
     dt : :obj:`float`
         Time sampling :math:`dt`
@@ -29,7 +29,7 @@ def _chirp_radon_2d(
 
     Returns
     -------
-    g : :obj:`np.ndarray`
+    g : :obj:`numpy.ndarray`
         2D output of size :math:`[\times n_{x} \times n_t]`
 
     """

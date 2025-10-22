@@ -16,7 +16,9 @@ if pytensor_message is not None:
 
         Parameters
         ----------
-        LOp : pylops.LinearOperator
+        LOp : :obj:`pylops.LinearOperator`
+            PyLops Linear operator
+
         """
 
         def __init__(self, LOp: pylops.LinearOperator) -> None:
@@ -36,7 +38,9 @@ else:
 
         Parameters
         ----------
-        LOp : pylops.LinearOperator
+        LOp : :obj:`pylops.LinearOperator`
+            PyLops Linear operator
+
         """
 
         __props__ = ("dims", "dimsd", "shape")
@@ -72,7 +76,9 @@ else:
 
         Parameters
         ----------
-        LOp : pylops.LinearOperator
+        LOp : :obj:`pylops.LinearOperator`
+            PyLops Linear operator
+
         """
 
         def __init__(self, LOp: pylops.LinearOperator) -> None:

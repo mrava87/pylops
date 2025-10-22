@@ -227,7 +227,7 @@ def Deghosting(
 
     Parameters
     ----------
-    p : :obj:`np.ndarray`
+    p : :obj:`numpy.ndarray`
         Pressure (or vertical velocity) data of of size
         :math:`\lbrack n_{r_x}\,(\times n_{r_y})
         \times n_t \rbrack` (or :math:`\lbrack n_{r_{x,\text{sub}}}\,
@@ -252,9 +252,9 @@ def Deghosting(
         .. versionadded:: 2.3.0
 
         Type of data (``p`` or ``vz``)
-    pd : :obj:`np.ndarray`, optional
+    pd : :obj:`numpy.ndarray`, optional
         Direct arrival to be subtracted from ``p``
-    win : :obj:`np.ndarray`, optional
+    win : :obj:`numpy.ndarray`, optional
         Time window to be applied to ``p`` to remove the direct arrival
         (if ``pd=None``)
     ntaper : :obj:`float` or :obj:`tuple`, optional
@@ -280,9 +280,9 @@ def Deghosting(
 
     Returns
     -------
-    pup : :obj:`np.ndarray`
+    pup : :obj:`numpy.ndarray`
         Up-going pressure (or particle velocity) wavefield
-    pdown : :obj:`np.ndarray`
+    pdown : :obj:`numpy.ndarray`
         Down-going (or particle velocity) wavefield
 
     Raises

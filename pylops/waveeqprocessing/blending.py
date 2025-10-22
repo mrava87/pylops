@@ -31,7 +31,7 @@ class BlendingContinuous(LinearOperator):
         Number of sources
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source
     shiftall : :obj:`bool`, optional
         Shift all shots together (``True``) or one at the time (``False``). Defaults to ``shiftall=False`` (original
@@ -40,6 +40,29 @@ class BlendingContinuous(LinearOperator):
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+
+    Attributes
+    ----------
+    ntot : :obj:`int`
+        Total number of time samples in blended data (based on the
+        the maximum ignition time in ``times``)
+    PadOp : :obj:`pylops.basicoperators.Pad`
+        Padding operator used to add one zero at the end of each
+        shot gather to avoid boundary effects when shifting
+    shifts : :obj:`list` or :obj:`numpy.ndarray`
+        Integer part of the time shifts (in number of samples)
+    ShiftOps : :obj:`list` of :obj:`pylops.signalprocessing.Shift` or :obj:`pylops.signalprocessing.Shift`
+        Shift operator(s) used to apply the fractional part of the time shifts
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape.
 
     Notes
     -----
@@ -240,7 +263,7 @@ def BlendingGroup(
         Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
         :math:`group_{size} \times n_{groups}`, where each column contains the
         firing times for every group.
@@ -332,7 +355,7 @@ def BlendingHalf(
         Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
         :math:`group_{size} \times n_{groups}`, where each column contains the
         firing times for every group.

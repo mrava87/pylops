@@ -157,14 +157,32 @@ class Marchenko:
     Attributes
     ----------
     ns : :obj:`int`
-        Number of samples along source axis
+        Number of samples along source axis.
     nr : :obj:`int`
-        Number of samples along receiver axis
+        Number of samples along receiver axis.
+    nt : :obj:`int`
+        Number of samples along time axis.
+    nt2 : :obj:`int`
+        Number of samples along the negative-mirrored time axis.
+    t : :obj:`numpy.ndarray`
+        Time axis.
+    kwargs_fft : :obj:`dict`
+        Keyword arguments to be passed to the selected fft method
+    ncp : :obj:`module`
+        Array module (``numpy`` or ``cupy``)
+    Rtwosided_fft : :obj:`numpy.ndarray`
+        Two-sided frequency-domain reflection response of size
+        :math:`[n_{f_\text{max}} \times n_s \times n_r]`.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly
-        (``True``) or not (``False``)
+        Operator shape.
 
     Raises
     ------

@@ -43,11 +43,16 @@ class Sum(LinearOperator):
 
     Attributes
     ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Notes
     -----
@@ -100,8 +105,8 @@ class Sum(LinearOperator):
         )
 
         # array of ones with dims of model in self.axis for np.tile in adjoint mode
-        self.tile = np.ones(len(self.dims), dtype=int)
-        self.tile[self.axis] = self.dims[self.axis]
+        self._tile = np.ones(len(self.dims), dtype=int)
+        self._tile[self.axis] = self.dims[self.axis]
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
@@ -111,5 +116,5 @@ class Sum(LinearOperator):
     def _rmatvec(self, x: NDArray) -> NDArray:
         ncp = get_array_module(x)
         y = ncp.expand_dims(x, self.axis)
-        y = ncp.tile(y, self.tile)
+        y = ncp.tile(y, self._tile)
         return y

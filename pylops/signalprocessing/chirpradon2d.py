@@ -22,11 +22,11 @@ class ChirpRadon2D(LinearOperator):
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    haxis : :obj:`np.ndarray`
+    haxis : :obj:`numpy.ndarray`
         Spatial axis
-    pmax : :obj:`np.ndarray`
+    pmax : :obj:`numpy.ndarray`
         Maximum slope defined as :math:`\tan` of maximum stacking angle in
         :math:`x` direction :math:`p_\text{max} = \tan(\alpha_{x, \text{max}})`.
         If one operates in terms of minimum velocity :math:`c_0`, set
@@ -40,11 +40,23 @@ class ChirpRadon2D(LinearOperator):
 
     Attributes
     ----------
+    nh : :obj:`int`
+        Number of samples in spatial axis.
+    nt : :obj:`int`
+        Number of samples in time axis.
+    dh : :obj:`float`
+        Sampling step in spatial axis.
+    dt : :obj:`float`
+        Sampling step in time axis.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening. In
+        this case, same as ``dims``.
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Notes
     -----

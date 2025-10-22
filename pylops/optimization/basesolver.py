@@ -50,6 +50,24 @@ class Solver(metaclass=ABCMeta):
     callbacks : :obj:`pylops.optimization.callback.Callbacks`
         Callbacks object used to implement custom callbacks
 
+    Attributes
+    ----------
+    iiter : :obj:`int`
+        Iteration counter.
+    preallocate : :obj:`bool`
+        Whether to preallocate all variables used by the solver (``True``)
+        or not (``False``). Available only after ``setup`` is called.
+        Note that preallocation is not always possible, for example when
+        using JAX arrays.
+    tstart : :obj:`float`
+        Time at the start of the optimization process.
+    tend : :obj:`float`
+        Time at the end of the optimization process. Available
+        only after ``finalize`` is called.
+    telapsed : :obj:`float`
+        Total time elapsed during the optimization process. Available
+        only after ``finalize`` is called.
+
     """
 
     def __init__(
@@ -185,7 +203,7 @@ class Solver(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         preallocate : :obj:`bool`, optional
             .. versionadded:: 2.6.0
@@ -213,7 +231,7 @@ class Solver(metaclass=ABCMeta):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of the solver
         show : :obj:`bool`, optional
             Display step log
@@ -237,7 +255,7 @@ class Solver(metaclass=ABCMeta):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver
         show : :obj:`bool`, optional
             Display step log
@@ -283,7 +301,7 @@ class Solver(metaclass=ABCMeta):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data
         show : :obj:`bool`, optional
             Display finalize log
@@ -305,7 +323,7 @@ class Solver(metaclass=ABCMeta):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current solution
 
         Examples

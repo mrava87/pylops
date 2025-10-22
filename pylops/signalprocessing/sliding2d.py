@@ -41,9 +41,9 @@ def _slidingsteps(
 
     Returns
     -------
-    starts : :obj:`np.ndarray`
+    starts : :obj:`numpy.ndarray`
         Start indices
-    ends : :obj:`np.ndarray`
+    ends : :obj:`numpy.ndarray`
         End indices
 
     """
@@ -177,10 +177,23 @@ class Sliding2D(LinearOperator):
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
-    Returns
-    -------
-    Sop : :obj:`pylops.LinearOperator`
-        Sliding operator
+    Attributes
+    ----------
+    taps: :obj:`numpy.ndarray`
+        Set of tapers applied to each window (only if ``tapertype`` is not ``None``)
+    simOp : :obj:`bool`
+        Operator ``Op`` is applied to all windows simultaneously (``True``)
+        or to each window individually (``False``)
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape.
 
     Raises
     ------

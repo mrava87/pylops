@@ -38,9 +38,9 @@ def cg(
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times N]`
-    y : :obj:`np.ndarray`
+    y : :obj:`numpy.ndarray`
         Data of size :math:`[N \times 1]`
-    x0 : :obj:`np.ndarray`, optional
+    x0 : :obj:`numpy.ndarray`, optional
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
@@ -71,7 +71,7 @@ def cg(
 
     Returns
     -------
-    x : :obj:`np.ndarray`
+    x : :obj:`numpy.ndarray`
         Estimated model of size :math:`[N \times 1]`
     iit : :obj:`int`
         Number of executed iterations
@@ -131,9 +131,9 @@ def cgls(
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`
-    y : :obj:`np.ndarray`
+    y : :obj:`numpy.ndarray`
         Data of size :math:`[N \times 1]`
-    x0 : :obj:`np.ndarray`, optional
+    x0 : :obj:`numpy.ndarray`, optional
         Initial guess
     niter : :obj:`int`, optional
         Number of iterations
@@ -166,7 +166,7 @@ def cgls(
 
     Returns
     -------
-    x : :obj:`np.ndarray`
+    x : :obj:`numpy.ndarray`
         Estimated model of size :math:`[M \times 1]`
     istop : :obj:`int`
         Gives the reason for termination
@@ -245,9 +245,9 @@ def lsqr(
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`
-    y : :obj:`np.ndarray`
+    y : :obj:`numpy.ndarray`
         Data of size :math:`[N \times 1]`
-    x0 : :obj:`np.ndarray`, optional
+    x0 : :obj:`numpy.ndarray`, optional
         Initial guess of size :math:`[M \times 1]`
     damp : :obj:`float`, optional
         Damping coefficient
@@ -284,7 +284,7 @@ def lsqr(
 
     Returns
     -------
-    x : :obj:`np.ndarray`
+    x : :obj:`numpy.ndarray`
         Estimated model of size :math:`[M \times 1]`
     istop : :obj:`int`
         Gives the reason for termination

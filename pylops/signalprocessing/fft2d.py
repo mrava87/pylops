@@ -487,15 +487,12 @@ def FFT2D(
     cdtype : :obj:`bool`
         Output type of the forward. Complex equivalent to ``rdtype``.
     shape : :obj:`tuple`
-        Operator shape
+        Operator shape.
     clinear : :obj:`bool`
         .. versionadded:: 1.17.0
 
         Operator is complex-linear. Is false when either ``real=True`` or when
         ``dtype`` is not a complex type.
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly
-        (``True``) or not (``False``)
 
     Raises
     ------

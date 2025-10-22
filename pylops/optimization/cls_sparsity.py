@@ -243,6 +243,30 @@ class IRLS(Solver):
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
 
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    r : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called.
+    rw : :obj:`numpy.ndarray`
+        Weigthing vector of size :math:`[N \times 1]` for ``kind=data``
+        or ``kind=datamodel`` or of size :math:`[M \times 1]` for ``kind=model``
+        used in the solver when ``preallocate=True``. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+
     Raises
     ------
     NotImplementedError
@@ -399,7 +423,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         nouter : :obj:`int`, optional
             Number of outer iterations
@@ -599,7 +623,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
         engine : :obj:`str`, optional
             .. versionadded:: 2.6.0
@@ -618,7 +642,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
 
         """
@@ -651,7 +675,7 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS. Provide
             ``None`` to initialize internally as zero vector
         nouter : :obj:`int`, optional
@@ -677,7 +701,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -748,9 +772,9 @@ class IRLS(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[N \times 1]`. If ``None``, initialize
             internally as zero vector
         nouter : :obj:`int`, optional
@@ -795,7 +819,7 @@ class IRLS(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[N \times 1]`
 
         """
@@ -836,6 +860,28 @@ class OMP(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    norms : :obj:`numpy.ndarray`
+        Vector of size :math:`[Nbasis \times 1]` containing the
+        norms of each column of the ``Opbasis`` operator. Available
+        only after ``setup`` is called.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]`. Available only
+        after ``setup`` is called and updated at each call to ``step``.
+    cost : :obj:`list`
+        History of the L2 norm of the residual. Available only after
+        ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     See Also
     --------
@@ -971,7 +1017,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         niter_outer : :obj:`int`, optional
             Number of iterations of outer loop
@@ -1047,7 +1093,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1066,7 +1112,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
         cols : :obj:`list`
             Current list of chosen elements
@@ -1170,7 +1216,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1187,7 +1233,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         cols : :obj:`list`
             Current list of chosen elements
@@ -1222,7 +1268,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         cols : :obj:`list`
             Current list of chosen elements of vector x to be updated by a step of OMP
@@ -1231,7 +1277,7 @@ class OMP(Solver):
 
         Returns
         -------
-        xfin : :obj:`np.ndarray`
+        xfin : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1265,7 +1311,7 @@ class OMP(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         niter_outer : :obj:`int`, optional
             Number of iterations of outer loop
@@ -1307,7 +1353,7 @@ class OMP(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         niter_outer : :obj:`int`
             Number of effective outer iterations
@@ -1345,6 +1391,61 @@ class ISTA(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    Opmatvec : :obj:`callable`
+        Function handle to ``Op.matvec`` or ``Op.matmat``
+        depending on the number of dimensions of ``y``.
+    Oprmatvec : :obj:`callable`
+        Function handle to ``Op.rmatvec`` or ``Op.rmatmat``
+        depending on the number of dimensions of ``y``.
+    SOpmatvec : :obj:`callable`
+        Function handle to ``SOp.matvec`` or ``SOp.matmat``
+        depending on the number of dimensions of ``y``.
+    SOprmatvec : :obj:`callable`
+        Function handle to ``SOp.rmatvec`` or ``SOp.rmatmat``
+        depending on the number of dimensions of ``y``.
+    threshf : :obj:`callable`
+        Function handle to the chosen thresholding method.
+    thresh : :obj:`float`
+        Threshold.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    grad : :obj:`numpy.ndarray`
+        Gradient vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    x_unthesh : :obj:`numpy.ndarray`
+        Unthresholded model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    xold : :obj:`numpy.ndarray`
+        Old model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    SOpx_unthesh : :obj:`numpy.ndarray`
+        Old model vector pre-multiplied by the regularization operator
+        of size :math:`[M_S \times 1]` used in the solver when ``preallocate=True``.
+        Available only after ``setup`` is called and updated at each call to ``step``.
+    normresold : :obj:`float`
+        Old norm of the residual.
+    t : :obj:`float`
+        FISTA auxiliary coefficient (not used in ISTA).
+    cost : :obj:`list`
+        History of the L2 norm of the total objectiv function. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Raises
     ------
@@ -1501,7 +1602,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]` or :math:`[N \times R]` where
             a solution for multiple right-hand-side is found when ``R>1``.
         x0: :obj:`numpy.ndarray`, optional
@@ -1546,7 +1647,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial model vector
 
         """
@@ -1698,14 +1799,14 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
         xupdate : :obj:`float`
             Norm of the update
@@ -1814,7 +1915,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -1828,7 +1929,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -1894,7 +1995,7 @@ class ISTA(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         x0: :obj:`numpy.ndarray`, optional
             Initial guess
@@ -1942,7 +2043,7 @@ class ISTA(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         niter : :obj:`int`
             Number of effective iterations
@@ -1983,6 +2084,62 @@ class FISTA(ISTA):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    Opmatvec : :obj:`callable`
+        Function handle to ``Op.matvec`` or ``Op.matmat``
+        depending on the number of dimensions of ``y``.
+    Oprmatvec : :obj:`callable`
+        Function handle to ``Op.rmatvec`` or ``Op.rmatmat``
+        depending on the number of dimensions of ``y``.
+    SOpmatvec : :obj:`callable`
+        Function handle to ``SOp.matvec`` or ``SOp.matmat``
+        depending on the number of dimensions of ``y``.
+    SOprmatvec : :obj:`callable`
+        Function handle to ``SOp.rmatvec`` or ``SOp.rmatmat``
+        depending on the number of dimensions of ``y``.
+    threshf : :obj:`callable`
+        Function handle to the chosen thresholding method.
+    thresh : :obj:`float`
+        Threshold.
+    res : :obj:`numpy.ndarray`
+        Residual vector of size :math:`[N \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    grad : :obj:`numpy.ndarray`
+        Gradient vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    x_unthesh : :obj:`numpy.ndarray`
+        Unthresholded model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    xold : :obj:`numpy.ndarray`
+        Old model vector of size :math:`[M \times 1]` used in the
+        solver when ``preallocate=True``. Available only after ``setup``
+        is called and updated at each call to ``step``.
+    SOpx_unthesh : :obj:`numpy.ndarray`
+        Old model vector pre-multiplied by the regularization operator
+        of size :math:`[M_S \times 1]` used in the solver when ``preallocate=True``.
+        Available only after ``setup`` is called and updated at each call to ``step``.
+    normresold : :obj:`float`
+        Old norm of the residual.
+    t : :obj:`float`
+        FISTA auxiliary coefficient (not used in ISTA).
+    cost : :obj:`list`
+        History of the L2 norm of the total objectiv function. Available
+        only after ``setup`` is called and updated at each call to ``step``.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Raises
     ------
@@ -2069,18 +2226,18 @@ class FISTA(ISTA):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by a step of ISTA
-        z : :obj:`np.ndarray`
+        z : :obj:`numpy.ndarray`
             Current auxiliary model vector to be updated by a step of ISTA
         show : :obj:`bool`, optional
             Display iteration log
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
-        z : :obj:`np.ndarray`
+        z : :obj:`numpy.ndarray`
             Updated auxiliary model vector
         xupdate : :obj:`float`
             Norm of the update
@@ -2198,7 +2355,7 @@ class FISTA(ISTA):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of CG
         niter : :obj:`int`, optional
             Number of iterations. Can be set to ``None`` if already
@@ -2212,7 +2369,7 @@ class FISTA(ISTA):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -2262,6 +2419,13 @@ class SPGL1(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert of size :math:`[N \times M]`.
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
 
     Raises
     ------
@@ -2325,7 +2489,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         SOp : :obj:`pylops.LinearOperator`, optional
             Sparsifying transform
@@ -2369,7 +2533,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of the solver.
             If ``None``, x is assumed to be a zero vector
         show : :obj:`bool`, optional
@@ -2454,7 +2618,7 @@ class SPGL1(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         x0 : :obj:`numpy.ndarray`, optional
             Initial guess
@@ -2540,6 +2704,32 @@ class SplitBregman(Solver):
     ----------
     Op : :obj:`pylops.LinearOperator`
         Operator to invert
+
+    Attributes
+    ----------
+    ncp : :obj:`module`
+        Array module used by the solver (obtained via
+        :func:`pylops.utils.backend.get_array_module`)
+        ). Available only after ``setup`` is called.
+    isjax : :obj:`bool`
+        Whether the input data is a JAX array or not.
+    nregsL1 : :obj:`int`
+        Number of L1 regularization terms.
+    b : :obj:`numpy.ndarray`
+        Bregman update vector.
+    d : :obj:`numpy.ndarray`
+        Shrinked vector.
+    nregsL1 : :obj:`int`
+        Number of L2 regularization terms.
+    Regs : :obj:`list`
+        List of L1 and L2 regularization terms.
+    epsRs : :obj:`list`
+        List of L1 and L2 regularization dampings.
+    cost : :obj:`numpy.ndarray`, optional
+        History of total cost function through iterations.
+    iiter : :obj:`int`
+        Current iteration number. Available only after
+        ``setup`` is called and updated at each call to ``step``.
 
     Notes
     -----
@@ -2701,11 +2891,11 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         RegsL1 : :obj:`list`
             :math:`L_1` regularization operators
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter_outer : :obj:`int`, optional
@@ -2751,7 +2941,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Initial guess of size :math:`[N \times 1]`
 
         """
@@ -2827,7 +3017,7 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        x : :obj:`list` or :obj:`np.ndarray`
+        x : :obj:`list` or :obj:`numpy.ndarray`
             Current model vector to be updated by a step of OMP
         engine : :obj:`str`, optional
             Solver to use (``scipy`` or ``pylops``)
@@ -2844,7 +3034,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Updated model vector
 
         """
@@ -2936,7 +3126,7 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Current model vector to be updated by multiple steps of IRLS
         engine : :obj:`str`, optional
             Solver to use (``scipy`` or ``pylops``)
@@ -2955,7 +3145,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -2992,7 +3182,7 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        xfin : :obj:`np.ndarray`
+        xfin : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
 
         """
@@ -3029,11 +3219,11 @@ class SplitBregman(Solver):
 
         Parameters
         ----------
-        y : :obj:`np.ndarray`
+        y : :obj:`numpy.ndarray`
             Data of size :math:`[N \times 1]`
         RegsL1 : :obj:`list`
             :math:`L_1` regularization operators
-        x0 : :obj:`np.ndarray`, optional
+        x0 : :obj:`numpy.ndarray`, optional
             Initial guess of size :math:`[M \times 1]`. If ``None``, initialize
             internally as zero vector
         niter_outer : :obj:`int`, optional
@@ -3091,12 +3281,12 @@ class SplitBregman(Solver):
 
         Returns
         -------
-        x : :obj:`np.ndarray`
+        x : :obj:`numpy.ndarray`
             Estimated model of size :math:`[M \times 1]`
         iiter : :obj:`int`
             Iteration number of outer loop upon termination
         cost : :obj:`numpy.ndarray`
-            History of cost function through iterations
+            History of total cost function through iterations
 
         """
         x = self.setup(

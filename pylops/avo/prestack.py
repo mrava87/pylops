@@ -63,14 +63,14 @@ def PrestackLinearModelling(
 
     Parameters
     ----------
-    wav : :obj:`np.ndarray`
+    wav : :obj:`numpy.ndarray`
         Wavelet in time domain (must had odd number of
         elements and centered to zero). Note that the ``dtype`` of this
         variable will define that of the operator
-    theta : :obj:`np.ndarray`
+    theta : :obj:`numpy.ndarray`
         Incident angles in degrees. Must have same ``dtype`` of ``wav`` (or
         it will be automatically casted to it)
-    vsvp : :obj:`float` or :obj:`np.ndarray`
+    vsvp : :obj:`float` or :obj:`numpy.ndarray`
         :math:`V_S/V_P` ratio (constant or time/depth variant)
     nt0 : :obj:`int`, optional
         number of samples (if ``vsvp`` is a scalar)
@@ -239,18 +239,18 @@ def PrestackWaveletModelling(
 
     Parameters
     ----------
-    m : :obj:`np.ndarray`
+    m : :obj:`numpy.ndarray`
         elastic parameter profles of size :math:`[n_{t_0} \times N]`
         where :math:`N=3,\,2`. Note that the ``dtype`` of this
         variable will define that of the operator
     theta : :obj:`int`
         Incident angles in degrees. Must have same ``dtype`` of ``m`` (or
         it will be automatically cast to it)
-    nwav : :obj:`np.ndarray`
+    nwav : :obj:`numpy.ndarray`
         Number of samples of wavelet to be applied/estimated
     wavc : :obj:`int`, optional
         Index of the center of the wavelet
-    vsvp : :obj:`np.ndarray` or :obj:`float`, optional
+    vsvp : :obj:`numpy.ndarray` or :obj:`float`, optional
         :math:`V_S/V_P` ratio
     linearization : `{"akirich", "fatti", "PS"}` or :obj:`callable`, optional
         * "akirich": Aki-Richards. See :py:func:`pylops.avo.avo.akirichards`.
@@ -379,15 +379,15 @@ def PrestackInversion(
 
     Parameters
     ----------
-    data : :obj:`np.ndarray`
+    data : :obj:`numpy.ndarray`
         Band-limited seismic post-stack data of size
         :math:`[(n_\text{lins} \times) \, n_{t_0} \times n_{\theta} \, (\times n_x \times n_y)]`
-    theta : :obj:`np.ndarray`
+    theta : :obj:`numpy.ndarray`
         Incident angles in degrees
-    wav : :obj:`np.ndarray`
+    wav : :obj:`numpy.ndarray`
         Wavelet in time domain (must had odd number of elements
         and centered to zero)
-    m0 : :obj:`np.ndarray`, optional
+    m0 : :obj:`numpy.ndarray`, optional
         Background model of size :math:`[n_{t_0} \times n_{m}
         \,(\times n_x \times n_y)]`
     linearization : `{"akirich", "fatti", "PS"}` or :obj:`list`, optional
@@ -422,7 +422,7 @@ def PrestackInversion(
         Damping factor for additional blockiness regularization term
     kind : :obj:`str`, optional
         Derivative kind (``forward`` or ``centered``).
-    vsvp : :obj:`float` or :obj:`np.ndarray`
+    vsvp : :obj:`float` or :obj:`numpy.ndarray`
         :math:`V_S/V_P` ratio (constant or time/depth variant)
     **kwargs_solver
         Arbitrary keyword arguments for :py:func:`scipy.linalg.lstsq`
@@ -432,10 +432,10 @@ def PrestackInversion(
 
     Returns
     -------
-    minv : :obj:`np.ndarray`
+    minv : :obj:`numpy.ndarray`
         Inverted model of size :math:`[n_{t_0} \times n_{m}
         \,(\times n_x \times n_y)]`
-    datar : :obj:`np.ndarray`
+    datar : :obj:`numpy.ndarray`
         Residual data (i.e., data - background data) of
         size :math:`[n_{t_0} \times n_{\theta} \,(\times n_x \times n_y)]`
 

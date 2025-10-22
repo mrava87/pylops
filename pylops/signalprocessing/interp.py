@@ -117,9 +117,9 @@ def Interp(
 ) -> Tuple[LinearOperator, IntNDArray]:
     r"""Interpolation operator.
 
-    Apply interpolation along ``axis``
-    from regularly sampled input vector into fractionary positions ``iava``
-    using one of the following algorithms:
+    Apply interpolation along ``axis`` from regularly sampled input
+    vector into fractionary positions ``iava`` using one of the
+    following algorithms:
 
     - *Nearest neighbour* interpolation
       is a thin wrapper around :obj:`pylops.Restriction` at ``np.round(iava)``

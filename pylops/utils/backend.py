@@ -82,7 +82,7 @@ def get_module(backend: str = "numpy") -> ModuleType:
 
     Returns
     -------
-    mod : :obj:`func`
+    mod : :obj:`callable`
         Module to be used to process array (:mod:`numpy` or :mod:`cupy` or :mod:`jax`)
 
     """
@@ -102,7 +102,7 @@ def get_module_name(mod: ModuleType) -> str:
 
     Parameters
     ----------
-    mod : :obj:`func`
+    mod : :obj:`callable`
         Module to be used to process array (:mod:`numpy` or :mod:`cupy` or :mod:`jax`)
 
     Returns
@@ -133,7 +133,7 @@ def get_array_module(x: npt.ArrayLike) -> ModuleType:
 
     Returns
     -------
-    mod : :obj:`func`
+    mod : :obj:`callable`
         Module to be used to process array
         (:mod:`numpy`, :mod:`cupy`, or , :mod:`jax`)
 
@@ -154,7 +154,7 @@ def get_normalize_axis_index() -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -171,7 +171,7 @@ def get_convolve(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -196,7 +196,7 @@ def get_fftconvolve(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -221,7 +221,7 @@ def get_oaconvolve(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -250,7 +250,7 @@ def get_correlate(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -275,7 +275,7 @@ def get_add_at(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -298,7 +298,7 @@ def get_sliding_window_view(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -321,7 +321,7 @@ def get_block_diag(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -346,7 +346,7 @@ def get_toeplitz(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -371,7 +371,7 @@ def get_csc_matrix(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -394,7 +394,7 @@ def get_sparse_eye(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -417,7 +417,7 @@ def get_lstsq(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
@@ -440,7 +440,7 @@ def get_sp_fft(x: npt.ArrayLike) -> Callable:
 
     Returns
     -------
-    f : :obj:`func`
+    f : :obj:`callable`
         Function to be used to process array
 
     """
