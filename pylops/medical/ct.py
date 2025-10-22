@@ -163,6 +163,7 @@ class CT2D(LinearOperator):
         )
 
     def _init_1_slice_3d_geometries(self):
+        """Emulate 2D geometry as 3D to be able to use zero-copy GPU data exchange in ASTRA."""
         self._3d_vol_geom = astra.create_vol_geom(*self.dims, 1)
         if self.proj_geom_type == "parallel":
             self._3d_proj_geom = astra.create_proj_geom(
