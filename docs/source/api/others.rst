@@ -140,6 +140,7 @@ Signal-processing
     signalprocessing.nonstationary_convmtx
     signalprocessing.dip_estimate
     signalprocessing.slope_estimate
+    signalprocessing.pwd_slope_estimate
 
 Tapers
 ------
