@@ -58,7 +58,9 @@ class CT2D(LinearOperator):
     engine : :obj:`str`, optional
         Engine used for computation (``cpu`` or ``cuda``).
     dtype : :obj:`str`, optional
-        Type of elements in input array.
+        Type of elements in input array. Note that internally all operations will be
+        performed in float32 dtype because of ASTRA compatibility, and the output will
+        be converted to the requested dtype afterwards.
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
@@ -100,7 +102,7 @@ class CT2D(LinearOperator):
         origin_detector_dist: Optional[float] = None,
         projector_type: Optional[str] = None,
         engine: str = "cpu",
-        dtype: DTypeLike = "float64",
+        dtype: DTypeLike = "float32",
         name: str = "C",
     ) -> None:
         if astra_message is not None:
