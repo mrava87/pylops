@@ -6,7 +6,7 @@ import numpy as np
 
 from pylops import LinearOperator
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import NDArray
+from pylops.utils.typing import DTypeLike, NDArray
 
 try:
     from ._spraying2d_numba import spray_adjoint_numba, spray_forward_numba
@@ -15,22 +15,22 @@ except ImportError:
 
 
 class PWSprayer2D(LinearOperator):
+    r"""2D Plane-Wave Sprayer.
 
-    r"""
-    Plane-Wave Sprayer in 2D.
-
-    Forward mode sprays (paints) each input value along local structural
-    slopes in the :math:`\pm x` directions with exponential decay.
-    The adjoint mode gathers contributions back along the same slope
-    trajectories. Together, these define a linear operator that propagates
-    information preferentially along structural dips.
+    Spray (οr paint) each input value along local structural
+    slopes in :math:`\pm x` direction with exponential decay
+    in forward mode, and gather contributions back along the same
+    slope trajectories in adjoint mode. Together, this pair of
+    operators defines a linear operator that propagates information
+    preferentially along structural dips (implemented in
+    :class:`pylops.signalprocessing.PWSmoother2D`).
 
     Parameters
     ----------
     dims : :obj:`tuple` of :obj:`int`
-        Dimensions of the 2D model (``nz, nx``).
+        Number of samples for each dimension - ``(nz, nx)``.
     sigma : :obj:`numpy.ndarray`
-        Local slope field of shape ``(nz, nx)``, in samples per trace
+        Local slope field of shape ``(nz, nx)`` defined in samples per trace
         (:math:`dz/dx`).
     radius : :obj:`int`, optional
         Maximum number of steps along each :math:`\pm x` direction to spray
@@ -38,8 +38,27 @@ class PWSprayer2D(LinearOperator):
     alpha : :obj:`float`, optional
         Geometric decay factor per step (:math:`0 < \alpha \leq 1`).
         Higher values propagate energy farther. Default is ``0.9``.
-    dtype : :obj:`str` or :obj:`numpy.dtype`, optional
-        Data type of the operator. Default is ``'float32'``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array.
+    name : :obj:`str`, optional
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+
+    Attributes
+    ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening. In
+        this case, same as ``dims``.
+    shape : :obj:`tuple`
+        Operator shape.
+
+    See Also
+    --------
+    PWSmoother2D : Structure-aligned smoother
+    pwd_slope_estimate : Local slope estimation using plane-wave destruction
 
     Notes
     -----
@@ -50,23 +69,6 @@ class PWSprayer2D(LinearOperator):
     - Effective smoothing along dip grows with larger ``radius`` and
       higher ``alpha``.
 
-    See Also
-    --------
-    PWSmoother2D : Structure-aligned smoother
-    pwd_slope_estimate : Local slope estimation using plane-wave destruction
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pylops.utils import dottest
-    >>> nz, nx = 40, 30
-    >>> sigma = np.zeros((nz, nx), dtype='float32')  # flat slope
-    >>> P = PWSprayer2D(dims=(nz, nx), sigma=sigma, radius=4, alpha=0.9)
-    >>> x = np.zeros(nz*nx, dtype='float32')
-    >>> x[nz//2 * nx + nx//2] = 1.0   # impulse in the center
-    >>> y = P @ x                     # spray along horizontal direction
-    >>> dottest(P, nz*nx, nz*nx, complexflag=False)
-    True
     """
 
     def __init__(
@@ -75,14 +77,14 @@ class PWSprayer2D(LinearOperator):
         sigma: NDArray,
         radius: int = 8,
         alpha: float = 0.9,
-        dtype: str | np.dtype = "float32",
-        name: str = "PWSp",
+        dtype: DTypeLike = "float64",
+        name: str = "P",
     ):
         if len(dims) != 2:
             raise ValueError("dims must contain exactly two elements (nz, nx)")
         self._radius = int(radius)
         self._alpha = float(alpha)
-        self._sigma = np.ascontiguousarray(sigma.astype(np.float32))
+        self._sigma = np.ascontiguousarray(sigma)
         super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dims, name=name)
 
     @reshaped
@@ -99,21 +101,19 @@ class PWSprayer2D(LinearOperator):
 
 
 class PWSmoother2D(LinearOperator):
-
-    r"""
-    Structure-aligned 2D smoother based on plane-wave spraying.
+    r"""2D Structure-aligned smoother.
 
     This operator builds a symmetric, positive semi-definite (PSD) smoother
-    aligned with local structural dips. It is defined as
+    aligned over local structural dips (``sigma``). It is defined as:
 
     .. math::
 
-        S = P^\top P
+        S = P^H P
 
-    where :math:`P` is a :class:`PWSprayer2D` operator that propagates
-    values along local slopes. The composition ``P.T @ P`` produces a
-    correlation-like operator that smooths preferentially along dip
-    directions.
+    where :math:`P` is a :class:`pylops.signalprocessing.PWSprayer2D` operator that
+    propagates values along local slopes. The composition ``P.H @ P`` produces a
+    correlation-like operator that smooths preferentially along the defined
+    slopes.
 
     The resulting operator can be used as a regularizer or preconditioner
     in inverse problems to enforce structural smoothness.
@@ -121,18 +121,32 @@ class PWSmoother2D(LinearOperator):
     Parameters
     ----------
     dims : :obj:`tuple` of :obj:`int`
-        Dimensions of the 2D model (``nz, nx``).
+        Number of samples for each dimension - ``(nz, nx)``.
     sigma : :obj:`numpy.ndarray`
-        Local slope field of shape ``(nz, nx)``, in samples per trace
+        Local slope field of shape ``(nz, nx)`` defined in samples per trace
         (:math:`dz/dx`).
     radius : :obj:`int`, optional
-        Maximum number of steps (in samples) to spray along ``±x``.
-        Default is ``8``.
+        Maximum number of steps along each :math:`\pm x` direction to spray
+        or gather. Controls the spatial extent of spreading. Default is ``8``.
     alpha : :obj:`float`, optional
-        Geometric decay factor per step (:math:`0<\alpha\leq 1`).
-        Controls effective smoothing length. Default is ``0.9``.
-    dtype : :obj:`str` or :obj:`numpy.dtype`, optional
-        Data type of the operator. Default is ``'float32'``.
+        Geometric decay factor per step (:math:`0 < \alpha \leq 1`).
+        Higher values propagate energy farther. Default is ``0.9``.
+    dtype : :obj:`str`, optional
+        Type of elements in input array.
+    name : :obj:`str`, optional
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+
+    Attributes
+    ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening. In
+        this case, same as ``dims``.
+    shape : :obj:`tuple`
+        Operator shape.
 
     Notes
     -----
@@ -147,17 +161,6 @@ class PWSmoother2D(LinearOperator):
     PWSprayer2D : Forward sprayer/gather operator
     pwd_slope_estimate : Local slope estimation using plane-wave destruction
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pylops.utils import dottest
-    >>> nz, nx = 50, 30
-    >>> sigma = np.zeros((nz, nx), dtype='float32')  # flat structure
-    >>> Sop = PWSmoother2D(dims=(nz, nx), sigma=sigma, radius=4, alpha=0.9)
-    >>> x = np.random.randn(nz*nx).astype('float32')
-    >>> y = Sop @ x
-    >>> dottest(Sop, nz*nx, nz*nx, complexflag=False)
-    True
     """
 
     def __init__(
@@ -166,8 +169,8 @@ class PWSmoother2D(LinearOperator):
         sigma: NDArray,
         radius: int = 8,
         alpha: float = 0.9,
-        dtype: str | np.dtype = "float32",
-        name: str = "PWSm",
+        dtype: DTypeLike = "float64",
+        name: str = "P",
     ):
         if len(dims) != 2:
             raise ValueError("dims must contain exactly two elements (nz, nx)")
