@@ -17,10 +17,20 @@ from numpy.typing import ArrayLike
 from scipy.ndimage import gaussian_filter
 
 from pylops.basicoperators import Smoothing2D
+from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_toeplitz
 from pylops.utils.typing import NDArray
 
-from ._pwd2d_numba import conv_allpass_numba
+_jit_message_pwd = deps.numba_import("the plane-wave destruction kernels")
+
+if _jit_message_pwd is None:
+    from pylops.signalprocessing._pwd2d_numba import (
+        conv_allpass_numba as _conv_allpass_kernel,
+    )
+else:
+    _conv_allpass_kernel = None
+
+_pwd_warning_emitted = False
 
 
 def _conv_allpass_python(
@@ -125,6 +135,24 @@ def _conv_allpass_python(
                 v = din[i1 + 2, i2 + 1] - din[i1 - 2, i2]
                 u1[i1, i2] += v * c4d
                 u2[i1, i2] += v * c4
+
+
+def _conv_allpass(
+    din: np.ndarray,
+    dip: np.ndarray,
+    order: int,
+    u1: np.ndarray,
+    u2: np.ndarray,
+) -> None:
+    """Dispatch to numba kernel when available, otherwise use Python fallback."""
+    global _pwd_warning_emitted
+    if _conv_allpass_kernel is not None:
+        _conv_allpass_kernel(din, dip, order, u1, u2)
+    else:
+        if not _pwd_warning_emitted and _jit_message_pwd is not None:
+            warnings.warn(_jit_message_pwd)
+            _pwd_warning_emitted = True
+        _conv_allpass_python(din, dip, order, u1, u2)
 
 def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
     r"""Convolution matrix
@@ -475,9 +503,9 @@ def pwd_slope_estimate(
 
     Notes
     -----
-    ``pwd_slope_estimate`` relies on kernels defined in ``_pwd2d_numba.py``.
-    When Numba is available the implementation is JIT-accelerated; otherwise a
-    pure-Python fallback is used.
+    ``pwd_slope_estimate`` relies on kernels defined in
+    ``pylops.signalprocessing._pwd2d_numba``. When Numba is available the
+    implementation is JIT-accelerated; otherwise a pure-Python fallback is used.
 
     References
     ----------
@@ -520,7 +548,7 @@ def pwd_slope_estimate(
     from pylops.optimization.leastsquares import preconditioned_inversion
 
     for _ in range(niter):
-        conv_allpass_numba(din, sigma, order, u1, u2)
+        _conv_allpass(din, sigma, order, u1, u2)
 
         Dop = Diagonal(u1.ravel().astype("float32"), dtype="float32")
         delta_sigma[:] = preconditioned_inversion(
