@@ -32,7 +32,7 @@ nz, nx = sigmoid.shape
 
 ###############################################################################
 # Slope estimation comparison between PWD and Structure Tensor
-# ---------------------------------------
+# ------------------------------------------------------------
 # Estimate slopes using both the plane-wave destruction algorithm and the
 # structure-tensor estimator. Both return slopes in samples per trace.
 pwd_sigma = pwd_slope_estimate(
