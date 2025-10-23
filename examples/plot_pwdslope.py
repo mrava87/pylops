@@ -53,7 +53,7 @@ st_sigma, _ = slope_estimate(
     eps=1e-6,
     dips=False,
 )
-st_sigma = np.asarray(st_sigma, dtype=np.float32)
+st_sigma = st_sigma.astype(np.float32)
 
 ###############################################################################
 fig, ax = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
