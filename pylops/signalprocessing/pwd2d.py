@@ -1,6 +1,4 @@
-"""Plane-wave spraying operators for structure-aligned smoothing."""
-
-from __future__ import annotations
+__all__ = ["PWSprayer2D", "PWSmoother2D"]
 
 from typing import Tuple
 
@@ -10,15 +8,14 @@ from pylops import LinearOperator
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import NDArray
 
-try:  
-    from ._spraying2d_numba import spray_forward_numba, spray_adjoint_numba
-except ImportError:  
-    from _spraying2d_numba import spray_forward_numba, spray_adjoint_numba
+try:
+    from ._spraying2d_numba import spray_adjoint_numba, spray_forward_numba
+except ImportError:
+    from _spraying2d_numba import spray_adjoint_numba, spray_forward_numba
 
-__all__ = ["PWSprayer2D", "PWSmoother2D"]
 
 class PWSprayer2D(LinearOperator):
-    
+
     r"""
     Plane-Wave Sprayer in 2D.
 
@@ -55,7 +52,7 @@ class PWSprayer2D(LinearOperator):
 
     See Also
     --------
-    PWSmoother2D : Structure-aligned smoother (``Sprayer.T @ Sprayer``)
+    PWSmoother2D : Structure-aligned smoother
     pwd_slope_estimate : Local slope estimation using plane-wave destruction
 
     Examples
@@ -101,9 +98,8 @@ class PWSprayer2D(LinearOperator):
         return y
 
 
-
 class PWSmoother2D(LinearOperator):
-    
+
     r"""
     Structure-aligned 2D smoother based on plane-wave spraying.
 
@@ -163,6 +159,7 @@ class PWSmoother2D(LinearOperator):
     >>> dottest(Sop, nz*nx, nz*nx, complexflag=False)
     True
     """
+
     def __init__(
         self,
         dims: Tuple[int, int],
@@ -181,12 +178,10 @@ class PWSmoother2D(LinearOperator):
 
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
-        # y = Spray^T (Spray x)
         y = self._sprayer @ x
         y = self._sprayer.H @ y
         return y
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
-        # symmetric
         return self._matvec(x)
