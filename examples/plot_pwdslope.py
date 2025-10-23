@@ -24,9 +24,8 @@ np.random.seed(10)
 # Load sigmoid model
 # ------------------
 # Load the synthetic sigmoid model used throughout the notebooks.
-sigmoid_path = os.path.join(
-    os.path.dirname(__file__), "../testdata/slope_estimate/sigmoid_model.npy"
-)
+inputfile = "../testdata/sigmoid.npz"
+sigmoid = np.load(inputfile)["sigmoid"]
 sigmoid = np.load(sigmoid_path)
 nz, nx = sigmoid.shape
 
