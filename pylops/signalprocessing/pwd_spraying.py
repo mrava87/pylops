@@ -78,29 +78,26 @@ class PWSprayer2D(LinearOperator):
         radius: int = 8,
         alpha: float = 0.9,
         dtype: str | np.dtype = "float32",
+        name: str = "PWSp",
     ):
         if len(dims) != 2:
             raise ValueError("dims must contain exactly two elements (nz, nx)")
-        nz, nx = dims
-        self.nz, self.nx = int(nz), int(nx)
-        self.shape = (self.nz * self.nx, self.nz * self.nx)
-        self.dtype = np.dtype(dtype)
-        self.radius = int(radius)
-        self.alpha = float(alpha)
-        self.sigma = np.ascontiguousarray(np.asarray(sigma, dtype=np.float32))
-        super().__init__(dtype=self.dtype)
+        self._radius = int(radius)
+        self._alpha = float(alpha)
+        self._sigma = np.ascontiguousarray(sigma.astype(np.float32))
+        super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dims, name=name)
 
-    def _matvec(self, x):
-        x2 = np.asarray(x, dtype=np.float32, order="C").reshape(self.nz, self.nx)
-        y2 = np.zeros_like(x2)
-        spray_forward_numba(x2, self.sigma, self.radius, self.alpha, y2)
-        return y2.ravel().astype(self.dtype, copy=False)
+    @reshaped
+    def _matvec(self, x: NDArray) -> NDArray:
+        y = np.zeros_like(x)
+        spray_forward_numba(x, self._sigma, self._radius, self._alpha, y)
+        return y
 
-    def _rmatvec(self, x):
-        x2 = np.asarray(x, dtype=np.float32, order="C").reshape(self.nz, self.nx)
-        y2 = np.zeros_like(x2)
-        spray_adjoint_numba(x2, self.sigma, self.radius, self.alpha, y2)
-        return y2.ravel().astype(self.dtype, copy=False)
+    @reshaped
+    def _rmatvec(self, x: NDArray) -> NDArray:
+        y = np.zeros_like(x)
+        spray_adjoint_numba(x, self._sigma, self._radius, self._alpha, y)
+        return y
 
 
 
