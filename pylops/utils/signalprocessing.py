@@ -16,16 +16,11 @@ import numpy.typing as npt
 from numpy.typing import ArrayLike
 from scipy.ndimage import gaussian_filter
 
+from pylops.basicoperators import Smoothing2D
 from pylops.utils.backend import get_array_module, get_toeplitz
 from pylops.utils.typing import NDArray
 
-try:  
-    from ._pwd2d_numba import conv_allpass_numba
-except ImportError:  
-    try:
-        from _pwd2d_numba import conv_allpass_numba  
-    except ImportError:  
-        conv_allpass_numba = None  
+from ._pwd2d_numba import conv_allpass_numba
 
 
 def _conv_allpass_python(
@@ -126,15 +121,10 @@ def _conv_allpass_python(
                 u2[i1, i2] += v * c2
                 v = din[i1 + 1, i2 + 1] - din[i1 - 1, i2]
                 u1[i1, i2] += v * c3d
-        u2[i1, i2] += v * c3
-        v = din[i1 + 2, i2 + 1] - din[i1 - 2, i2]
-        u1[i1, i2] += v * c4d
-        u2[i1, i2] += v * c4
-
-
-if conv_allpass_numba is None:  
-    conv_allpass_numba = _conv_allpass_python  
-
+                u2[i1, i2] += v * c3
+                v = din[i1 + 2, i2 + 1] - din[i1 - 2, i2]
+                u1[i1, i2] += v * c4d
+                u2[i1, i2] += v * c4
 
 def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
     r"""Convolution matrix
@@ -435,7 +425,6 @@ def _triangular_smoothing_from_boxcars(
     dtype: str | np.dtype = "float32",
 ):
     """Build a triangular smoother as the composition of two boxcar passes."""
-    from pylops.basicoperators import Smoothing2D  # local import to avoid circular deps
 
     ny, nx = nsmooth
     ly = (ny + 1) // 2
@@ -523,8 +512,6 @@ def pwd_slope_estimate(
     if smoothing_lower == "triangle":
         Sop = _triangular_smoothing_from_boxcars(nsmooth=nsmooth, dims=(nz, nx), dtype="float32")
     elif smoothing_lower == "boxcar":
-        from pylops.basicoperators import Smoothing2D
-
         Sop = Smoothing2D(nsmooth=nsmooth, dims=(nz, nx), dtype="float32")
     else:
         raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
