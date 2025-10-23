@@ -169,28 +169,23 @@ class PWSmoother2D(LinearOperator):
         radius: int = 8,
         alpha: float = 0.9,
         dtype: str | np.dtype = "float32",
+        name: str = "PWSm",
     ):
         if len(dims) != 2:
             raise ValueError("dims must contain exactly two elements (nz, nx)")
-        nz, nx = dims
-        self.nz, self.nx = int(nz), int(nx)
-        self.shape = (self.nz * self.nx, self.nz * self.nx)
-        self.dtype = np.dtype(dtype)
         self._sprayer = PWSprayer2D(
-            dims=(self.nz, self.nx),
-            sigma=sigma,
-            radius=radius,
-            alpha=alpha,
-            dtype=self.dtype,
+            dims=dims, sigma=sigma, radius=radius, alpha=alpha, dtype=dtype
         )
-        super().__init__(dtype=self.dtype)
+        super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dims, name=name)
 
-    def _matvec(self, x):
+    @reshaped
+    def _matvec(self, x: NDArray) -> NDArray:
         # y = Spray^T (Spray x)
         y = self._sprayer @ x
         y = self._sprayer.H @ y
-        return y
+        return y.todense()
 
-    def _rmatvec(self, x):
+    @reshaped
+    def _rmatvec(self, x: NDArray) -> NDArray:
         # symmetric
         return self._matvec(x)
