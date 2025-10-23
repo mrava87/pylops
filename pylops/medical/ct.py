@@ -52,9 +52,9 @@ class CT2D(LinearOperator):
         Distance between origin and detector along the source-origin line
         (only for "proj_geom_type=fanflat")
     projector_type : :obj:`int`, optional
-        Type of projection kernel: ``strip``, or ``line``, or ``linear`` for ``engine=cpu``,
-        and ``cuda`` (i.e., hardware-accelerated ``linear``) for ``engine=cuda``.
-        type is supported.
+        Type of projection kernel: ``strip`` (default), ``line``, or ``linear`` for
+        ``engine=cpu``, and ``cuda`` (i.e., hardware-accelerated ``linear``) for
+        ``engine=cuda``. For ``fanflat`` geometry, ``linear`` kernel is not supported.
     engine : :obj:`str`, optional
         Engine used for computation (``cpu`` or ``cuda``).
     dtype : :obj:`str`, optional
@@ -117,20 +117,22 @@ class CT2D(LinearOperator):
         # make "strip" projector type default for cpu engine and only allow cuda otherwise
         if engine == "cpu":
             if projector_type is None:
-                self.projector_type = "strip"
-            else:
-                self.projector_type = projector_type
+                projector_type = "strip"
+            # fanflat geometry projectors need an appropriate suffix (unless it's "cuda")
             if projector_type == "cuda":
                 logging.warning("'cuda' projector type specified with 'cpu' engine.")
+            elif proj_geom_type == "fanflat":
+                projector_type += "_fanflat"
         elif engine == "cuda":
             if projector_type in [None, "cuda"]:
-                self.projector_type = "cuda"
+                projector_type = "cuda"
             else:
                 raise ValueError(
                     "Only 'cuda' projector type is supported for 'cuda' engine."
                 )
         else:
             raise NotImplementedError("Engine must be 'cpu' or 'cuda'")
+        self.projector_type = projector_type
 
         # create create volume and projection geometries as well as projector
         self._init_geometries()
