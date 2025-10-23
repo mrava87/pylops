@@ -78,7 +78,7 @@ fig.tight_layout()
 
 ###############################################################################
 # Structure-aligned smoothing via local slopes
-# ---------------------------------------
+# --------------------------------------------
 # Build the PWSmoother2D operator (Sprayer.T @ Sprayer) from both slope fields
 # and highlight the effect of structure-aligned smoothing.
 noise = np.random.uniform(-1.0, 1.0, size=(nz, nx)).astype(np.float32)
