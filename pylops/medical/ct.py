@@ -188,33 +188,48 @@ class CT2D(LinearOperator):
             "cuda3d", self._3d_proj_geom, self._3d_vol_geom
         )
 
-    @reshaped
-    def _matvec(self, x):
+    def _astra_project(self, x, mode):
+        """Perform forward/backward projection using ASTRA."""
         ncp = get_array_module(x)
         backend = get_module_name(ncp)
+        x_dtype = x.dtype
+        if x_dtype != ncp.float32:
+            logging.warning(
+                "CT2D operator received input that is not of float32 dtype. It will "
+                "be cast into float32 internally for ASTRA compatibility."
+            )
+            x = x.astype(ncp.float32)
         if backend == "numpy":
-            y_id, y = astra.create_sino(x, self.projector_id)
+            if mode == "forward":
+                y_id, y = astra.create_sino(x, self.projector_id)
+            elif mode == "backward":
+                y_id, y = astra.create_backprojection(x, self.projector_id)
             astra.data2d.delete(y_id)
         else:
-            # Ensure x and y are 1-slice 3D arrays
+            # Use zero-copy GPU data exchange, which is only implemented for contiguous
+            # 3D arrays in ASTRA
+            if not x.flags["C_CONTIGUOUS"]:
+                logging.warning(
+                    "CT2D operator received input that is not of contiguous. It will be "
+                    "cast into a contiguous array internally for ASTRA compatibility."
+                )
+                x = ncp.ascontiguousarray(x)
             x = ncp.expand_dims(x, axis=0)
-            y = ncp.empty_like(x, shape=astra.geom_size(self._3d_proj_geom))
-            astra.experimental.direct_FP3D(self._3d_projector_id, x, y)
-        return y
+            if mode == "forward":
+                y = ncp.empty_like(x, shape=astra.geom_size(self._3d_proj_geom))
+                astra.experimental.direct_FP3D(self._3d_projector_id, x, y)
+            elif mode == "backward":
+                y = ncp.empty_like(x, shape=astra.geom_size(self._3d_vol_geom))
+                astra.experimental.direct_BP3D(self._3d_projector_id, y, x)
+        return y.astype(x_dtype)
+
+    @reshaped
+    def _matvec(self, x):
+        return self._astra_project(x, mode="forward")
 
     @reshaped
     def _rmatvec(self, x):
-        ncp = get_array_module(x)
-        backend = get_module_name(ncp)
-        if backend == "numpy":
-            y_id, y = astra.create_backprojection(x, self.projector_id)
-            astra.data2d.delete(y_id)
-        else:
-            # Ensure x and y are 1-slice 3D arrays
-            x = ncp.expand_dims(x, axis=0)
-            y = ncp.empty_like(x, shape=astra.geom_size(self._3d_vol_geom))
-            astra.experimental.direct_BP3D(self._3d_projector_id, y, x)
-        return y
+        return self._astra_project(x, mode="backward")
 
     def __del__(self):
         if hasattr(self, "projector_id"):
