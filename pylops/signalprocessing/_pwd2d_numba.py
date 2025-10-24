@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import numpy as np
-
 __all__ = ["conv_allpass_numba"]
+
+
+from pylops.utils.typing import NDArray
 
 try:
     from numba import njit, prange
@@ -94,11 +95,7 @@ def _B5d(sigma: float) -> tuple[float, float, float, float, float]:
 
 @njit(parallel=True, fastmath=True, cache=True)
 def conv_allpass_numba(
-    din: np.ndarray,
-    dip: np.ndarray,
-    order: int,
-    u1: np.ndarray,
-    u2: np.ndarray,
+    din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
 ) -> None:
     """Numba kernel for PWD all-pass filtering used in :func:`pwd_slope_estimate`."""
     n1, n2 = din.shape

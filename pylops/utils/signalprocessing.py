@@ -16,7 +16,8 @@ import numpy.typing as npt
 from numpy.typing import ArrayLike
 from scipy.ndimage import gaussian_filter
 
-from pylops.basicoperators import Smoothing2D
+from pylops.basicoperators import Diagonal, Smoothing2D
+from pylops.optimization.leastsquares import preconditioned_inversion
 from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_toeplitz
 from pylops.utils.typing import NDArray
@@ -34,11 +35,7 @@ _pwd_warning_emitted = False
 
 
 def _conv_allpass_python(
-    din: np.ndarray,
-    dip: np.ndarray,
-    order: int,
-    u1: np.ndarray,
-    u2: np.ndarray,
+    din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
 ) -> None:
     """Pure-Python fallback for plane-wave destruction all-pass filtering."""
     n1, n2 = din.shape
@@ -145,11 +142,7 @@ def _conv_allpass_python(
 
 
 def _conv_allpass(
-    din: np.ndarray,
-    dip: np.ndarray,
-    order: int,
-    u1: np.ndarray,
-    u2: np.ndarray,
+    din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
 ) -> None:
     """Dispatch to numba kernel when available, otherwise use Python fallback."""
     global _pwd_warning_emitted
@@ -456,9 +449,7 @@ def dip_estimate(
 
 
 def _triangular_smoothing_from_boxcars(
-    nsmooth: Tuple[int, int],
-    dims: Tuple[int, int],
-    dtype: str | np.dtype = "float32",
+    nsmooth: Tuple[int, int], dims: Tuple[int, int], dtype: str | np.dtype = "float32"
 ):
     """Build a triangular smoother as the composition of two boxcar passes."""
 
@@ -554,9 +545,6 @@ def pwd_slope_estimate(
     else:
         raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
 
-    from pylops import Diagonal
-    from pylops.optimization.leastsquares import preconditioned_inversion
-
     for _ in range(niter):
         _conv_allpass(din, sigma, order, u1, u2)
 
@@ -567,7 +555,7 @@ def pwd_slope_estimate(
             Sop,
             damp=damp,
             iter_lim=liter,
-            show=0,
+            show=False,
         )[0].reshape(nz, nx)
 
         sigma += delta_sigma

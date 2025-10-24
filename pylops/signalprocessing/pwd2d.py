@@ -17,7 +17,7 @@ except ImportError:
 class PWSprayer2D(LinearOperator):
     r"""2D Plane-Wave Sprayer.
 
-    Spray (οr paint) each input value along local structural
+    Spray (or paint) each input value along local structural
     slopes in :math:`\pm x` direction with exponential decay
     in forward mode, and gather contributions back along the same
     slope trajectories in adjoint mode. Together, this pair of
