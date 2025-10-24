@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import numpy as np
+from math import floor
+
+from pylops.utils.typing import NDArray
 
 __all__ = ["spray_forward_numba", "spray_adjoint_numba"]
 
 try:  # pragma: no cover - executed only when numba is available
     from numba import njit, prange
 except ImportError:  # pragma: no cover - executed only in no-numba builds
+
     def njit(*args, **kwargs):  # type: ignore
         def decorator(func):
             return func
@@ -21,11 +24,7 @@ except ImportError:  # pragma: no cover - executed only in no-numba builds
 
 @njit(cache=True, fastmath=True, parallel=False)
 def spray_forward_numba(
-    m: np.ndarray,
-    sigma: np.ndarray,
-    radius: int,
-    alpha: float,
-    out: np.ndarray,
+    m: NDArray, sigma: NDArray, radius: int, alpha: float, out: NDArray
 ) -> None:
     """Forward spraying kernel used in :class:`PWSprayer2D`."""
     nz, nx = m.shape
@@ -72,11 +71,7 @@ def spray_forward_numba(
 
 @njit(cache=True, fastmath=True, parallel=True)
 def spray_adjoint_numba(
-    d: np.ndarray,
-    sigma: np.ndarray,
-    radius: int,
-    alpha: float,
-    out: np.ndarray,
+    d: NDArray, sigma: NDArray, radius: int, alpha: float, out: NDArray
 ) -> None:
     """Adjoint spraying kernel used in :class:`PWSprayer2D`."""
     nz, nx = d.shape
