@@ -4,7 +4,7 @@ cupy-cuda12x
 torch
 numba
 sympy
-astra-toolbox
+astra-toolbox>=2.3.0
 matplotlib
 ipython
 pytest

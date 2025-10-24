@@ -10,6 +10,7 @@ dependencies:
   - scipy>=1.13.0
   - cupy
   - sympy
+  - astra-toolbox>=2.3.0
   - matplotlib
   - ipython
   - pytest
