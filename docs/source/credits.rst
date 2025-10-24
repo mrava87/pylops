@@ -25,3 +25,4 @@ Contributors
 *  `David Sollberger <https://github.com/solldavid>`_, solldavid
 *  `Gustavo Coelho <https://github.com/guaacoelho>`_, guaacoelho
 *  `Shaowen Wang <https://github.com/GeophyAI>`_, GeophyAI
+*  `Francesco Brandolin <https://github.com/FB-I>`_, FB-I
