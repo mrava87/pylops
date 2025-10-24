@@ -47,7 +47,7 @@ def spray_forward_numba(
                 s = sigma[z0, min(x - 1, nx - 1)]
                 z += s
                 amp *= alpha
-                zi = int(np.floor(z))
+                zi = floor(z)
                 t = z - zi
                 zi0 = 0 if zi < 0 else (nz - 1 if zi >= nz else zi)
                 zi1 = 0 if zi + 1 < 0 else (nz - 1 if zi + 1 >= nz else zi + 1)
@@ -63,7 +63,7 @@ def spray_forward_numba(
                 s = sigma[z0, x]
                 z -= s
                 amp *= alpha
-                zi = int(np.floor(z))
+                zi = floor(z)
                 t = z - zi
                 zi0 = 0 if zi < 0 else (nz - 1 if zi >= nz else zi)
                 zi1 = 0 if zi + 1 < 0 else (nz - 1 if zi + 1 >= nz else zi + 1)
@@ -92,7 +92,7 @@ def spray_adjoint_numba(
                 s = sigma[z0, min(x - 1, nx - 1)]
                 z += s
                 amp *= alpha
-                zi = int(np.floor(z))
+                zi = floor(z)
                 t = z - zi
                 zi0 = 0 if zi < 0 else (nz - 1 if zi >= nz else zi)
                 zi1 = 0 if zi + 1 < 0 else (nz - 1 if zi + 1 >= nz else zi + 1)
@@ -108,7 +108,7 @@ def spray_adjoint_numba(
                 s = sigma[z0, x]
                 z -= s
                 amp *= alpha
-                zi = int(np.floor(z))
+                zi = floor(z)
                 t = z - zi
                 zi0 = 0 if zi < 0 else (nz - 1 if zi >= nz else zi)
                 zi1 = 0 if zi + 1 < 0 else (nz - 1 if zi + 1 >= nz else zi + 1)
