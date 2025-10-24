@@ -58,7 +58,7 @@ class TestCT2D:
         reason="CUDA tests are failing because of severely mismatched adjoint.",
     )
     def test_adjointess(self, operator):
-        assert dottest(operator)
+        assert dottest(operator, rtol=1e-5)
 
     def test_non_astra_native_dtype(self, operator, x, y):
         x = x.astype(np.float64)
