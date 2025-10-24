@@ -8,10 +8,7 @@ from pylops import LinearOperator
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, NDArray
 
-try:
-    from ._spraying2d_numba import spray_adjoint_numba, spray_forward_numba
-except ImportError:
-    from _spraying2d_numba import spray_adjoint_numba, spray_forward_numba
+from ._spraying2d_numba import _spray_adjoint_numba, _spray_forward_numba
 
 
 class PWSprayer2D(LinearOperator):
@@ -31,7 +28,7 @@ class PWSprayer2D(LinearOperator):
         Number of samples for each dimension - ``(nz, nx)``.
     sigma : :obj:`numpy.ndarray`
         Local slope field of shape ``(nz, nx)`` defined in samples per trace
-        (:math:`dz/dx`).
+        (:math:`\Delta z / \Delta x`).
     radius : :obj:`int`, optional
         Maximum number of steps along each :math:`\pm x` direction to spray
         or gather. Controls the spatial extent of spreading. Default is ``8``.
@@ -90,13 +87,13 @@ class PWSprayer2D(LinearOperator):
     @reshaped
     def _matvec(self, x: NDArray) -> NDArray:
         y = np.zeros_like(x)
-        spray_forward_numba(x, self._sigma, self._radius, self._alpha, y)
+        _spray_forward_numba(x, self._sigma, self._radius, self._alpha, y)
         return y
 
     @reshaped
     def _rmatvec(self, x: NDArray) -> NDArray:
         y = np.zeros_like(x)
-        spray_adjoint_numba(x, self._sigma, self._radius, self._alpha, y)
+        _spray_adjoint_numba(x, self._sigma, self._radius, self._alpha, y)
         return y
 
 
@@ -124,7 +121,7 @@ class PWSmoother2D(LinearOperator):
         Number of samples for each dimension - ``(nz, nx)``.
     sigma : :obj:`numpy.ndarray`
         Local slope field of shape ``(nz, nx)`` defined in samples per trace
-        (:math:`dz/dx`).
+        (:math:`\Delta z / \Delta x`).
     radius : :obj:`int`, optional
         Maximum number of steps along each :math:`\pm x` direction to spray
         or gather. Controls the spatial extent of spreading. Default is ``8``.

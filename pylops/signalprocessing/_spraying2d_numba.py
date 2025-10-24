@@ -1,13 +1,9 @@
-"""Numba-accelerated kernels for plane-wave spraying operators."""
-
-from __future__ import annotations
-
 from math import floor
 
 from pylops.utils.typing import NDArray
 
-__all__ = ["spray_forward_numba", "spray_adjoint_numba"]
-
+# Remap numba njit to no-ops and prange to range
+# if numba is not available
 try:  # pragma: no cover - executed only when numba is available
     from numba import njit, prange
 except ImportError:  # pragma: no cover - executed only in no-numba builds
@@ -23,10 +19,12 @@ except ImportError:  # pragma: no cover - executed only in no-numba builds
 
 
 @njit(cache=True, fastmath=True, parallel=False)
-def spray_forward_numba(
+def _spray_forward_numba(
     m: NDArray, sigma: NDArray, radius: int, alpha: float, out: NDArray
 ) -> None:
-    """Forward spraying kernel used in :class:`PWSprayer2D`."""
+    """Forward spraying kernel used in
+    :class:`pylops.signalprocessing.PWSprayer2D`.
+    """
     nz, nx = m.shape
     ftype = sigma.dtype.type
     alpha = ftype(alpha)
@@ -72,10 +70,12 @@ def spray_forward_numba(
 
 
 @njit(cache=True, fastmath=True, parallel=True)
-def spray_adjoint_numba(
+def _spray_adjoint_numba(
     d: NDArray, sigma: NDArray, radius: int, alpha: float, out: NDArray
 ) -> None:
-    """Adjoint spraying kernel used in :class:`PWSprayer2D`."""
+    """Adjoint spraying kernel used in
+    :class:`pylops.signalprocessing.PWSprayer2D`.
+    """
     nz, nx = d.shape
     ftype = sigma.dtype.type
     alpha = ftype(alpha)

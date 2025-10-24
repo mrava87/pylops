@@ -157,8 +157,9 @@ fig.suptitle("Sigmoid model")
 ax[0].imshow(sigmoid3d[ny // 2], aspect="auto", cmap="gray")
 ax[0].set_ylabel("z (samples)")
 ax[0].set_xlabel("x (samples)")
-ax[1].imshow(sigmoid3d[..., nx // 2].T, aspect="auto", cmap="gray")
+im1 = ax[1].imshow(sigmoid3d[..., nx // 2].T, aspect="auto", cmap="gray")
 ax[1].set_xlabel("y (samples)")
+create_colorbar(im1, ax=ax[1])
 fig.tight_layout()
 
 ###############################################################################
@@ -185,20 +186,26 @@ v = np.max(np.abs(pwd_slope3d_y))
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=(3, 1))
 fig.suptitle("PWD slopes along x")
-ax[0].imshow(pwd_slope3d_y[ny // 2], aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[0].imshow(pwd_slope3d_y[ny // 2], aspect="auto", cmap="turbo", vmin=-v, vmax=v)
 ax[0].set_ylabel("z (samples)")
 ax[0].set_xlabel("x (samples)")
-ax[1].imshow(pwd_slope3d_y[..., nx // 2].T, aspect="auto", cmap="jet", vmin=-v, vmax=v)
+im1 = ax[1].imshow(
+    pwd_slope3d_y[..., nx // 2].T, aspect="auto", cmap="turbo", vmin=-v, vmax=v
+)
 ax[1].set_xlabel("y (samples)")
+create_colorbar(im1, ax=ax[1])
 fig.tight_layout()
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=[3, 1])
 fig.suptitle("PWD slopes along y")
-ax[0].imshow(pwd_slope3d_x[ny // 2], aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[0].imshow(pwd_slope3d_x[ny // 2], aspect="auto", cmap="turbo", vmin=-v, vmax=v)
 ax[0].set_ylabel("z (samples)")
 ax[0].set_xlabel("x (samples)")
-ax[1].imshow(pwd_slope3d_x[..., nx // 2].T, aspect="auto", cmap="jet", vmin=-v, vmax=v)
+im1 = ax[1].imshow(
+    pwd_slope3d_x[..., nx // 2].T, aspect="auto", cmap="turbo", vmin=-v, vmax=v
+)
 ax[1].set_xlabel("y (samples)")
+create_colorbar(im1, ax=ax[1])
 fig.tight_layout()
 
 ###############################################################################
@@ -225,6 +232,7 @@ fig.suptitle("Smoothed with structure-tensor slopes")
 ax[0].imshow(smooth_st3d[ny // 2], aspect="auto", cmap="magma")
 ax[0].set_ylabel("z (samples)")
 ax[0].set_xlabel("x (samples)")
-ax[1].imshow(smooth_st3d[..., nx // 2].T, aspect="auto", cmap="magma")
+im1 = ax[1].imshow(smooth_st3d[..., nx // 2].T, aspect="auto", cmap="magma")
 ax[1].set_xlabel("y (samples)")
+create_colorbar(im1, ax=ax[1])
 fig.tight_layout()

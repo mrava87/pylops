@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 __all__ = [
     "convmtx",
     "nonstationary_convmtx",
@@ -12,150 +10,16 @@ import warnings
 from typing import Tuple
 
 import numpy as np
-import numpy.typing as npt
-from numpy.typing import ArrayLike
 from scipy.ndimage import gaussian_filter
 
 from pylops.basicoperators import Diagonal, Smoothing2D
 from pylops.optimization.leastsquares import preconditioned_inversion
-from pylops.utils import deps
+from pylops.utils._pwd2d import _conv_allpass, _triangular_smoothing_from_boxcars
 from pylops.utils.backend import get_array_module, get_toeplitz
 from pylops.utils.typing import NDArray
 
-_jit_message_pwd = deps.numba_import("the plane-wave destruction kernels")
 
-if _jit_message_pwd is None:
-    from pylops.signalprocessing._pwd2d_numba import (
-        conv_allpass_numba as _conv_allpass_kernel,
-    )
-else:
-    _conv_allpass_kernel = None
-
-_pwd_warning_emitted = False
-
-
-def _conv_allpass_python(
-    din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
-) -> None:
-    """Pure-Python fallback for plane-wave destruction all-pass filtering."""
-    n1, n2 = din.shape
-    nw = 1 if order == 1 else 2
-
-    for j in range(n1):
-        for i in range(n2):
-            u1[j, i] = 0.0
-            u2[j, i] = 0.0
-
-    def b3(sig: float):
-        b0 = (1.0 - sig) * (2.0 - sig) / 12.0
-        b1 = (2.0 + sig) * (2.0 - sig) / 6.0
-        b2 = (1.0 + sig) * (2.0 + sig) / 12.0
-        return b0, b1, b2
-
-    def b3d(sig: float):
-        b0 = -(2.0 - sig) / 12.0 - (1.0 - sig) / 12.0
-        b1 = (2.0 - sig) / 6.0 - (2.0 + sig) / 6.0
-        b2 = (2.0 + sig) / 12.0 + (1.0 + sig) / 12.0
-        return b0, b1, b2
-
-    def b5(sig: float):
-        s = sig
-        b0 = (1 - s) * (2 - s) * (3 - s) * (4 - s) / 1680.0
-        b1 = (4 - s) * (2 - s) * (3 - s) * (4 + s) / 420.0
-        b2 = (4 - s) * (3 - s) * (3 + s) * (4 + s) / 280.0
-        b3 = (4 - s) * (2 + s) * (3 + s) * (4 + s) / 420.0
-        b4 = (1 + s) * (2 + s) * (3 + s) * (4 + s) / 1680.0
-        return b0, b1, b2, b3, b4
-
-    def b5d(sig: float):
-        s = sig
-        b0 = (
-            -(
-                (2 - s) * (3 - s) * (4 - s)
-                + (1 - s) * (3 - s) * (4 - s)
-                + (1 - s) * (2 - s) * (4 - s)
-                + (1 - s) * (2 - s) * (3 - s)
-            )
-            / 1680.0
-        )
-        b1 = (
-            -(
-                (2 - s) * (3 - s) * (4 + s)
-                + (4 - s) * (3 - s) * (4 + s)
-                + (4 - s) * (2 - s) * (4 + s)
-            )
-            / 420.0
-            + (4 - s) * (2 - s) * (3 - s) / 420.0
-        )
-        b2 = (
-            -((3 - s) * (3 + s) * (4 + s) + (4 - s) * (3 + s) * (4 + s)) / 280.0
-            + (4 - s) * (3 - s) * (4 + s) / 280.0
-            + (4 - s) * (3 - s) * (3 + s) / 280.0
-        )
-        b3 = (
-            -((2 + s) * (3 + s) * (4 + s)) / 420.0
-            + (4 - s) * (3 + s) * (4 + s) / 420.0
-            + (4 - s) * (2 + s) * (4 + s) / 420.0
-            + (4 - s) * (2 + s) * (3 + s) / 420.0
-        )
-        b4 = (
-            (2 + s) * (3 + s) * (4 + s)
-            + (1 + s) * (3 + s) * (4 + s)
-            + (1 + s) * (2 + s) * (4 + s)
-            + (1 + s) * (2 + s) * (3 + s)
-        ) / 1680.0
-        return b0, b1, b2, b3, b4
-
-    for i1 in range(nw, n1 - nw):
-        for i2 in range(0, n2 - 1):
-            s = dip[i1, i2]
-            if order == 1:
-                b0d, b1d, b2d = b3d(s)
-                b0, b1, b2 = b3(s)
-                v = din[i1 - 1, i2 + 1] - din[i1 + 1, i2]
-                u1[i1, i2] += v * b0d
-                u2[i1, i2] += v * b0
-                v = din[i1 + 0, i2 + 1] - din[i1 + 0, i2]
-                u1[i1, i2] += v * b1d
-                u2[i1, i2] += v * b1
-                v = din[i1 + 1, i2 + 1] - din[i1 - 1, i2]
-                u1[i1, i2] += v * b2d
-                u2[i1, i2] += v * b2
-            else:
-                c0d, c1d, c2d, c3d, c4d = b5d(s)
-                c0, c1, c2, c3, c4 = b5(s)
-                v = din[i1 - 2, i2 + 1] - din[i1 + 2, i2]
-                u1[i1, i2] += v * c0d
-                u2[i1, i2] += v * c0
-                v = din[i1 - 1, i2 + 1] - din[i1 + 1, i2]
-                u1[i1, i2] += v * c1d
-                u2[i1, i2] += v * c1
-                v = din[i1 + 0, i2 + 1] - din[i1 + 0, i2]
-                u1[i1, i2] += v * c2d
-                u2[i1, i2] += v * c2
-                v = din[i1 + 1, i2 + 1] - din[i1 - 1, i2]
-                u1[i1, i2] += v * c3d
-                u2[i1, i2] += v * c3
-                v = din[i1 + 2, i2 + 1] - din[i1 - 2, i2]
-                u1[i1, i2] += v * c4d
-                u2[i1, i2] += v * c4
-
-
-def _conv_allpass(
-    din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
-) -> None:
-    """Dispatch to numba kernel when available, otherwise use Python fallback."""
-    global _pwd_warning_emitted
-    if _conv_allpass_kernel is not None:
-        _conv_allpass_kernel(din, dip, order, u1, u2)
-    else:
-        if not _pwd_warning_emitted and _jit_message_pwd is not None:
-            warnings.warn(_jit_message_pwd)
-            _pwd_warning_emitted = True
-        _conv_allpass_python(din, dip, order, u1, u2)
-
-
-def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
+def convmtx(h: NDArray, n: int, offset: int = 0) -> NDArray:
     r"""Convolution matrix
 
     Makes a dense convolution matrix :math:`\mathbf{C}`
@@ -202,7 +66,7 @@ def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
 
 
 def nonstationary_convmtx(
-    H: npt.ArrayLike,
+    H: NDArray,
     n: int,
     hc: int = 0,
     pad: Tuple[int] = (0, 0),
@@ -243,7 +107,7 @@ def nonstationary_convmtx(
 
 
 def slope_estimate(
-    d: npt.ArrayLike,
+    d: NDArray,
     dz: float = 1.0,
     dx: float = 1.0,
     smooth: float = 5.0,
@@ -395,7 +259,7 @@ def slope_estimate(
 
 
 def dip_estimate(
-    d: npt.ArrayLike,
+    d: NDArray,
     dz: float = 1.0,
     dx: float = 1.0,
     smooth: int = 5,
@@ -434,7 +298,6 @@ def dip_estimate(
     anisotropies : :obj:`numpy.ndarray`
         Estimated local anisotropies: :math:`1-\lambda_\text{min}/\lambda_\text{max}`
 
-
     Notes
     -----
     Thin wrapper around ``pylops.utils.signalprocessing.slope_estimate`` with ``dips=True``.
@@ -448,37 +311,29 @@ def dip_estimate(
     return dips, anisos
 
 
-def _triangular_smoothing_from_boxcars(
-    nsmooth: Tuple[int, int], dims: Tuple[int, int], dtype: str | np.dtype = "float32"
-):
-    """Build a triangular smoother as the composition of two boxcar passes."""
-
-    ny, nx = nsmooth
-    ly = (ny + 1) // 2
-    lx = (nx + 1) // 2
-
-    box = Smoothing2D(nsmooth=(ly, lx), dims=dims, dtype=dtype)
-    return box @ box
-
-
 def pwd_slope_estimate(
-    d: ArrayLike,
+    d: NDArray,
     niter: int = 5,
     liter: int = 20,
     order: int = 2,
+    smoothing: str = "triangle",
     nsmooth: Tuple[int, int] = (10, 10),
     damp: float = 0.0,
-    smoothing: str = "triangle",
 ) -> NDArray:
     r"""Plane-Wave Destruction (PWD) local slope estimation.
 
-    Slopes :math:`\sigma(z, x)` are estimated following the
-    plane-wave-destruction formulation (Claerbout, 1999; Fomel, 2002),
-    with optional structure-aligned smoothing preconditioning.
+    Local slopes are estimated using the *Plane-Wave Destruction (PWD)* algorithm [1]_ [2]_
+    with optional structure-aligned smoothing preconditioning. Slopes are returned as
+    :math:`\tan\theta`, defined in a RHS coordinate system with :math:`z`-axis
+    pointing downward.
+
+    This algorithm relies on kernels defined in ``pylops.utils._pwd2d_numba``.
+    When Numba is available the implementation is JIT-accelerated; otherwise a pure-Python
+    fallback is used.
 
     Parameters
     ----------
-    d : :obj:`numpy.ndarray` or :obj:`ArrayLike`
+    d : :obj:`numpy.ndarray`
         Input 2D array of shape ``(nz, nx)``.
     niter : :obj:`int`, optional
         Number of outer PWD iterations. Default is ``5``.
@@ -487,71 +342,61 @@ def pwd_slope_estimate(
     order : :obj:`int`, optional
         Accuracy order of the all-pass filters. Use ``1`` (3-tap) or ``2`` (5-tap).
         Default is ``2``.
+    smoothing : :obj:`str`, optional
+        Preconditioning choice: ``"triangle"`` (default) that applies a triangular
+        smoother (two boxcar passes), or ``"boxcar"`` that applies a single-pass boxcar.
     nsmooth : :obj:`tuple` of :obj:`int`, optional
         Smoothing lengths ``(ny, nx)`` for the preconditioner. Default ``(10, 10)``.
     damp : :obj:`float`, optional
         Damping factor for the least-squares solve. Default ``0.0``.
-    smoothing : :obj:`str`, optional
-        Preconditioning choice: ``"triangle"`` (default) applies a triangular
-        smoother (two boxcar passes); ``"boxcar"`` applies a single-pass boxcar.
 
     Returns
     -------
     sigma : :obj:`numpy.ndarray`
-        Estimated slope field of shape ``(nz, nx)`` in samples per trace (:math:`\Delta z / \Delta x`).
+        Estimated slope field of shape ``(nz, nx)`` in samples per trace
+        (:math:`\Delta z / \Delta x`).
 
-    Notes
-    -----
-    ``pwd_slope_estimate`` relies on kernels defined in
-    ``pylops.signalprocessing._pwd2d_numba``. When Numba is available the
-    implementation is JIT-accelerated; otherwise a pure-Python fallback is used.
+    Raises
+    ------
+    ValueError
+        If ``order`` is not ``1`` or ``2``.
+    ValueError
+        If input array ``d`` is not 2-D.
 
-    References
-    ----------
-    - Claerbout, J. F. (1992). *Earth Sounding Analysis: Processing Versus Inversion*.
-    - Fomel, S. (2002). "Applications of plane-wave destruction filters."
-      *Geophysics*, 67(6), 1946-1960.
+    .. [1] Claerbout, J., and Brown, M., "Two-dimensional textures and prediction-error
+       filters", EAGE Annual Meeting, Expanded Abstracts. 1999.
+    .. [2] Fomel, S., "Applications of plane‐wave destruction filters",
+       Geophysics. 2002.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pylops.utils.signalprocessing import pwd_slope_estimate
-    >>> nz, nx = 100, 60
-    >>> data = np.random.randn(nz, nx).astype("float32")
-    >>> sigma = pwd_slope_estimate(data, niter=3, nsmooth=(5, 5))
-    >>> sigma.shape
-    (100, 60)
     """
     if order not in (1, 2):
         raise ValueError("order must be 1 (B3) or 2 (B5)")
-
-    din = np.asarray(d, dtype=np.float32, order="C")
-    if din.ndim != 2:
+    if d.ndim != 2:
         raise ValueError("input data must be 2-D")
 
-    nz, nx = din.shape
-    sigma = np.zeros((nz, nx), dtype=np.float32)
+    dtype = d.dtype
+    nz, nx = d.shape
+    sigma = np.zeros_like(d)
     delta_sigma = np.zeros_like(sigma)
     u1 = np.zeros_like(sigma)
     u2 = np.zeros_like(sigma)
 
-    smoothing_lower = smoothing.lower()
-    if smoothing_lower == "triangle":
+    if smoothing == "triangle":
         Sop = _triangular_smoothing_from_boxcars(
-            nsmooth=nsmooth, dims=(nz, nx), dtype="float32"
+            nsmooth=nsmooth, dims=(nz, nx), dtype=dtype
         )
-    elif smoothing_lower == "boxcar":
-        Sop = Smoothing2D(nsmooth=nsmooth, dims=(nz, nx), dtype="float32")
+    elif smoothing == "boxcar":
+        Sop = Smoothing2D(nsmooth=nsmooth, dims=(nz, nx), dtype=dtype)
     else:
         raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
 
     for _ in range(niter):
-        _conv_allpass(din, sigma, order, u1, u2)
+        _conv_allpass(d, sigma, order, u1, u2)
 
-        Dop = Diagonal(u1.ravel().astype("float32"), dtype="float32")
+        Dop = Diagonal(u1.ravel(), dtype=dtype)
         delta_sigma[:] = preconditioned_inversion(
             Dop,
-            (-u2.ravel()).astype(np.float32, copy=False),
+            -u2.ravel(),
             Sop,
             damp=damp,
             iter_lim=liter,
@@ -560,4 +405,4 @@ def pwd_slope_estimate(
 
         sigma += delta_sigma
 
-    return sigma.astype(np.float32, copy=False)
+    return sigma
