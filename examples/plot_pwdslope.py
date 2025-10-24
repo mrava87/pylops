@@ -173,11 +173,11 @@ pwd_slope_fun = partial(
     damp=6e-4,
     smoothing="triangle",
 )
-pwd_slope3d_y = np.concat(
+pwd_slope3d_y = np.concatenate(
     [pwd_slope_fun(sigmoid3d[i])[None].astype(np.float32) for i in range(ny)]
 )
 
-pwd_slope3d_x = np.concat(
+pwd_slope3d_x = np.concatenate(
     [pwd_slope_fun(sigmoid3d[:, :, i].T)[None].astype(np.float32) for i in range(nx)]
 ).transpose(2, 1, 0)
 
