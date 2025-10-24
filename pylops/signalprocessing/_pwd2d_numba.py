@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Iterable
-
 import numpy as np
 
 __all__ = ["conv_allpass_numba"]
@@ -11,6 +9,7 @@ __all__ = ["conv_allpass_numba"]
 try:
     from numba import njit, prange
 except ImportError:  # pragma: no cover - executed only without numba
+
     def njit(*args, **kwargs):  # type: ignore
         def decorator(func):
             return func
@@ -55,14 +54,21 @@ def _B5(sigma: float) -> tuple[float, float, float, float, float]:
 def _B5d(sigma: float) -> tuple[float, float, float, float, float]:
     """Derivatives of quartic B-spline coefficients."""
     s = sigma
-    b0 = -(
-        (2 - s) * (3 - s) * (4 - s)
-        + (1 - s) * (3 - s) * (4 - s)
-        + (1 - s) * (2 - s) * (4 - s)
-        + (1 - s) * (2 - s) * (3 - s)
-    ) / 1680.0
+    b0 = (
+        -(
+            (2 - s) * (3 - s) * (4 - s)
+            + (1 - s) * (3 - s) * (4 - s)
+            + (1 - s) * (2 - s) * (4 - s)
+            + (1 - s) * (2 - s) * (3 - s)
+        )
+        / 1680.0
+    )
     b1 = (
-        -((2 - s) * (3 - s) * (4 + s) + (4 - s) * (3 - s) * (4 + s) + (4 - s) * (2 - s) * (4 + s))
+        -(
+            (2 - s) * (3 - s) * (4 + s)
+            + (4 - s) * (3 - s) * (4 + s)
+            + (4 - s) * (2 - s) * (4 + s)
+        )
         / 420.0
         + (4 - s) * (2 - s) * (3 - s) / 420.0
     )
