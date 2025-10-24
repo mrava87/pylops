@@ -72,14 +72,21 @@ def _conv_allpass_python(
 
     def b5d(sig: float):
         s = sig
-        b0 = -(
-            (2 - s) * (3 - s) * (4 - s)
-            + (1 - s) * (3 - s) * (4 - s)
-            + (1 - s) * (2 - s) * (4 - s)
-            + (1 - s) * (2 - s) * (3 - s)
-        ) / 1680.0
+        b0 = (
+            -(
+                (2 - s) * (3 - s) * (4 - s)
+                + (1 - s) * (3 - s) * (4 - s)
+                + (1 - s) * (2 - s) * (4 - s)
+                + (1 - s) * (2 - s) * (3 - s)
+            )
+            / 1680.0
+        )
         b1 = (
-            -((2 - s) * (3 - s) * (4 + s) + (4 - s) * (3 - s) * (4 + s) + (4 - s) * (2 - s) * (4 + s))
+            -(
+                (2 - s) * (3 - s) * (4 + s)
+                + (4 - s) * (3 - s) * (4 + s)
+                + (4 - s) * (2 - s) * (4 + s)
+            )
             / 420.0
             + (4 - s) * (2 - s) * (3 - s) / 420.0
         )
@@ -153,6 +160,7 @@ def _conv_allpass(
             warnings.warn(_jit_message_pwd)
             _pwd_warning_emitted = True
         _conv_allpass_python(din, dip, order, u1, u2)
+
 
 def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
     r"""Convolution matrix
@@ -245,7 +253,7 @@ def slope_estimate(
     d: npt.ArrayLike,
     dz: float = 1.0,
     dx: float = 1.0,
-    smooth: int = 5,
+    smooth: float = 5.0,
     eps: float = 0.0,
     dips: bool = False,
 ) -> Tuple[NDArray, NDArray]:
@@ -538,13 +546,15 @@ def pwd_slope_estimate(
 
     smoothing_lower = smoothing.lower()
     if smoothing_lower == "triangle":
-        Sop = _triangular_smoothing_from_boxcars(nsmooth=nsmooth, dims=(nz, nx), dtype="float32")
+        Sop = _triangular_smoothing_from_boxcars(
+            nsmooth=nsmooth, dims=(nz, nx), dtype="float32"
+        )
     elif smoothing_lower == "boxcar":
         Sop = Smoothing2D(nsmooth=nsmooth, dims=(nz, nx), dtype="float32")
     else:
         raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
 
-    from pylops import Diagonal  
+    from pylops import Diagonal
     from pylops.optimization.leastsquares import preconditioned_inversion
 
     for _ in range(niter):
