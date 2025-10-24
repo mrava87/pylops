@@ -14,66 +14,60 @@ import pytest
 from pylops.medical import CT2D
 from pylops.utils import dottest
 
-par = {
-    "parallel_strip": {
-        "ny": 51,
-        "nx": 30,
-        "ntheta": 20,
-        "proj_geom_type": "parallel",
-        "projector_type": "strip",
-        "dtype": "float64",
-    },
-    "parallel_line": {
-        "ny": 51,
-        "nx": 30,
-        "ntheta": 20,
-        "proj_geom_type": "parallel",
-        "projector_type": "line",
-        "dtype": "float64",
-    },
-    "fanflat_strip": {
-        "ny": 51,
-        "nx": 30,
-        "ntheta": 20,
-        "proj_geom_type": "fanflat",
-        "source_origin_dist": 100,
-        "origin_detector_dist": 0,
-        "projector_type": "strip_fanflat",
-        "dtype": "float64",
-    },
-    "cuda": {
-        "ny": 51,
-        "nx": 30,
-        "ntheta": 20,
-        "proj_geom_type": "parallel",
-        "projector_type": "cuda",
-        "dtype": "float64",
-    },
-}
+
+@pytest.fixture
+def operator(request):
+    geometry_type = request.param
+    nx = 51
+    ny = 30
+    ntheta = 20
+    theta = np.linspace(0.0, np.pi, ntheta, endpoint=False)
+    source_origin_dist = 100 if geometry_type == "fanflat" else None
+    origin_detector_dist = 0 if geometry_type == "fanflat" else None
+    return CT2D(
+        (ny, nx),
+        1.0,
+        ny,
+        theta,
+        geometry_type,
+        source_origin_dist,
+        origin_detector_dist,
+        engine="cpu" if backend == "numpy" else "cuda",
+    )
+
+
+@pytest.fixture
+def x(operator):
+    return np.ones(operator.dims, dtype=np.float32)
+
+
+@pytest.fixture
+def y(operator):
+    return np.ones((len(operator.thetas), operator.det_count), dtype=np.float32)
 
 
 @pytest.mark.skipif(platform.system() == "Darwin", reason="Not OSX enabled")
-@pytest.mark.parametrize("par", par.values(), ids=par.keys())
-def test_CT2D(par):
-    """Dot-test for CT2D operator"""
-    if backend == "cupy" or par["projector_type"] == "cuda":
-        pytest.skip("CUDA tests are failing because of severely mismatched adjoint.")
+@pytest.mark.parametrize("operator", ["parallel", "fanflat"], indirect=True)
+class TestCT2D:
+    def test_basic(self, operator, x, y):
+        assert not np.allclose(operator @ x, 0.0)
+        assert not np.allclose(operator.T @ y, 0.0)
 
-    theta = np.linspace(0.0, np.pi, par["ntheta"], endpoint=False)
+    @pytest.mark.skipif(
+        backend == "cupy",
+        reason="CUDA tests are failing because of severely mismatched adjoint.",
+    )
+    def test_adjointess(self, operator):
+        assert dottest(operator)
 
-    Cop = CT2D(
-        (par["ny"], par["nx"]),
-        1.0,
-        par["ny"],
-        theta,
-        proj_geom_type=par["proj_geom_type"],
-        projector_type=par["projector_type"] if backend == "numpy" else "cuda",
-        source_origin_dist=par.get("source_origin_dist", None),
-        origin_detector_dist=par.get("origin_detector_dist", None),
-        engine="cpu" if backend == "numpy" else "cuda",
-    )
-    assert dottest(
-        Cop,
-        par["ny"] * par["ntheta"],
-        par["ny"] * par["nx"],
-    )
+    def test_non_astra_native_dtype(self, operator, x, y):
+        x = x.astype(np.float64)
+        y = y.astype(np.float64)
+        assert not np.allclose(operator @ x, 0.0)
+        assert not np.allclose(operator.T @ y, 0.0)
+
+    def test_non_contiguous_input(self, operator, x, y):
+        x = x[:, ::-1]  # non-contiguous view
+        y = y[:, ::-1]
+        assert not np.allclose(operator @ x, 0.0)
+        assert not np.allclose(operator.T @ y, 0.0)
