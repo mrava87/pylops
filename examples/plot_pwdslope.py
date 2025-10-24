@@ -56,9 +56,9 @@ pwd_slope = pwd_slope_estimate(
     niter=5,
     liter=20,
     order=2,
+    smoothing="triangle",
     nsmooth=(12, 12),
     damp=6e-4,
-    smoothing="triangle",
 ).astype(np.float32)
 
 st_slope, _ = slope_estimate(
@@ -149,13 +149,16 @@ ny = 20
 
 sigmoid3d = np.zeros((ny, nz, nx), dtype=sigmoid.dtype)
 for i in range(ny):
-    sigmoid3d[i, ...] = np.roll(sigmoid, i // 2, axis=0)
+    sigmoid3d[i, ...] = np.roll(sigmoid / 1e3, i // 2, axis=0)
 
 ###############################################################################
 fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=(3, 1))
 fig.suptitle("Sigmoid model")
 ax[0].imshow(sigmoid3d[ny // 2], aspect="auto", cmap="gray")
+ax[0].set_ylabel("z (samples)")
+ax[0].set_xlabel("x (samples)")
 ax[1].imshow(sigmoid3d[..., nx // 2].T, aspect="auto", cmap="gray")
+ax[1].set_xlabel("y (samples)")
 fig.tight_layout()
 
 ###############################################################################
@@ -178,10 +181,24 @@ pwd_slope3d_x = np.concat(
 ).transpose(2, 1, 0)
 
 ###############################################################################
+v = np.max(np.abs(pwd_slope3d_y))
+
 fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=(3, 1))
-fig.suptitle("PWD slopes")
+fig.suptitle("PWD slopes along x")
 ax[0].imshow(pwd_slope3d_y[ny // 2], aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[0].set_ylabel("z (samples)")
+ax[0].set_xlabel("x (samples)")
+ax[1].imshow(pwd_slope3d_y[..., nx // 2].T, aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[1].set_xlabel("y (samples)")
+fig.tight_layout()
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=[3, 1])
+fig.suptitle("PWD slopes along y")
+ax[0].imshow(pwd_slope3d_x[ny // 2], aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[0].set_ylabel("z (samples)")
+ax[0].set_xlabel("x (samples)")
 ax[1].imshow(pwd_slope3d_x[..., nx // 2].T, aspect="auto", cmap="jet", vmin=-v, vmax=v)
+ax[1].set_xlabel("y (samples)")
 fig.tight_layout()
 
 ###############################################################################
@@ -206,5 +223,8 @@ smooth_st3d = SOp_pwd3d @ noise3d
 fig, ax = plt.subplots(1, 2, figsize=(10, 4), sharey=True, width_ratios=(3, 1))
 fig.suptitle("Smoothed with structure-tensor slopes")
 ax[0].imshow(smooth_st3d[ny // 2], aspect="auto", cmap="magma")
+ax[0].set_ylabel("z (samples)")
+ax[0].set_xlabel("x (samples)")
 ax[1].imshow(smooth_st3d[..., nx // 2].T, aspect="auto", cmap="magma")
+ax[1].set_xlabel("y (samples)")
 fig.tight_layout()
