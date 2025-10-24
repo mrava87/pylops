@@ -478,6 +478,14 @@ Signal processing:
      - |:white_check_mark:|
      - |:white_check_mark:|
      - |:white_check_mark:|
+   * - :class:`pylops.signalprocessing.PWSprayer2D`
+     - |:white_check_mark:|
+     - |:red_circle:|
+     - |:red_circle:|
+   * - :class:`pylops.signalprocessing.PWSmoother2D`
+     - |:white_check_mark:|
+     - |:red_circle:|
+     - |:red_circle:|
    * - :class:`pylops.signalprocessing.Sliding1D`
      - |:white_check_mark:|
      - |:white_check_mark:|

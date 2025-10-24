@@ -32,6 +32,8 @@ A list of operators present in pylops.signalprocessing:
     FourierRadon3D	                Three dimensional Fourier Radon transform.
     ChirpRadon2D	                Two dimensional Chirp Radon transform.
     ChirpRadon3D	                Three dimensional Chirp Radon transform.
+    PWSprayer2D                     2D Plane-Wave Spraying operator.
+    PWSmoother2D                    2D Plane-Wave Smoothing operator.
     Seislet                         Two dimensional Seislet operator.
     Sliding1D                       1D Sliding transform operator.
     Sliding2D                       2D Sliding transform operator.
@@ -72,6 +74,7 @@ from .dwtnd import *
 from .seislet import *
 from .dct import *
 from .dtcwt import *
+from .pwd2d import *
 
 __all__ = [
     "FFT",
@@ -106,4 +109,6 @@ __all__ = [
     "Seislet",
     "DCT",
     "DTCWT",
+    "PWSprayer2D",
+    "PWSmoother2D",
 ]

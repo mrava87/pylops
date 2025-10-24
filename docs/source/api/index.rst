@@ -116,6 +116,8 @@ Signal processing
     FourierRadon3D
     ChirpRadon2D
     ChirpRadon3D
+    PWSprayer2D
+    PWSmoother2D
     Sliding1D
     Sliding2D
     Sliding3D
