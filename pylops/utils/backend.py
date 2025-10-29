@@ -486,32 +486,32 @@ def get_real_dtype(dtype: DTypeLike) -> DTypeLike:
     return np.real(np.ones(1, dtype)).dtype
 
 
-def to_cupy(x: NDArray) -> NDArray:
-    """Convert x to cupy array
+def to_cupy(x: npt.ArrayLike) -> npt.ArrayLike:
+    """Convert x to cupy array if cupy is available
 
     Parameters
     ----------
-    x : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+    x : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or :obj:`jax.Array`
         Array to evaluate
 
     Returns
     -------
-    x : :obj:`numpy.ndarray`
+    x : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or :obj:`jax.Array`
         Converted array
 
     """
     if deps.cupy_enabled:
-        if cp.get_array_module(x) == np:
+        if cp.get_array_module(x) != cp:
             x = cp.asarray(x)
     return x
 
 
-def to_numpy(x: NDArray) -> NDArray:
+def to_numpy(x: npt.ArrayLike) -> NDArray:
     """Convert x to numpy array
 
     Parameters
     ----------
-    x : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+    x : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or :obj:`jax.Array`
         Array to evaluate
 
     Returns
@@ -523,51 +523,57 @@ def to_numpy(x: NDArray) -> NDArray:
     if deps.cupy_enabled:
         if cp.get_array_module(x) == cp:
             x = cp.asnumpy(x)
+    if deps.jax_enabled:
+        if isinstance(x, jnp.ndarray):
+            x = np.array(x)
     return x
 
 
-def to_cupy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> NDArray:
+def to_cupy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
     """Convert y to cupy array conditional to x being a cupy array
 
     Parameters
     ----------
-    x : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+    x : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Array to evaluate
-    y : :obj:`numpy.ndarray`
+    y : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Array to convert
 
     Returns
     -------
-    y : :obj:`cupy.ndarray`
+    y : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Converted array
 
     """
     if deps.cupy_enabled:
-        if cp.get_array_module(x) == cp and cp.get_array_module(y) == np:
+        if cp.get_array_module(x) == cp and cp.get_array_module(y) != cp:
             with cp.cuda.Device(x.device):
                 y = cp.asarray(y)
     return y
 
 
-def to_numpy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> NDArray:
+def to_numpy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
     """Convert y to numpy array conditional to x being a numpy array
 
     Parameters
     ----------
-    x : :obj:`numpy.ndarray` or :obj:`cupy.ndarray`
+    x : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Array to evaluate
-    y : :obj:`numpy.ndarray`
+    y : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Array to convert
 
     Returns
     -------
-    y : :obj:`cupy.ndarray`
+    y : :obj:`numpy.ndarray`, :obj:`cupy.ndarray` or `jax.Array`
         Converted array
 
     """
     if deps.cupy_enabled:
         if cp.get_array_module(x) == np and cp.get_array_module(y) == cp:
             y = cp.asnumpy(y)
+    if deps.jax_enabled:
+        if isinstance(x, np.ndarray) and isinstance(y, jnp.ndarray):
+            y = np.array(y)
     return y
 
 
