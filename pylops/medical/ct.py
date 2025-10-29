@@ -44,6 +44,8 @@ class CT2D(LinearOperator):
         Number of detectors
     thetas : :obj:`numpy.ndarray`
         Vector of angles in degrees
+    engine : :obj:`str`
+        Engine used for computation (``cpu`` or ``cuda``).
     proj_geom_type : :obj:`str`, optional
         Type of projection geometry (``parallel`` or ``fanflat``)
     source_origin_dist : :obj:`float`, optional
@@ -55,8 +57,6 @@ class CT2D(LinearOperator):
         Type of projection kernel: ``strip`` (default), ``line``, or ``linear`` for
         ``engine=cpu``, and ``cuda`` (i.e., hardware-accelerated ``linear``) for
         ``engine=cuda``. For ``fanflat`` geometry, ``linear`` kernel is not supported.
-    engine : :obj:`str`, optional
-        Engine used for computation (``cpu`` or ``cuda``).
     dtype : :obj:`str`, optional
         Type of elements in input array. Note that internally all operations will be
         performed in float32 dtype because of ASTRA compatibility, and the output will
@@ -97,11 +97,11 @@ class CT2D(LinearOperator):
         det_width: float,
         det_count: int,
         thetas: NDArray,
+        engine: str,
         proj_geom_type: str = "parallel",
         source_origin_dist: Optional[float] = None,
         origin_detector_dist: Optional[float] = None,
         projector_type: Optional[str] = None,
-        engine: str = "cpu",
         dtype: DTypeLike = "float32",
         name: str = "C",
     ) -> None:
@@ -112,6 +112,7 @@ class CT2D(LinearOperator):
         self.det_width = det_width
         self.det_count = det_count
         self.thetas = to_numpy(thetas)  # ASTRA can only consume angles as a NumPy array
+        self.engine = engine
         self.proj_geom_type = proj_geom_type
         self.source_origin_dist = source_origin_dist
         self.origin_detector_dist = origin_detector_dist
@@ -199,13 +200,14 @@ class CT2D(LinearOperator):
                 "be cast into float32 internally for ASTRA compatibility."
             )
             x = x.astype(ncp.float32)
-        if backend == "numpy":
+        if self.engine == "cpu":
+            x = to_numpy(x)
             if mode == "forward":
                 y_id, y = astra.create_sino(x, self.projector_id)
             elif mode == "backward":
                 y_id, y = astra.create_backprojection(x, self.projector_id)
             astra.data2d.delete(y_id)
-        else:
+        if self.engine == "cuda":
             # Use zero-copy GPU data exchange, which is only implemented for contiguous
             # 3D arrays in ASTRA
             if not x.flags["C_CONTIGUOUS"]:
