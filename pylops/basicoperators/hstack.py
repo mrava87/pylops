@@ -1,5 +1,6 @@
 __all__ = ["HStack"]
 
+import concurrent.futures as mt
 import multiprocessing as mp
 
 import numpy as np
@@ -47,8 +48,8 @@ class HStack(LinearOperator):
         :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices can be passed
         in place of one or more operators.
     nproc : :obj:`int`, optional
-        Number of processes used to evaluate the N operators in parallel
-        using ``multiprocessing``. If ``nproc=1``, work in serial mode.
+        Number of processes/threads used to evaluate the N operators in parallel
+        using ``multiprocessing``/``concurrent.futures``. If ``nproc=1``, work in serial mode.
     forceflat : :obj:`bool`, optional
         .. versionadded:: 2.2.0
 
@@ -59,6 +60,10 @@ class HStack(LinearOperator):
         Type of output vectors of `matvec` and `rmatvec. If ``None``, this is
         inferred directly from the input vectors. Note that this is ignored
         if ``nproc>1``.
+    multiproc : :obj:`bool`, optional
+        .. versionadded:: 2.6.0
+
+        Use multiprocessing (``True``) or multithreading (``False``) when ``nproc>1``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -139,6 +144,7 @@ class HStack(LinearOperator):
         nproc: int = 1,
         forceflat: bool = None,
         inoutengine: Optional[tuple] = None,
+        multiproc: bool = True,
         dtype: Optional[str] = None,
     ) -> None:
         self.ops = ops
@@ -161,12 +167,15 @@ class HStack(LinearOperator):
         else:
             dimsd = (self.nops,)
             forceflat = True
-        # create pool for multiprocessing
+        # create pool for multithreading / multiprocessing
+        self.multiproc = multiproc
         self._nproc = nproc
         self.pool = None
         if self.nproc > 1:
-            self.pool = mp.Pool(processes=nproc)
-
+            if multiproc:
+                self.pool = mp.Pool(processes=nproc)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
         self.inoutengine = inoutengine
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         clinear = all([getattr(oper, "clinear", True) for oper in self.ops])
@@ -241,6 +250,30 @@ class HStack(LinearOperator):
         y = np.hstack(ys)
         return y
 
+    def _matvec_multithread(self, x: NDArray) -> NDArray:
+        ys = list(
+            self.pool.map(
+                lambda args: _matvec_rmatvec_map(*args),
+                [
+                    (oper._rmatvec, x[self.nnops[iop] : self.nnops[iop + 1]])
+                    for iop, oper in enumerate(self.ops)
+                ],
+            )
+        )
+
+        y = np.sum(ys, axis=0)
+        return y
+
+    def _rmatvec_multithread(self, x: NDArray) -> NDArray:
+        ys = list(
+            self.pool.map(
+                lambda args: _matvec_rmatvec_map(*args),
+                [(oper._matvec, x) for iop, oper in enumerate(self.ops)],
+            )
+        )
+        y = np.hstack(ys)
+        return y
+
     def _matvec(self, x: NDArray) -> NDArray:
         if self.nproc == 1:
             y = self._matvec_serial(x)
@@ -250,7 +283,25 @@ class HStack(LinearOperator):
 
     def _rmatvec(self, x: NDArray) -> NDArray:
         if self.nproc == 1:
-            y = self._rmatvec_serial(x)
+            if self.multiproc:
+                y = self._matvec_multiproc(x)
+            else:
+                y = self._matvec_multithread(x)
         else:
-            y = self._rmatvec_multiproc(x)
+            if self.multiproc:
+                y = self._rmatvec_multiproc(x)
+            else:
+                y = self._rmatvec_multithread(x)
         return y
+
+    def close(self):
+        """Close the pool of workers used for multiprocessing /
+        multithreading.
+        """
+        if self.pool is not None:
+            if self.multiproc:
+                self.pool.close()
+                self.pool.join()
+            else:
+                self.pool.shutdown()
+            self.pool = None

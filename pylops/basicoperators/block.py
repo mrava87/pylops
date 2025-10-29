@@ -1,5 +1,6 @@
 __all__ = ["Block"]
 
+import concurrent.futures as mt
 import multiprocessing as mp
 from typing import Iterable, Optional
 
@@ -65,12 +66,16 @@ class Block(_Block):
         Alternatively, :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices
         can be passed in place of one or more operators.
     nproc : :obj:`int`, optional
-        Number of processes used to evaluate the N operators in parallel using
-        ``multiprocessing``. If ``nproc=1``, work in serial mode.
+        Number of processes/threads used to evaluate the N operators in parallel using
+        ``multiprocessing``/``concurrent.futures``. If ``nproc=1``, work in serial mode.
     forceflat : :obj:`bool`, optional
         .. versionadded:: 2.2.0
 
         Force an array to be flattened after rmatvec.
+    multiproc : :obj:`bool`, optional
+        .. versionadded:: 2.6.0
+
+        Use multiprocessing (``True``) or multithreading (``False``) when ``nproc>1``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -148,10 +153,17 @@ class Block(_Block):
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
         forceflat: bool = None,
+        multiproc: bool = True,
         dtype: Optional[DTypeLike] = None,
     ):
         if nproc > 1:
-            self.pool = mp.Pool(processes=nproc)
+            if multiproc:
+                self.pool = mp.Pool(processes=nproc)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
         super().__init__(
-            ops=ops, forceflat=forceflat, dtype=dtype, _args_VStack={"nproc": nproc}
+            ops=ops,
+            forceflat=forceflat,
+            dtype=dtype,
+            _args_VStack={"nproc": nproc, "multiproc": multiproc},
         )
