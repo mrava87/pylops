@@ -96,7 +96,7 @@ fig.tight_layout()
 
 ###############################################################################
 # Let's now repeat the same exercise, this time using the CT2D operator
-Cop = pylops.medical.CT2D((ny, nx), 1.0, ny, theta)
+Cop = pylops.medical.CT2D((ny, nx), 1.0, ny, theta, engine='cpu')
 
 y = Cop * x.T
 xrec = Cop.H * y
