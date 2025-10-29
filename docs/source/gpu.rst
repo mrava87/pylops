@@ -592,8 +592,8 @@ Medical:
      - GPU/TPU with JAX
    * - :class:`pylops.medical.ct.CT2D`
      - |:white_check_mark:|
-     - |:red_circle:|
-     - |:red_circle:|
+     - |:white_check_mark:|
+     - |:white_check_mark:|
 
 .. warning::
 

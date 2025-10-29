@@ -210,7 +210,9 @@ class CT2D(LinearOperator):
         if self.engine == "cuda":
             # Use zero-copy GPU data exchange, which is only implemented for contiguous
             # 3D arrays in ASTRA
-            if not x.flags["C_CONTIGUOUS"]:
+            if backend in ["numpy", "cupy"] and not x.flags["C_CONTIGUOUS"]:
+                # JAX shouldn't have non-contiguous arrays here. In the worst case ASTRA
+                # should throw an error later
                 logging.warning(
                     "CT2D operator received input that is not of contiguous. It will be "
                     "cast into a contiguous array internally for ASTRA compatibility."
