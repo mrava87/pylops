@@ -278,15 +278,15 @@ class HStack(LinearOperator):
         if self.nproc == 1:
             y = self._matvec_serial(x)
         else:
-            y = self._matvec_multiproc(x)
-        return y
-
-    def _rmatvec(self, x: NDArray) -> NDArray:
-        if self.nproc == 1:
             if self.multiproc:
                 y = self._matvec_multiproc(x)
             else:
                 y = self._matvec_multithread(x)
+        return y
+
+    def _rmatvec(self, x: NDArray) -> NDArray:
+        if self.nproc == 1:
+            y = self._rmatvec_serial(x)
         else:
             if self.multiproc:
                 y = self._rmatvec_multiproc(x)
