@@ -4,6 +4,8 @@ __all__ = [
     "BlendingHalf",
 ]
 
+from typing import Optional
+
 import numpy as np
 
 from pylops import LinearOperator
@@ -36,6 +38,9 @@ class BlendingContinuous(LinearOperator):
     shiftall : :obj:`bool`, optional
         Shift all shots together (``True``) or one at the time (``False``). Defaults to ``shiftall=False`` (original
         implementation), however ``shiftall=True`` should be preferred when ``nr`` is small.
+    nttot : :obj:`int`
+        Total number of time samples in blended data (if ``None``, computed internally
+        based on the the maximum ignition time in ``times``)
     dtype : :obj:`str`, optional
         Operator dtype
     name : :obj:`str`, optional
@@ -43,9 +48,6 @@ class BlendingContinuous(LinearOperator):
 
     Attributes
     ----------
-    ntot : :obj:`int`
-        Total number of time samples in blended data (based on the
-        the maximum ignition time in ``times``)
     PadOp : :obj:`pylops.basicoperators.Pad`
         Padding operator used to add one zero at the end of each
         shot gather to avoid boundary effects when shifting
@@ -89,6 +91,7 @@ class BlendingContinuous(LinearOperator):
         dt: float,
         times: NDArray,
         shiftall: bool = False,
+        nttot: Optional[int] = None,
         dtype: DTypeLike = "float64",
         name: str = "B",
     ) -> None:
@@ -99,7 +102,7 @@ class BlendingContinuous(LinearOperator):
         self.dt = dt
         self.times = times
         self.shiftall = shiftall
-        self.nttot = int(np.max(self.times) / self.dt + self.nt + 1)
+        self.nttot = nttot if nttot is not None else g
         if not self.shiftall:
             # original implementation, where each source is shifted indipendently
             self.PadOp = Pad((self.nr, self.nt), ((0, 0), (0, 1)), dtype=self.dtype)
