@@ -102,7 +102,11 @@ class BlendingContinuous(LinearOperator):
         self.dt = dt
         self.times = times
         self.shiftall = shiftall
-        self.nttot = nttot if nttot is not None else g
+        self.nttot = (
+            nttot
+            if nttot is not None
+            else int(np.max(self.times) / self.dt + self.nt + 1)
+        )
         if not self.shiftall:
             # original implementation, where each source is shifted indipendently
             self.PadOp = Pad((self.nr, self.nt), ((0, 0), (0, 1)), dtype=self.dtype)
