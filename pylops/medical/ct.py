@@ -2,7 +2,7 @@ __all__ = [
     "CT2D",
 ]
 
-import logging
+import warnings
 from typing import Optional
 
 import numpy as np
@@ -12,9 +12,6 @@ from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_module_name, to_numpy
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
-
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
-
 
 astra_message = deps.astra_import("the astra module")
 
@@ -123,7 +120,7 @@ class CT2D(LinearOperator):
                 projector_type = "strip"
             # fanflat geometry projectors need an appropriate suffix (unless it's "cuda")
             if projector_type == "cuda":
-                logging.warning("'cuda' projector type specified with 'cpu' engine.")
+                warnings.warn("'cuda' projector type specified with 'cpu' engine.")
             elif proj_geom_type == "fanflat":
                 projector_type += "_fanflat"
         elif engine == "cuda":
@@ -195,7 +192,7 @@ class CT2D(LinearOperator):
         backend = get_module_name(ncp)
         x_dtype = x.dtype
         if x_dtype != ncp.float32:
-            logging.warning(
+            warnings.warn(
                 "CT2D operator received input that is not of float32 dtype. It will "
                 "be cast into float32 internally for ASTRA compatibility."
             )
@@ -213,7 +210,7 @@ class CT2D(LinearOperator):
             if backend in ["numpy", "cupy"] and not x.flags["C_CONTIGUOUS"]:
                 # JAX shouldn't have non-contiguous arrays here. In the worst case ASTRA
                 # should throw an error later
-                logging.warning(
+                warnings.warn(
                     "CT2D operator received input that is not of contiguous. It will be "
                     "cast into a contiguous array internally for ASTRA compatibility."
                 )
