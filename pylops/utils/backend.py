@@ -32,14 +32,13 @@ from types import ModuleType
 from typing import Callable
 
 import numpy as np
-import numpy.typing as npt
 import scipy.fft as sp_fft
 from scipy.linalg import block_diag, lstsq, toeplitz
 from scipy.signal import convolve, correlate, fftconvolve, oaconvolve
 from scipy.sparse import csc_matrix, eye
 
 from pylops.utils import deps
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, ArrayLike
 
 if deps.cupy_enabled:
     import cupy as cp
@@ -123,7 +122,7 @@ def get_module_name(mod: ModuleType) -> str:
     return backend
 
 
-def get_array_module(x: npt.ArrayLike) -> ModuleType:
+def get_array_module(x: ArrayLike) -> ModuleType:
     """Returns correct numerical module based on input
 
     Parameters
@@ -161,7 +160,7 @@ def get_normalize_axis_index() -> Callable:
     return normalize_axis_index
 
 
-def get_convolve(x: npt.ArrayLike) -> Callable:
+def get_convolve(x: ArrayLike) -> Callable:
     """Returns correct convolve module based on input
 
     Parameters
@@ -186,7 +185,7 @@ def get_convolve(x: npt.ArrayLike) -> Callable:
         return convolve
 
 
-def get_fftconvolve(x: npt.ArrayLike) -> Callable:
+def get_fftconvolve(x: ArrayLike) -> Callable:
     """Returns correct fftconvolve module based on input
 
     Parameters
@@ -211,7 +210,7 @@ def get_fftconvolve(x: npt.ArrayLike) -> Callable:
         return fftconvolve
 
 
-def get_oaconvolve(x: npt.ArrayLike) -> Callable:
+def get_oaconvolve(x: ArrayLike) -> Callable:
     """Returns correct oaconvolve module based on input
 
     Parameters
@@ -240,7 +239,7 @@ def get_oaconvolve(x: npt.ArrayLike) -> Callable:
         return oaconvolve
 
 
-def get_correlate(x: npt.ArrayLike) -> Callable:
+def get_correlate(x: ArrayLike) -> Callable:
     """Returns correct correlate module based on input
 
     Parameters
@@ -265,7 +264,7 @@ def get_correlate(x: npt.ArrayLike) -> Callable:
         return correlate
 
 
-def get_add_at(x: npt.ArrayLike) -> Callable:
+def get_add_at(x: ArrayLike) -> Callable:
     """Returns correct add.at module based on input
 
     Parameters
@@ -288,7 +287,7 @@ def get_add_at(x: npt.ArrayLike) -> Callable:
         return cupyx.scatter_add
 
 
-def get_sliding_window_view(x: npt.ArrayLike) -> Callable:
+def get_sliding_window_view(x: ArrayLike) -> Callable:
     """Returns correct sliding_window_view module based on input
 
     Parameters
@@ -311,7 +310,7 @@ def get_sliding_window_view(x: npt.ArrayLike) -> Callable:
         return cp.lib.stride_tricks.sliding_window_view
 
 
-def get_block_diag(x: npt.ArrayLike) -> Callable:
+def get_block_diag(x: ArrayLike) -> Callable:
     """Returns correct block_diag module based on input
 
     Parameters
@@ -336,7 +335,7 @@ def get_block_diag(x: npt.ArrayLike) -> Callable:
         return block_diag
 
 
-def get_toeplitz(x: npt.ArrayLike) -> Callable:
+def get_toeplitz(x: ArrayLike) -> Callable:
     """Returns correct toeplitz module based on input
 
     Parameters
@@ -361,7 +360,7 @@ def get_toeplitz(x: npt.ArrayLike) -> Callable:
         return toeplitz
 
 
-def get_csc_matrix(x: npt.ArrayLike) -> Callable:
+def get_csc_matrix(x: ArrayLike) -> Callable:
     """Returns correct csc_matrix module based on input
 
     Parameters
@@ -384,7 +383,7 @@ def get_csc_matrix(x: npt.ArrayLike) -> Callable:
         return cp_csc_matrix
 
 
-def get_sparse_eye(x: npt.ArrayLike) -> Callable:
+def get_sparse_eye(x: ArrayLike) -> Callable:
     """Returns correct sparse eye module based on input
 
     Parameters
@@ -407,7 +406,7 @@ def get_sparse_eye(x: npt.ArrayLike) -> Callable:
         return cp_eye
 
 
-def get_lstsq(x: npt.ArrayLike) -> Callable:
+def get_lstsq(x: ArrayLike) -> Callable:
     """Returns correct lstsq module based on input
 
     Parameters
@@ -430,7 +429,7 @@ def get_lstsq(x: npt.ArrayLike) -> Callable:
         return cp.linalg.lstsq
 
 
-def get_sp_fft(x: npt.ArrayLike) -> Callable:
+def get_sp_fft(x: ArrayLike) -> Callable:
     """Returns correct scipy.fft module based on input
 
     Parameters
@@ -486,7 +485,7 @@ def get_real_dtype(dtype: DTypeLike) -> DTypeLike:
     return np.real(np.ones(1, dtype)).dtype
 
 
-def to_cupy(x: npt.ArrayLike) -> npt.ArrayLike:
+def to_cupy(x: ArrayLike) -> ArrayLike:
     """Convert x to cupy array if cupy is available
 
     Parameters
@@ -506,7 +505,7 @@ def to_cupy(x: npt.ArrayLike) -> npt.ArrayLike:
     return x
 
 
-def to_numpy(x: npt.ArrayLike) -> NDArray:
+def to_numpy(x: ArrayLike) -> NDArray:
     """Convert x to numpy array
 
     Parameters
@@ -529,7 +528,7 @@ def to_numpy(x: npt.ArrayLike) -> NDArray:
     return x
 
 
-def to_cupy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
+def to_cupy_conditional(x: ArrayLike, y: ArrayLike) -> ArrayLike:
     """Convert y to cupy array conditional to x being a cupy array
 
     Parameters
@@ -552,7 +551,7 @@ def to_cupy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
     return y
 
 
-def to_numpy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
+def to_numpy_conditional(x: ArrayLike, y: ArrayLike) -> ArrayLike:
     """Convert y to numpy array conditional to x being a numpy array
 
     Parameters
@@ -577,7 +576,7 @@ def to_numpy_conditional(x: npt.ArrayLike, y: npt.ArrayLike) -> npt.ArrayLike:
     return y
 
 
-def inplace_set(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
+def inplace_set(x: ArrayLike, y: ArrayLike, idx: list) -> NDArray:
     """Perform inplace set based on input
 
     Parameters
@@ -603,7 +602,7 @@ def inplace_set(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
         return y
 
 
-def inplace_add(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
+def inplace_add(x: ArrayLike, y: ArrayLike, idx: list) -> NDArray:
     """Perform inplace add based on input
 
     Parameters
@@ -629,7 +628,7 @@ def inplace_add(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
         return y
 
 
-def inplace_multiply(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
+def inplace_multiply(x: ArrayLike, y: ArrayLike, idx: list) -> NDArray:
     """Perform inplace multiplication based on input
 
     Parameters
@@ -655,7 +654,7 @@ def inplace_multiply(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
         return y
 
 
-def inplace_divide(x: npt.ArrayLike, y: npt.ArrayLike, idx: list) -> NDArray:
+def inplace_divide(x: ArrayLike, y: ArrayLike, idx: list) -> NDArray:
     """Perform inplace division based on input
 
     Parameters
