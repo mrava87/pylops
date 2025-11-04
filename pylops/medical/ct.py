@@ -69,6 +69,14 @@ class CT2D(LinearOperator):
         Operator contains a matrix that can be solved
         explicitly (``True``) or not (``False``)
 
+    Raises
+    ------
+    ValueError
+        If a projector type other than 'cuda' is provided for 'cuda' engine.
+
+    NotImplementedError
+        If ASTRA toolbox could not be imported.
+
     Notes
     -----
     The CT2D operator applies parallel or fan beam computerized tomography operators
