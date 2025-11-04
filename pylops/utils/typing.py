@@ -1,6 +1,7 @@
 __all__ = [
     "IntNDArray",
     "NDArray",
+    "ArrayLike",
     "InputDimsLike",
     "SamplingLike",
     "ShapeLike",
@@ -20,6 +21,7 @@ if torch_enabled:
 
 IntNDArray = npt.NDArray[np.int_]
 NDArray = npt.NDArray
+ArrayLike = npt.ArrayLike
 
 InputDimsLike = Union[Sequence[int], IntNDArray]
 SamplingLike = Union[Sequence[float], NDArray]
