@@ -268,7 +268,7 @@ class BlockDiag(LinearOperator):
             self.pool.map(
                 lambda args: _matvec_rmatvec_map(*args),
                 [
-                    (oper._matvec, x[self.nnops[iop] : self.nnops[iop + 1]])
+                    (oper._matvec, x[self.mmops[iop] : self.mmops[iop + 1]])
                     for iop, oper in enumerate(self.ops)
                 ],
             )
@@ -283,7 +283,7 @@ class BlockDiag(LinearOperator):
             self.pool.map(
                 lambda args: _matvec_rmatvec_map(*args),
                 [
-                    (oper._rmatvec, x[self.mmops[iop] : self.mmops[iop + 1]])
+                    (oper._rmatvec, x[self.nnops[iop] : self.nnops[iop + 1]])
                     for iop, oper in enumerate(self.ops)
                 ],
             )
