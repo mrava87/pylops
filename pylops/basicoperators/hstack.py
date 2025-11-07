@@ -2,6 +2,7 @@ __all__ = ["HStack"]
 
 import concurrent.futures as mt
 import multiprocessing as mp
+import threading
 
 import numpy as np
 import scipy as sp
@@ -18,7 +19,7 @@ else:
         LinearOperator as spLinearOperator,
     )
 
-from typing import Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 from pylops import LinearOperator
 from pylops.basicoperators import MatrixMult, Zero
@@ -29,6 +30,13 @@ from pylops.utils.typing import NDArray
 def _matvec_rmatvec_map(op, x: NDArray) -> NDArray:
     """matvec/rmatvec for multiprocessing"""
     return op(x).squeeze()
+
+
+def _matvec_map_mt(op: Callable, x: NDArray, y: NDArray, lock: threading.Lock) -> None:
+    """rmatvec for multithreading with lock"""
+    ylocal = op(x).squeeze()
+    with lock:
+        y[:] += ylocal
 
 
 class HStack(LinearOperator):
@@ -176,6 +184,7 @@ class HStack(LinearOperator):
                 self.pool = mp.Pool(processes=nproc)
             else:
                 self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
+                self.lock = threading.Lock()
         self.inoutengine = inoutengine
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         clinear = all([getattr(oper, "clinear", True) for oper in self.ops])
@@ -194,9 +203,16 @@ class HStack(LinearOperator):
     @nproc.setter
     def nproc(self, nprocnew: int):
         if self._nproc > 1:
-            self.pool.close()
+            if self.multiproc:
+                self.pool.close()
+                self.pool.join()
+            else:
+                self.pool.shutdown()
         if nprocnew > 1:
-            self.pool = mp.Pool(processes=nprocnew)
+            if self.multiproc:
+                self.pool = mp.Pool(processes=nprocnew)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nprocnew)
         self._nproc = nprocnew
 
     def _matvec_serial(self, x: NDArray) -> NDArray:
@@ -250,25 +266,42 @@ class HStack(LinearOperator):
         y = np.hstack(ys)
         return y
 
+    # def _matvec_multithread(self, x: NDArray) -> NDArray:
+    #     ys = list(
+    #         self.pool.map(
+    #             lambda args: _matvec_rmatvec_map(*args),
+    #             [
+    #                 (oper._matvec, x[self.mmops[iop] : self.mmops[iop + 1]])
+    #                 for iop, oper in enumerate(self.ops)
+    #             ],
+    #         )
+    #     )
+    #     y = np.sum(ys, axis=0)
+    #     return y
+
     def _matvec_multithread(self, x: NDArray) -> NDArray:
-        ys = list(
+        y = np.zeros(self.nops, dtype=self.dtype)
+        list(
             self.pool.map(
-                lambda args: _matvec_rmatvec_map(*args),
+                lambda args: _matvec_map_mt(*args),
                 [
-                    (oper._rmatvec, x[self.nnops[iop] : self.nnops[iop + 1]])
+                    (
+                        oper._matvec,
+                        x[self.mmops[iop] : self.mmops[iop + 1]],
+                        y,
+                        self.lock,
+                    )
                     for iop, oper in enumerate(self.ops)
                 ],
             )
         )
-
-        y = np.sum(ys, axis=0)
         return y
 
     def _rmatvec_multithread(self, x: NDArray) -> NDArray:
         ys = list(
             self.pool.map(
                 lambda args: _matvec_rmatvec_map(*args),
-                [(oper._matvec, x) for iop, oper in enumerate(self.ops)],
+                [(oper._rmatvec, x) for iop, oper in enumerate(self.ops)],
             )
         )
         y = np.hstack(ys)
