@@ -45,6 +45,10 @@ class BlendingContinuous(LinearOperator):
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Attributes
     ----------
@@ -94,6 +98,7 @@ class BlendingContinuous(LinearOperator):
         nttot: Optional[int] = None,
         dtype: DTypeLike = "float64",
         name: str = "B",
+        **kwargs_fft,
     ) -> None:
         self.dtype = np.dtype(dtype)
         self.nt = nt
@@ -131,6 +136,7 @@ class BlendingContinuous(LinearOperator):
                             sampling=self.dt,
                             real=True,
                             dtype=self.dtype,
+                            **kwargs_fft,
                         )
                     )
         else:
@@ -149,6 +155,7 @@ class BlendingContinuous(LinearOperator):
                 sampling=self.dt,
                 real=True,
                 dtype=self.dtype,
+                **kwargs_fft,
             )
             self.diff = diff
 
@@ -250,6 +257,7 @@ def BlendingGroup(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Group blending operator
 
@@ -284,6 +292,10 @@ def BlendingGroup(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -320,7 +332,13 @@ def BlendingGroup(
         Hop = []
         for j in range(group_size):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             Hop.append(ShiftOp)
         Bop.append(HStack(Hop))
@@ -342,6 +360,7 @@ def BlendingHalf(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Half blending operator
 
@@ -376,6 +395,10 @@ def BlendingHalf(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -412,7 +435,13 @@ def BlendingHalf(
         OpShift = []
         for i in range(n_groups):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             OpShift.append(ShiftOp)
         Dop = BlockDiag(OpShift, nproc=nproc)
