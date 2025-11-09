@@ -49,8 +49,8 @@ class ChirpRadon3D(LinearOperator):
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
     **kwargs_fftw
-            Arbitrary keyword arguments for :py:class:`pyfftw.FTTW`
-            (reccomended: ``flags=('FFTW_ESTIMATE', ), threads=NTHREADS``)
+        Arbitrary keyword arguments for :py:class:`pyfftw.FTTW`
+        (reccomended: ``flags=('FFTW_ESTIMATE', ), threads=NTHREADS``)
 
     Attributes
     ----------
