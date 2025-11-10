@@ -1,7 +1,5 @@
 __all__ = ["Block"]
 
-import concurrent.futures as mt
-import multiprocessing as mp
 from typing import Iterable, Optional
 
 from pylops import LinearOperator
