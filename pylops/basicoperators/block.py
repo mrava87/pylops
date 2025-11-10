@@ -72,18 +72,21 @@ class Block(_Block):
         .. versionadded:: 2.2.0
 
         Force an array to be flattened after rmatvec.
-    multiproc : :obj:`bool`, optional
+    parallel_kind : :obj:`str`, optional
         .. versionadded:: 2.6.0
 
-        Use multiprocessing (``True``) or multithreading (``False``) when ``nproc>1``.
+        Parallelism kind when ``nproc>1``. Can be ``multiproc`` (using
+        :mod:`multiprocessing`) or ``multithread`` (using
+        :class:`concurrent.futures.ThreadPoolExecutor`). Defaults
+        to ``multiproc``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
     Attributes
     ----------
-    pool : :obj:`multiprocessing.Pool` or :obj:`None`
-        Pool of workers used to evaluate the N operators in parallel using
-        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
+    pool : :obj:`multiprocessing.Pool` or :obj:`concurrent.futures.ThreadPoolExecutor` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel.
+        When ``nproc=1``, no pool is created (i.e.,
         ``pool=None``).
     shape : :obj:`tuple`
         Operator shape.
@@ -153,17 +156,12 @@ class Block(_Block):
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
         forceflat: bool = None,
-        multiproc: bool = True,
+        parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ):
-        if nproc > 1:
-            if multiproc:
-                self.pool = mp.Pool(processes=nproc)
-            else:
-                self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
         super().__init__(
             ops=ops,
             forceflat=forceflat,
             dtype=dtype,
-            _args_VStack={"nproc": nproc, "multiproc": multiproc},
+            _args_VStack={"nproc": nproc, "parallel_kind": parallel_kind},
         )

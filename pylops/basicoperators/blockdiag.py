@@ -55,10 +55,13 @@ class BlockDiag(LinearOperator):
         Type of output vectors of `matvec` and `rmatvec. If ``None``, this is
         inferred directly from the input vectors. Note that this is ignored
         if ``nproc>1``.
-    multiproc : :obj:`bool`, optional
+    parallel_kind : :obj:`str`, optional
         .. versionadded:: 2.6.0
 
-        Use multiprocessing (``True``) or multithreading (``False``) when ``nproc>1``.
+        Parallelism kind when ``nproc>1``. Can be ``multiproc`` (using
+        :mod:`multiprocessing`) or ``multithread`` (using
+        :class:`concurrent.futures.ThreadPoolExecutor`). Defaults
+        to ``multiproc``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -80,10 +83,9 @@ class BlockDiag(LinearOperator):
         Shape of the array after the forward, but before flattening.
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
-    pool : :obj:`multiprocessing.Pool` or :obj:`None`
-        Pool of workers used to evaluate the N operators in parallel using
-        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
-        ``pool=None``).
+    pool : :obj:`multiprocessing.Pool` or :obj:`concurrent.futures.ThreadPoolExecutor` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel.
+        When ``nproc=1``, no pool is created (i.e., ``pool=None``).
     shape : :obj:`tuple`
         Operator shape.
 
@@ -142,9 +144,12 @@ class BlockDiag(LinearOperator):
         nproc: int = 1,
         forceflat: bool = None,
         inoutengine: Optional[tuple] = None,
-        multiproc: bool = True,
+        parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ) -> None:
+        if parallel_kind not in ["multiproc", "multithread"]:
+            raise ValueError("parallel_kind must be 'multiproc' or 'multithread'")
+        # identify dimensions
         self.ops = ops
         mops = np.zeros(len(ops), dtype=int)
         nops = np.zeros(len(ops), dtype=int)
@@ -174,11 +179,11 @@ class BlockDiag(LinearOperator):
             dimsd = (self.nops,)
             forceflat = True
         # create pool for multithreading / multiprocessing
-        self.multiproc = multiproc
+        self.parallel_kind = parallel_kind
         self._nproc = nproc
         self.pool: Optional[mp.pool.Pool] = None
         if self.nproc > 1:
-            if multiproc:
+            if self.parallel_kind == "multiproc":
                 self.pool = mp.Pool(processes=nproc)
             else:
                 self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
@@ -200,9 +205,16 @@ class BlockDiag(LinearOperator):
     @nproc.setter
     def nproc(self, nprocnew: int) -> None:
         if self._nproc > 1 and self.pool is not None:
-            self.pool.close()
+            if self.parallel_kind == "multiproc":
+                self.pool.close()
+                self.pool.join()
+            else:
+                self.pool.shutdown()
         if nprocnew > 1:
-            self.pool = mp.Pool(processes=nprocnew)
+            if self.parallel_kind == "multiproc":
+                self.pool = mp.Pool(processes=nprocnew)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nprocnew)
         self._nproc = nprocnew
 
     def _matvec_serial(self, x: NDArray) -> NDArray:
@@ -236,8 +248,6 @@ class BlockDiag(LinearOperator):
         return y
 
     def _matvec_multiproc(self, x: NDArray) -> NDArray:
-        if self.pool is None:
-            raise ValueError
         ys = self.pool.starmap(
             _matvec_rmatvec_map,
             [
@@ -249,8 +259,6 @@ class BlockDiag(LinearOperator):
         return y
 
     def _rmatvec_multiproc(self, x: NDArray) -> NDArray:
-        if self.pool is None:
-            raise ValueError
         ys = self.pool.starmap(
             _matvec_rmatvec_map,
             [
@@ -262,8 +270,6 @@ class BlockDiag(LinearOperator):
         return y
 
     def _matvec_multithread(self, x: NDArray) -> NDArray:
-        if self.pool is None:
-            raise ValueError
         ys = list(
             self.pool.map(
                 lambda args: _matvec_rmatvec_map(*args),
@@ -277,8 +283,6 @@ class BlockDiag(LinearOperator):
         return y
 
     def _rmatvec_multithread(self, x: NDArray) -> NDArray:
-        if self.pool is None:
-            raise ValueError
         ys = list(
             self.pool.map(
                 lambda args: _matvec_rmatvec_map(*args),
@@ -295,7 +299,7 @@ class BlockDiag(LinearOperator):
         if self.nproc == 1:
             y = self._matvec_serial(x)
         else:
-            if self.multiproc:
+            if self.parallel_kind == "multiproc":
                 y = self._matvec_multiproc(x)
             else:
                 y = self._matvec_multithread(x)
@@ -305,7 +309,7 @@ class BlockDiag(LinearOperator):
         if self.nproc == 1:
             y = self._rmatvec_serial(x)
         else:
-            if self.multiproc:
+            if self.parallel_kind == "multiproc":
                 y = self._rmatvec_multiproc(x)
             else:
                 y = self._rmatvec_multithread(x)
@@ -316,7 +320,7 @@ class BlockDiag(LinearOperator):
         / multithreading.
         """
         if self.pool is not None:
-            if self.multiproc:
+            if self.parallel_kind == "multiproc":
                 self.pool.close()
                 self.pool.join()
             else:

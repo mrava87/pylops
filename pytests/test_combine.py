@@ -353,7 +353,7 @@ def test_BlockDiag(par):
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_VStack_multiproc_multithread(par):
     """Single and multiprocess/multithreading consistentcy for VStack operator"""
-    for multiproc in [True, False]:
+    for parallel_kind in ["multiproc", "multithread"]:
         np.random.seed(0)
         nproc = 2
         G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
@@ -364,7 +364,7 @@ def test_VStack_multiproc_multithread(par):
         Vmultiop = VStack(
             [MatrixMult(G, dtype=par["dtype"])] * 4,
             nproc=nproc,
-            multiproc=multiproc,
+            parallel_kind=parallel_kind,
             dtype=par["dtype"],
         )
         assert dottest(
@@ -389,7 +389,7 @@ def test_VStack_multiproc_multithread(par):
 @pytest.mark.parametrize("par", [(par2), (par2j)])
 def test_HStack_multiproc_multithread(par):
     """Single and multiprocess/multithreading  consistentcy for HStack operator"""
-    for multiproc in [True, False]:
+    for parallel_kind in ["multiproc", "multithread"]:
         np.random.seed(0)
         nproc = 2
         G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
@@ -400,7 +400,7 @@ def test_HStack_multiproc_multithread(par):
         Hmultiop = HStack(
             [MatrixMult(G, dtype=par["dtype"])] * 4,
             nproc=nproc,
-            multiproc=multiproc,
+            parallel_kind=parallel_kind,
             dtype=par["dtype"],
         )
         assert dottest(
@@ -425,7 +425,7 @@ def test_HStack_multiproc_multithread(par):
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_Block_multiproc_multithread(par):
     """Single and multiprocess/multithreading  consistentcy for Block operator"""
-    for multiproc in [True, False]:
+    for parallel_kind in ["multiproc", "multithread"]:
         np.random.seed(0)
         nproc = 2
         G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
@@ -435,7 +435,9 @@ def test_Block_multiproc_multithread(par):
         y = np.ones(4 * par["ny"]) + par["imag"] * np.ones(4 * par["ny"])
 
         Bop = Block(Ghor, dtype=par["dtype"])
-        Bmultiop = Block(Ghor, nproc=nproc, multiproc=multiproc, dtype=par["dtype"])
+        Bmultiop = Block(
+            Ghor, nproc=nproc, parallel_kind=parallel_kind, dtype=par["dtype"]
+        )
         assert dottest(
             Bmultiop,
             4 * par["ny"],
@@ -458,7 +460,7 @@ def test_Block_multiproc_multithread(par):
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])
 def test_BlockDiag_multiproc_multithread(par):
     """Single and multiprocess/multithreading consistentcy for BlockDiag operator"""
-    for multiproc in [True, False]:
+    for parallel_kind in ["multiproc", "multithread"]:
         np.random.seed(0)
         nproc = 2
         G = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
@@ -469,7 +471,7 @@ def test_BlockDiag_multiproc_multithread(par):
         BDmultiop = BlockDiag(
             [MatrixMult(G, dtype=par["dtype"])] * 4,
             nproc=nproc,
-            multiproc=multiproc,
+            parallel_kind=parallel_kind,
             dtype=par["dtype"],
         )
         assert dottest(
