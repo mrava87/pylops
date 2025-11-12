@@ -31,5 +31,5 @@ jobs:
         run: |
           export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1;
           export PYTEST=.venv-pylops/bin/pytest
-          $PYTEST
+          srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 $PYTEST
           echo "done!"
