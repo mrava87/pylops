@@ -8,28 +8,28 @@ jobs:
     steps:
       - name: Check out source repository
         uses: actions/checkout@v4
-      - name: Print checked code and check environments
+      - name: Set up Python environment and Install dependencies and pylops
         run: |
-          ls -lah
-          echo $(pwd)
-          echo $(which python3)
-          echo $(which pip3)
-      - name: Set up Python environment and Install dependencies
-        run: |
-          python3 -m venv pylopsvenv 
-          source pylopsvenv/bin/activate 
-          echo $(which python3)
-          echo $(which pip3)
-          python3 -m pip install --upgrade pip setuptools
-          pip install flake8 pytest setuptools-scm
-          pip install -r requirements-dev-gpu.txt
-      - name: Install pylops
-        run: |
-          source pylopsvenv/bin/activate 
-          python3 -m setuptools_scm
-          pip install .
+          python3 -m venv .venv-pylops
+          # write install scripts
+          cat << 'EOF' > pylops_tests.sh
+          #!/bin/bash
+          PYTHON=.venv-pylops/bin/python3
+          PIP=.venv-pylops/bin/pip
+          ls $PYTHON
+          ls $PIP
+          $PIP install 
+          $PIP install --upgrade pip setuptools
+          $PIP install install flake8 pytest setuptools-scm
+          $PIP install -r requirements-dev-gpu.txt
+          $PIP install cupy-cuda12x
+          $PYTHON -m setuptools_scm
+          $PIP install .
+          EOF
+          srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 bash pylops_tests.sh
       - name: Tests with pytest 
         run: |
-          export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1; 
-          source pylopsvenv/bin/activate 
-          pytest
+          export CUPY_PYLOPS=1; export TEST_CUPY_PYLOPS=1;
+          export PYTEST=.venv-pylops/bin/pytest
+          srun --account=yuxilab -n 1 -N 1 --gres=gpu:L40S:1 $PYTEST
+          echo "done!"
