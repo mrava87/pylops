@@ -458,7 +458,7 @@ class Kirchhoff(LinearOperator):
                     )
                 ).reshape(np.prod(dims), ns)
                 self.angle_recs = (
-                    np.sign(trav_srcs_grad[1])
+                    np.sign(trav_recs_grad[1])
                     * np.arccos(
                         trav_recs_grad[-1]
                         / np.sqrt(np.sum(trav_recs_grad**2, axis=0))
