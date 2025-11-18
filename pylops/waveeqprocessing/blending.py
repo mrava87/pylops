@@ -4,6 +4,8 @@ __all__ = [
     "BlendingHalf",
 ]
 
+from typing import Optional
+
 import numpy as np
 
 from pylops import LinearOperator
@@ -36,16 +38,20 @@ class BlendingContinuous(LinearOperator):
     shiftall : :obj:`bool`, optional
         Shift all shots together (``True``) or one at the time (``False``). Defaults to ``shiftall=False`` (original
         implementation), however ``shiftall=True`` should be preferred when ``nr`` is small.
+    nttot : :obj:`int`
+        Total number of time samples in blended data (if ``None``, computed internally
+        based on the the maximum ignition time in ``times``)
     dtype : :obj:`str`, optional
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Attributes
     ----------
-    ntot : :obj:`int`
-        Total number of time samples in blended data (based on the
-        the maximum ignition time in ``times``)
     PadOp : :obj:`pylops.basicoperators.Pad`
         Padding operator used to add one zero at the end of each
         shot gather to avoid boundary effects when shifting
@@ -89,8 +95,10 @@ class BlendingContinuous(LinearOperator):
         dt: float,
         times: NDArray,
         shiftall: bool = False,
+        nttot: Optional[int] = None,
         dtype: DTypeLike = "float64",
         name: str = "B",
+        **kwargs_fft,
     ) -> None:
         self.dtype = np.dtype(dtype)
         self.nt = nt
@@ -99,7 +107,11 @@ class BlendingContinuous(LinearOperator):
         self.dt = dt
         self.times = times
         self.shiftall = shiftall
-        self.nttot = int(np.max(self.times) / self.dt + self.nt + 1)
+        self.nttot = (
+            nttot
+            if nttot is not None
+            else int(np.max(self.times) / self.dt + self.nt + 1)
+        )
         if not self.shiftall:
             # original implementation, where each source is shifted indipendently
             self.PadOp = Pad((self.nr, self.nt), ((0, 0), (0, 1)), dtype=self.dtype)
@@ -124,6 +136,7 @@ class BlendingContinuous(LinearOperator):
                             sampling=self.dt,
                             real=True,
                             dtype=self.dtype,
+                            **kwargs_fft,
                         )
                     )
         else:
@@ -142,6 +155,7 @@ class BlendingContinuous(LinearOperator):
                 sampling=self.dt,
                 real=True,
                 dtype=self.dtype,
+                **kwargs_fft,
             )
             self.diff = diff
 
@@ -243,6 +257,7 @@ def BlendingGroup(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Group blending operator
 
@@ -277,6 +292,10 @@ def BlendingGroup(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -313,7 +332,13 @@ def BlendingGroup(
         Hop = []
         for j in range(group_size):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             Hop.append(ShiftOp)
         Bop.append(HStack(Hop))
@@ -335,6 +360,7 @@ def BlendingHalf(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Half blending operator
 
@@ -369,6 +395,10 @@ def BlendingHalf(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -405,7 +435,13 @@ def BlendingHalf(
         OpShift = []
         for i in range(n_groups):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             OpShift.append(ShiftOp)
         Dop = BlockDiag(OpShift, nproc=nproc)

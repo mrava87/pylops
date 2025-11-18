@@ -1,6 +1,5 @@
 __all__ = ["Block"]
 
-import multiprocessing as mp
 from typing import Iterable, Optional
 
 from pylops import LinearOperator
@@ -65,20 +64,27 @@ class Block(_Block):
         Alternatively, :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices
         can be passed in place of one or more operators.
     nproc : :obj:`int`, optional
-        Number of processes used to evaluate the N operators in parallel using
-        ``multiprocessing``. If ``nproc=1``, work in serial mode.
+        Number of processes/threads used to evaluate the N operators in parallel using
+        ``multiprocessing``/``concurrent.futures``. If ``nproc=1``, work in serial mode.
     forceflat : :obj:`bool`, optional
         .. versionadded:: 2.2.0
 
         Force an array to be flattened after rmatvec.
+    parallel_kind : :obj:`str`, optional
+        .. versionadded:: 2.6.0
+
+        Parallelism kind when ``nproc>1``. Can be ``multiproc`` (using
+        :mod:`multiprocessing`) or ``multithread`` (using
+        :class:`concurrent.futures.ThreadPoolExecutor`). Defaults
+        to ``multiproc``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
     Attributes
     ----------
-    pool : :obj:`multiprocessing.Pool` or :obj:`None`
-        Pool of workers used to evaluate the N operators in parallel using
-        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
+    pool : :obj:`multiprocessing.Pool` or :obj:`concurrent.futures.ThreadPoolExecutor` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel.
+        When ``nproc=1``, no pool is created (i.e.,
         ``pool=None``).
     shape : :obj:`tuple`
         Operator shape.
@@ -148,10 +154,12 @@ class Block(_Block):
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
         forceflat: bool = None,
+        parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ):
-        if nproc > 1:
-            self.pool = mp.Pool(processes=nproc)
         super().__init__(
-            ops=ops, forceflat=forceflat, dtype=dtype, _args_VStack={"nproc": nproc}
+            ops=ops,
+            forceflat=forceflat,
+            dtype=dtype,
+            _args_VStack={"nproc": nproc, "parallel_kind": parallel_kind},
         )

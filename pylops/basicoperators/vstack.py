@@ -1,6 +1,8 @@
 __all__ = ["VStack"]
 
+import concurrent.futures as mt
 import multiprocessing as mp
+import threading
 
 import numpy as np
 import scipy as sp
@@ -26,8 +28,15 @@ from pylops.utils.typing import DTypeLike, NDArray
 
 
 def _matvec_rmatvec_map(op: Callable, x: NDArray) -> NDArray:
-    """matvec/rmatvec for multiprocessing"""
+    """matvec/rmatvec for multiprocessing / multithreading"""
     return op(x).squeeze()
+
+
+def _rmatvec_map_mt(op: Callable, x: NDArray, y: NDArray, lock: threading.Lock) -> None:
+    """rmatvec for multithreading with lock"""
+    ylocal = op(x).squeeze()
+    with lock:
+        y[:] += ylocal
 
 
 class VStack(LinearOperator):
@@ -46,8 +55,8 @@ class VStack(LinearOperator):
         :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices can be passed
         in place of one or more operators.
     nproc : :obj:`int`, optional
-        Number of processes used to evaluate the N operators in parallel using
-        ``multiprocessing``. If ``nproc=1``, work in serial mode.
+        Number of processes/threads used to evaluate the N operators in parallel using
+        ``multiprocessing``/``concurrent.futures``. If ``nproc=1``, work in serial mode.
     forceflat : :obj:`bool`, optional
         .. versionadded:: 2.2.0
 
@@ -58,6 +67,13 @@ class VStack(LinearOperator):
         Type of output vectors of `matvec` and `rmatvec. If ``None``, this is
         inferred directly from the input vectors. Note that this is ignored
         if ``nproc>1``.
+    parallel_kind : :obj:`str`, optional
+        .. versionadded:: 2.6.0
+
+        Parallelism kind when ``nproc>1``. Can be ``multiproc`` (using
+        :mod:`multiprocessing`) or ``multithread`` (using
+        :class:`concurrent.futures.ThreadPoolExecutor`). Defaults
+        to ``multiproc``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -77,10 +93,9 @@ class VStack(LinearOperator):
         Shape of the array after the forward, but before flattening.
 
         For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
-    pool : :obj:`multiprocessing.Pool` or :obj:`None`
-        Pool of workers used to evaluate the N operators in parallel using
-        ``multiprocessing``. When ``nproc=1``, no pool is created (i.e.,
-        ``pool=None``).
+    pool : :obj:`multiprocessing.Pool` or :obj:`concurrent.futures.ThreadPoolExecutor` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel.
+        When ``nproc=1``, no pool is created (i.e., ``pool=None``).
     shape : :obj:`tuple`
         Operator shape.
 
@@ -138,8 +153,12 @@ class VStack(LinearOperator):
         nproc: int = 1,
         forceflat: bool = None,
         inoutengine: Optional[tuple] = None,
+        parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ) -> None:
+        if parallel_kind not in ["multiproc", "multithread"]:
+            raise ValueError("parallel_kind must be 'multiproc' or 'multithread'")
+        # identify dimensions
         self.ops = ops
         nops = np.zeros(len(self.ops), dtype=int)
         for iop, oper in enumerate(ops):
@@ -160,11 +179,16 @@ class VStack(LinearOperator):
         else:
             dims = (self.mops,)
             forceflat = True
-        # create pool for multiprocessing
+        # create pool for multithreading / multiprocessing
+        self.parallel_kind = parallel_kind
         self._nproc = nproc
         self.pool = None
         if self.nproc > 1:
-            self.pool = mp.Pool(processes=nproc)
+            if self.parallel_kind == "multiproc":
+                self.pool = mp.Pool(processes=nproc)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nproc)
+                self.lock = threading.Lock()
         self.inoutengine = inoutengine
         dtype = _get_dtype(self.ops) if dtype is None else np.dtype(dtype)
         clinear = all([getattr(oper, "clinear", True) for oper in self.ops])
@@ -182,10 +206,17 @@ class VStack(LinearOperator):
 
     @nproc.setter
     def nproc(self, nprocnew: int):
-        if self._nproc > 1:
-            self.pool.close()
+        if self._nproc > 1 and self.pool is not None:
+            if self.parallel_kind == "multiproc":
+                self.pool.close()
+                self.pool.join()
+            else:
+                self.pool.shutdown()
         if nprocnew > 1:
-            self.pool = mp.Pool(processes=nprocnew)
+            if self.parallel_kind == "multiproc":
+                self.pool = mp.Pool(processes=nprocnew)
+            else:
+                self.pool = mt.ThreadPoolExecutor(max_workers=nprocnew)
         self._nproc = nprocnew
 
     def _matvec_serial(self, x: NDArray) -> NDArray:
@@ -239,16 +270,62 @@ class VStack(LinearOperator):
         y = np.sum(ys, axis=0)
         return y
 
+    def _matvec_multithread(self, x: NDArray) -> NDArray:
+        ys = list(
+            self.pool.map(
+                lambda args: _matvec_rmatvec_map(*args),
+                [(oper._matvec, x) for iop, oper in enumerate(self.ops)],
+            )
+        )
+        y = np.hstack(ys)
+        return y
+
+    def _rmatvec_multithread(self, x: NDArray) -> NDArray:
+        y = np.zeros(self.mops, dtype=self.dtype)
+        list(
+            self.pool.map(
+                lambda args: _rmatvec_map_mt(*args),
+                [
+                    (
+                        oper._rmatvec,
+                        x[self.nnops[iop] : self.nnops[iop + 1]],
+                        y,
+                        self.lock,
+                    )
+                    for iop, oper in enumerate(self.ops)
+                ],
+            )
+        )
+        return y
+
     def _matvec(self, x: NDArray) -> NDArray:
         if self.nproc == 1:
             y = self._matvec_serial(x)
         else:
-            y = self._matvec_multiproc(x)
+            if self.parallel_kind == "multiproc":
+                y = self._matvec_multiproc(x)
+            else:
+                y = self._matvec_multithread(x)
         return y
 
     def _rmatvec(self, x: NDArray) -> NDArray:
         if self.nproc == 1:
             y = self._rmatvec_serial(x)
         else:
-            y = self._rmatvec_multiproc(x)
+            if self.parallel_kind == "multiproc":
+                y = self._rmatvec_multiproc(x)
+            else:
+                y = self._rmatvec_multithread(x)
         return y
+
+    def close(self):
+        """Close the pool of workers used for multiprocessing /
+        multithreading.
+        """
+        if self.pool is not None:
+            if self.parallel_kind == "multiproc":
+                self.pool.close()
+                self.pool.join()
+            else:
+                self.pool.shutdown()
+            self.pool = None
