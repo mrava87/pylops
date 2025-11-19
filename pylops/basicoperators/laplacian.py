@@ -126,6 +126,6 @@ class Laplacian(LinearOperator):
         l2op *= weights[0]
         for ax, samp, weight in zip(axes[1:], sampling[1:], weights[1:]):
             l2op += weight * SecondDerivative(
-                dims, axis=ax, sampling=samp, edge=edge, dtype=dtype
+                dims, axis=ax, sampling=samp, edge=edge, kind=kind, dtype=dtype
             )
         return l2op
