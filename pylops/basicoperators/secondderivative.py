@@ -64,7 +64,7 @@ class SecondDerivative(LinearOperator):
     direction of a multi-dimensional array.
 
     For simplicity, given a one dimensional array, the second-order centered
-    first derivative is:
+    second derivative is:
 
     .. math::
         y[i] = (x[i+1] - 2x[i] + x[i-1]) / \Delta x^2

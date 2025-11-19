@@ -29,6 +29,10 @@ class Gradient(LinearOperator):
         Derivative kind (``forward``, ``centered``, or ``backward``).
     dtype : :obj:`str`, optional
         Type of elements in input array.
+    name : :obj:`str`, optional
+        .. versionadded:: 2.0.0
+
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
     Attributes
     ----------

@@ -21,7 +21,7 @@ class Laplacian(LinearOperator):
     ----------
     dims : :obj:`tuple`
         Number of samples for each dimension.
-    axes : :obj:`int`, optional
+    axes : :obj:`tuple`, optional
         .. versionadded:: 2.0.0
 
         Axes along which the Laplacian is applied.
@@ -37,6 +37,10 @@ class Laplacian(LinearOperator):
         Derivative kind (``forward``, ``centered``, or ``backward``)
     dtype : :obj:`str`, optional
         Type of elements in input array.
+    name : :obj:`str`, optional
+        .. versionadded:: 2.0.0
+
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`)
 
     Attributes
     ----------
@@ -54,7 +58,7 @@ class Laplacian(LinearOperator):
     Raises
     ------
     ValueError
-        If ``axes``. ``weights``, and ``sampling`` do not have the same size
+        If ``axes``, ``weights``, and ``sampling`` do not have the same size
 
     Notes
     -----
@@ -122,6 +126,6 @@ class Laplacian(LinearOperator):
         l2op *= weights[0]
         for ax, samp, weight in zip(axes[1:], sampling[1:], weights[1:]):
             l2op += weight * SecondDerivative(
-                dims, axis=ax, sampling=samp, edge=edge, dtype=dtype
+                dims, axis=ax, sampling=samp, edge=edge, kind=kind, dtype=dtype
             )
         return l2op
