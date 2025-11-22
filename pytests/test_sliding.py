@@ -12,7 +12,6 @@ else:
     backend = "numpy"
 import pytest
 
-import pylops
 from pylops.basicoperators import Identity, MatrixMult
 from pylops.signalprocessing import Sliding1D, Sliding2D, Sliding3D
 from pylops.signalprocessing.sliding1d import sliding1d_design
@@ -134,11 +133,13 @@ def test_Sliding1D(par):
     x = np.ones(par["ny"] * nwins)
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
 
 
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
 def test_Sliding1D_simOp(par):
     """Dot-test and inverse for Sliding1D operator with
@@ -163,8 +164,7 @@ def test_Sliding1D_simOp(par):
     x = np.ones(par["nwiny"] * nwins)
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
 
 
@@ -191,11 +191,13 @@ def test_Sliding2D(par):
     x = np.ones((par["ny"] * nwins, par["nt"]))
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
 
 
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
 def test_Sliding2D_simOp(par):
     """Dot-test and inverse for Sliding2D operator with
@@ -219,8 +221,7 @@ def test_Sliding2D_simOp(par):
     x = np.ones((nwins, par["nwiny"], par["nt"]))
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
 
 
@@ -259,11 +260,13 @@ def test_Sliding3D(par):
     x = np.ones((par["ny"] * par["nx"] * nwins[0] * nwins[1], par["nt"]))
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
 
 
+@pytest.mark.skipif(
+    int(os.environ.get("TEST_CUPY_PYLOPS", 0)) == 1, reason="Not CuPy enabled"
+)
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
 def test_Sliding3D_simOp(par):
     """Dot-test and inverse for Sliding3D operator with
@@ -296,6 +299,5 @@ def test_Sliding3D_simOp(par):
     x = np.ones((par["nwiny"] * par["nwinx"] * nwins[0] * nwins[1], par["nt"]))
     y = Slid * x.ravel()
 
-    with pylops.enabled_ndarray_multiplication():
-        xinv = Slid / y
+    xinv = Slid / y
     assert_array_almost_equal(x.ravel(), xinv)
