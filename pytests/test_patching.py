@@ -139,7 +139,7 @@ def test_Patch2D(par):
     """Dot-test and inverse for Patch2D operator"""
     Op = MatrixMult(np.ones((par["nwiny"] * par["nwint"], par["ny"] * par["nt"])))
 
-    nwins, dims, mwin_inends, dwin_inends = patch2d_design(
+    nwins, dims, _, _ = patch2d_design(
         (par["npy"], par["npt"]),
         (par["nwiny"], par["nwint"]),
         (par["novery"], par["novert"]),
@@ -161,7 +161,7 @@ def test_Patch2D(par):
         par["ny"] * par["nt"] * nwins[0] * nwins[1],
         backend=backend,
     )
-    x = np.ones((par["ny"] * nwins[0], par["nt"] * nwins[1]))
+    x = np.ones((par["ny"] * nwins[0] * par["nt"] * nwins[1]))
     y = Pop * x.ravel()
 
     xinv = Pop / y
@@ -174,7 +174,7 @@ def test_Patch2D_scalings(par):
     Op = MatrixMult(np.ones((par["nwiny"] * par["nwint"], par["ny"] * par["nt"])))
     scalings = np.arange(par["nwiny"] * par["nwint"]) + 1.0
 
-    nwins, dims, mwin_inends, dwin_inends = patch2d_design(
+    nwins, dims, _, _ = patch2d_design(
         (par["npy"], par["npt"]),
         (par["nwiny"], par["nwint"]),
         (par["novery"], par["novert"]),
@@ -197,7 +197,78 @@ def test_Patch2D_scalings(par):
         par["ny"] * par["nt"] * nwins[0] * nwins[1],
         backend=backend,
     )
-    x = np.ones((par["ny"] * nwins[0], par["nt"] * nwins[1]))
+    x = np.ones((par["ny"] * nwins[0] * par["nt"] * nwins[1]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par4)])
+def test_Patch2D_singlepatch1(par):
+    """Dot-test and inverse for Patch2D operator with single patch in fist dimension"""
+    Op = MatrixMult(np.ones((par["npy"] * par["nwint"], par["npy"] * par["nt"])))
+
+    nwins, dims, _, _ = patch2d_design(
+        (par["npy"], par["npt"]),
+        (par["npy"], par["nwint"]),
+        (0, par["novert"]),
+        (par["npy"], par["nt"]),
+    )
+
+    Pop = Patch2D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npt"]),
+        nwin=(par["npy"], par["nwint"]),
+        nover=(0, par["novert"]),
+        nop=(par["npy"], par["nt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert nwins[0] == 1
+    assert dottest(
+        Pop,
+        par["npy"] * par["npt"],
+        par["npy"] * par["nt"] * nwins[0] * nwins[1],
+        backend=backend,
+    )
+    x = np.ones((par["npy"] * nwins[0] * par["nt"] * nwins[1]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+def test_Patch2D_singlepatch2(par):
+    """Dot-test and inverse for Patch2D operator with single patch in second dimension"""
+    Op = MatrixMult(np.ones((par["nwiny"] * par["npt"], par["ny"] * par["npt"])))
+
+    nwins, dims, _, _ = patch2d_design(
+        (par["npy"], par["npt"]),
+        (par["nwiny"], par["npt"]),
+        (par["novery"], 0),
+        (par["ny"], par["npt"]),
+    )
+    Pop = Patch2D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npt"]),
+        nwin=(par["nwiny"], par["npt"]),
+        nover=(par["novery"], 0),
+        nop=(par["ny"], par["npt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert nwins[1] == 1
+    assert dottest(
+        Pop,
+        par["npy"] * par["npt"],
+        par["ny"] * par["npt"] * nwins[0] * nwins[1],
+        backend=backend,
+    )
+    x = np.ones((par["ny"] * nwins[0] * par["npt"] * nwins[1]))
     y = Pop * x.ravel()
 
     xinv = Pop / y
@@ -216,7 +287,7 @@ def test_Patch3D(par):
         )
     )
 
-    nwins, dims, mwin_inends, dwin_inends = patch3d_design(
+    nwins, dims, _, _ = patch3d_design(
         (par["npy"], par["npx"], par["npt"]),
         (par["nwiny"], par["nwinx"], par["nwint"]),
         (par["novery"], par["noverx"], par["novert"]),
@@ -244,6 +315,179 @@ def test_Patch3D(par):
         backend=backend,
     )
     x = np.ones((par["ny"] * nwins[0], par["nx"] * nwins[1], par["nt"] * nwins[2]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+def test_Patch3D_singlepatch1(par):
+    """Dot-test and inverse for Patch3D operator with single patch in fist dimension"""
+    Op = MatrixMult(
+        np.ones(
+            (
+                par["npy"] * par["nwinx"] * par["nwint"],
+                par["npy"] * par["nx"] * par["nt"],
+            )
+        )
+    )
+
+    nwins, dims, _, _ = patch3d_design(
+        (par["npy"], par["npx"], par["npt"]),
+        (par["npy"], par["nwinx"], par["nwint"]),
+        (0, par["noverx"], par["novert"]),
+        (par["npy"], par["nx"], par["nt"]),
+    )
+
+    Pop = Patch3D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npx"], par["npt"]),
+        nwin=(par["npy"], par["nwinx"], par["nwint"]),
+        nover=(0, par["noverx"], par["novert"]),
+        nop=(par["npy"], par["nx"], par["nt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert nwins[0] == 1
+    assert dottest(
+        Pop,
+        par["npy"] * par["npx"] * par["npt"],
+        par["npy"] * par["nx"] * par["nt"] * nwins[0] * nwins[1] * nwins[2],
+        backend=backend,
+    )
+    x = np.ones((par["npy"] * nwins[0], par["nx"] * nwins[1], par["nt"] * nwins[2]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+def test_Patch3D_singlepatch2(par):
+    """Dot-test and inverse for Patch3D operator with single patch in second dimension"""
+    Op = MatrixMult(
+        np.ones(
+            (
+                par["nwiny"] * par["npx"] * par["nwint"],
+                par["ny"] * par["npx"] * par["nt"],
+            )
+        )
+    )
+
+    nwins, dims, _, _ = patch3d_design(
+        (par["npy"], par["npx"], par["npt"]),
+        (par["nwiny"], par["npx"], par["nwint"]),
+        (par["novery"], 0, par["novert"]),
+        (par["ny"], par["npx"], par["nt"]),
+    )
+
+    Pop = Patch3D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npx"], par["npt"]),
+        nwin=(par["nwiny"], par["npx"], par["nwint"]),
+        nover=(par["novery"], 0, par["novert"]),
+        nop=(par["ny"], par["npx"], par["nt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert nwins[1] == 1
+    assert dottest(
+        Pop,
+        par["npy"] * par["npx"] * par["npt"],
+        par["ny"] * par["npx"] * par["nt"] * nwins[0] * nwins[1] * nwins[2],
+        backend=backend,
+    )
+    x = np.ones((par["ny"] * nwins[0], par["npx"] * nwins[1], par["nt"] * nwins[2]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+def test_Patch3D_singlepatch12(par):
+    """Dot-test and inverse for Patch3D operator with single patch in
+    fist and second dimensions"""
+    Op = MatrixMult(
+        np.ones(
+            (
+                par["npy"] * par["npx"] * par["nwint"],
+                par["npy"] * par["npx"] * par["nt"],
+            )
+        )
+    )
+
+    nwins, dims, _, _ = patch3d_design(
+        (par["npy"], par["npx"], par["npt"]),
+        (par["npy"], par["npx"], par["nwint"]),
+        (0, 0, par["novert"]),
+        (par["npy"], par["npx"], par["nt"]),
+    )
+
+    Pop = Patch3D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npx"], par["npt"]),
+        nwin=(par["npy"], par["npx"], par["nwint"]),
+        nover=(0, 0, par["novert"]),
+        nop=(par["npy"], par["npx"], par["nt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert nwins[0] == 1
+    assert nwins[1] == 1
+    assert dottest(
+        Pop,
+        par["npy"] * par["npx"] * par["npt"],
+        par["npy"] * par["npx"] * par["nt"] * nwins[0] * nwins[1] * nwins[2],
+        backend=backend,
+    )
+    x = np.ones((par["npy"] * nwins[0], par["npx"] * nwins[1], par["nt"] * nwins[2]))
+    y = Pop * x.ravel()
+
+    xinv = Pop / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+def test_Patch3D_singlepatch3(par):
+    """Dot-test and inverse for Patch3D operator with single patch in third dimension"""
+    Op = MatrixMult(
+        np.ones(
+            (
+                par["nwiny"] * par["nwinx"] * par["npt"],
+                par["ny"] * par["nx"] * par["npt"],
+            )
+        )
+    )
+
+    nwins, dims, _, _ = patch3d_design(
+        (par["npy"], par["npx"], par["npt"]),
+        (par["nwiny"], par["nwinx"], par["npt"]),
+        (par["novery"], par["noverx"], 0),
+        (par["ny"], par["nx"], par["npt"]),
+    )
+
+    Pop = Patch3D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npx"], par["npt"]),
+        nwin=(par["nwiny"], par["nwinx"], par["npt"]),
+        nover=(par["novery"], par["noverx"], 0),
+        nop=(par["ny"], par["nx"], par["npt"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert dottest(
+        Pop,
+        par["npy"] * par["npx"] * par["npt"],
+        par["ny"] * par["nx"] * par["npt"] * nwins[0] * nwins[1] * nwins[2],
+        backend=backend,
+    )
+    x = np.ones((par["ny"] * nwins[0], par["nx"] * nwins[1], par["npt"] * nwins[2]))
     y = Pop * x.ravel()
 
     xinv = Pop / y
