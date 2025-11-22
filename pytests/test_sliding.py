@@ -12,7 +12,7 @@ else:
     backend = "numpy"
 import pytest
 
-from pylops.basicoperators import MatrixMult
+from pylops.basicoperators import Identity, MatrixMult
 from pylops.signalprocessing import Sliding1D, Sliding2D, Sliding3D
 from pylops.signalprocessing.sliding1d import sliding1d_design
 from pylops.signalprocessing.sliding2d import sliding2d_design
@@ -137,6 +137,34 @@ def test_Sliding1D(par):
     assert_array_almost_equal(x.ravel(), xinv)
 
 
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
+def test_Sliding1D_simOp(par):
+    """Dot-test and inverse for Sliding1D operator with
+    Op applied to all windows simultaneously
+    """
+    nwins, dim = sliding1d_design(
+        par["npy"], par["nwiny"], par["novery"], par["nwiny"]
+    )[:2]
+
+    Op = Identity((nwins, par["nwiny"]))
+
+    Slid = Sliding1D(
+        Op,
+        dim=dim,
+        dimd=par["npy"],
+        nwin=par["nwiny"],
+        nover=par["novery"],
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert dottest(Slid, par["npy"], par["nwiny"] * nwins)
+    x = np.ones(par["nwiny"] * nwins)
+    y = Slid * x.ravel()
+
+    xinv = Slid / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_Sliding2D(par):
     """Dot-test and inverse for Sliding2D operator"""
@@ -158,6 +186,33 @@ def test_Sliding2D(par):
         Slid, par["npy"] * par["nt"], par["ny"] * par["nt"] * nwins, backend=backend
     )
     x = np.ones((par["ny"] * nwins, par["nt"]))
+    y = Slid * x.ravel()
+
+    xinv = Slid / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
+def test_Sliding2D_simOp(par):
+    """Dot-test and inverse for Sliding2D operator with
+    Op applied to all windows simultaneously
+    """
+    nwins, dims = sliding2d_design(
+        (par["npy"], par["nt"]), par["nwiny"], par["novery"], (par["nwiny"], par["nt"])
+    )[:2]
+
+    Op = Identity((nwins, par["nwiny"], par["nt"]))
+
+    Slid = Sliding2D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["nt"]),
+        nwin=par["nwiny"],
+        nover=par["novery"],
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    x = np.ones((nwins, par["nwiny"], par["nt"]))
     y = Slid * x.ravel()
 
     xinv = Slid / y
@@ -197,6 +252,42 @@ def test_Sliding3D(par):
         backend=backend,
     )
     x = np.ones((par["ny"] * par["nx"] * nwins[0] * nwins[1], par["nt"]))
+    y = Slid * x.ravel()
+
+    xinv = Slid / y
+    assert_array_almost_equal(x.ravel(), xinv)
+
+
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
+def test_Sliding3D_simOp(par):
+    """Dot-test and inverse for Sliding3D operator with
+    Op applied to all windows simultaneously
+    """
+    nwins, dims = sliding3d_design(
+        (par["npy"], par["npx"], par["nt"]),
+        (par["nwiny"], par["nwinx"]),
+        (par["novery"], par["noverx"]),
+        (par["nwiny"], par["nwinx"], par["nt"]),
+    )[:2]
+
+    Op = Identity((*nwins, par["nwiny"], par["nwinx"], par["nt"]))
+
+    Slid = Sliding3D(
+        Op,
+        dims=dims,
+        dimsd=(par["npy"], par["npx"], par["nt"]),
+        nwin=(par["nwiny"], par["nwinx"]),
+        nover=(par["novery"], par["noverx"]),
+        nop=(par["ny"], par["nx"]),
+        tapertype=par["tapertype"],
+        savetaper=par["savetaper"],
+    )
+    assert dottest(
+        Slid,
+        par["npy"] * par["npx"] * par["nt"],
+        par["nwiny"] * par["nwinx"] * par["nt"] * nwins[0] * nwins[1],
+    )
+    x = np.ones((par["nwiny"] * par["nwinx"] * nwins[0] * nwins[1], par["nt"]))
     y = Slid * x.ravel()
 
     xinv = Slid / y
