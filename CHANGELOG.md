@@ -1,6 +1,40 @@
 Changelog
 =========
 
+# 2.6.0
+* Added `pylops.medical` module and `pylops.medical.CT2D` operator
+* Added `pylops.utils.signalprocessing.pwd_slope_estimate` and
+  `pylops.signalprocessing.PWSprayer2D` and `pylops.signalprocessing.PWSmoother2D`
+  operators
+* Added support for multithreading to `pylops.basicoperators.Block`,
+  `pylops.basicoperators.BlockDiag`, `pylops.basicoperators.HStack`, and
+  `pylops.basicoperators.VStack` (and ``parallel_kind`` parameter)
+* Added `kwargs_fft` to `pylops.waveeqprocessing.BlendingContinuous`,
+  `pylops.waveeqprocessing.BlendingGroup`, and
+  `pylops.waveeqprocessing.BlendingHalf`
+* Added ``nttot`` to `pylops.waveeqprocessing.BlendingContinuous`
+* Added ``fftengine`` to  `pylops.waveeqprocessing.PhaseShift`
+* Added ``mkl_fft`` engine to `pylops.signalprocessing.FFT`,
+  `pylops.signalprocessing.FFT2D`, and `pylops.signalprocessing.FFTND`
+* Added JAX backend to `pylops.signalprocessing.ChirpRadon2D` and
+  `pylops.signalprocessing.ChirpRadon3D` operators.
+* Added `pylops.optimization.callback.CostNanInfCallback`,
+  `pylops.optimization.callback.CostToDataCallback`, and
+  `pylops.optimization.callback.CostToInitialCallback` callbacks, and
+  and ``rtol`` and ``rtol1`` parameters in all solvers
+* Optimized internal handling of `pylops.basicoperators.Zero` operators in
+  `pylops.basicoperators.BlockDiag`, `pylops.basicoperators.HStack`, and
+  `pylops.basicoperators.VStack`
+* Homogenize error/warning/info messages across the library by switching to
+  ``logging/warning``
+* Fixed initialization of ``r`` and ``rw`` in `pylops.optimization.cls_sparsity.IRLS`
+* Fixed `pylops.optimization.cls_sparsity._halfthreshold` for complex valued CuPy arrays
+* Fixed initialization of ``decay`` in sparse solvers to correctly solve complex-valued
+  problems
+* Fixed bug when calling ``__pow__`` of a linear operator with CuPy arrays
+* Fixed dtype handling in `pylops.optimization.cls_sparsity.ISTA` and
+  `pylops.optimization.cls_sparsity.FISTA`
+
 # 2.5.0
 * Added `cuda` engine to `pylops.waveeqprocessing.Kirchhoff`
   operator
@@ -12,19 +46,19 @@ Changelog
 * Added `kwargs_fft` to `pylops.signalprocessing.FFT`,
   `pylops.signalprocessing.FFT2D`, and
   `pylops.signalprocessing.FFTND`
-* Fix bug in `pylops.waveeqprocessing.MDD` when using
+* Fixed bug in `pylops.waveeqprocessing.MDD` when using
   CuPy arrays for `G` and `d` with `twosided=True` and `add_negative=True`
-* Fix bug in `pylops.signalprocessing.FourierRadon3D`
+* Fixed bug in `pylops.signalprocessing.FourierRadon3D`
   in the default choice of `num_threads_per_blocks`
-* Fix bug in `pylops.signalprocessing.Convolve1D`
+* Fixed bug in `pylops.signalprocessing.Convolve1D`
   in the definition of `pad` and `padd` when applying the
   operator to a CuPy array
-* Fix bug in `pylops.optimization.cls_sparsity.OMP` avoiding
+* Fixed bug in `pylops.optimization.cls_sparsity.OMP` avoiding
   passing `explicit` in the creation of `_ColumnLinearOperator`
-* Fix bug in `pylops.optimization.cls_sparsity.OMP` callback
+* Fixed bug in `pylops.optimization.cls_sparsity.OMP` callback
   method as `cols` was not passed not allowing ``x`` to be
   properly reconstructed
-* Fix bug in `pylops.waveeqprocessing.SeismicInterpolation`
+* Fixed bug in `pylops.waveeqprocessing.SeismicInterpolation`
   in calculation of `sampling` when not passed
 
 # 2.4.0
@@ -33,7 +67,7 @@ Changelog
 * Added `pylops.PyTensorOperator` operator
 * Added `pylops.ToCupy` operator
 * Added `pylops.utils.seismicevents.parabolic3d` method
-* Fix bug in `pylops.Restriction` when passing iava as cupy array
+* Fixed bug in `pylops.Restriction` when passing iava as cupy array
 
 # 2.3.1
 * Fixed bug in `pylops.utils.backend` (see [Issue #606](https://github.com/PyLops/pylops/issues/606))
@@ -336,7 +370,7 @@ To aid users in navigating the breaking changes, we provide the following docume
 * Added ``pylops.LinearOperator.asoperator`` method to
   ``pylops.LinearOperator``
 * Added ``pylops.utils.signalprocessing.slope_estimate`` function
-* Fix bug in ``pylops.signalprocessing.Radon2D`` and
+* Fixed bug in ``pylops.signalprocessing.Radon2D`` and
  ``pylops.signalprocessing.Radon3D`` when ``onthefly=True`` returning the
  same result as when ``onthefly=False``
 
@@ -348,7 +382,7 @@ To aid users in navigating the breaking changes, we provide the following docume
 * Added ``pylops.waveeqprocessing.PressureToVelocity``,
   ``pylops.waveeqprocessing.UpDownComposition3Doperator``, and
   ``pylops.waveeqprocessing.PhaseShift`` operators
-* Fix bug in ``pylops.basicoperators.Kronecker``
+* Fixed bug in ``pylops.basicoperators.Kronecker``
   (see [Issue #125](https://github.com/PyLops/pylops/issues/125))
 
 # 1.7.0
