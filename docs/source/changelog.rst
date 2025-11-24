@@ -3,6 +3,46 @@
 Changelog
 =========
 
+
+Version 2.6.0
+-------------
+
+*Released on: 24/11/2025*
+
+* Added :py:mod:`pylops.medical` module and :py:class:`pylops.medical.CT2D` operator
+* Added :py:func:`pylops.utils.signalprocessing.pwd_slope_estimate` and
+  :py:class:`pylops.signalprocessing.PWSprayer2D` and 
+  :py:class:`pylops.signalprocessing.PWSmoother2D` operators 
+* Added support for multithreading to :py:class:`pylops.Block`,
+  :py:class:`pylops.BlockDiag`, :py:class:`pylops.HStack`,
+  and :py:class:`pylops.VStack` (and `parallel_kind` parameter) 
+* Added ``kwargs_fft`` to :py:class:`pylops.waveeqprocessing.BlendingContinuous`,
+  :py:class:`pylops.waveeqprocessing.BlendingGroup`, and
+  :py:class:`pylops.waveeqprocessing.BlendingHalf`
+* Added ``nttot`` to :py:class:`pylops.waveeqprocessing.BlendingContinuous`
+* Added ``fftengine`` to  :py:class:`pylops.waveeqprocessing.PhaseShift`
+* Added ``mkl_fft`` engine to :py:class:`pylops.signalprocessing.FFT`,
+  :py:class:`pylops.signalprocessing.FFT2D`, and :py:class:`pylops.signalprocessing.FFTND`
+* Added JAX backend to :py:class:`pylops.signalprocessing.ChirpRadon2D` and
+  :py:class:`pylops.signalprocessing.ChirpRadon3D` operators.
+* Added :py:class:`pylops.optimization.callback.CostNanInfCallback`, 
+  :py:class:`pylops.optimization.callback.CostToDataCallback`, and
+  :py:class:`pylops.optimization.callback.CostToInitialCallback` callbacks, and
+  and ``rtol`` and ``rtol1`` parameters in all solvers
+* Optimized internal handling of :py:class:`pylops.Zero` operators in
+  :py:class:`pylops.BlockDiag`, :py:class:`pylops.HStack`, and
+  :py:class:`pylops.VStack`
+* Homogenize error/warning/info messages across the library by switching to
+  ``logging/warning`` 
+* Fixed initialization of ``r`` and ``rw`` in :py:class:`pylops.optimization.cls_sparsity.IRLS`
+* Fixed :py:func:`pylops.optimization.cls_sparsity._halfthreshold` for complex valued CuPy arrays
+* Fixed initialization of ``decay`` in sparse solvers to correctly solve complex-valued 
+  problems
+* Fixed bug when calling ``__pow__`` of a linear operator with CuPy arrays
+* Fixed dtype handling in :py:class:`pylops.optimization.cls_sparsity.ISTA` and
+  :py:class:`pylops.optimization.cls_sparsity.FISTA`
+
+
 Version 2.5.0
 -------------
 
