@@ -3,8 +3,6 @@ __all__ = [
     "Deghosting",
 ]
 
-
-import logging
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -16,8 +14,6 @@ from pylops.utils import dottest as Dottest
 from pylops.utils.backend import to_cupy_conditional
 from pylops.utils.tapers import taper2d, taper3d
 from pylops.utils.typing import DTypeLike, NDArray
-
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
 
 
 class _PhaseShift(LinearOperator):
@@ -84,6 +80,8 @@ def PhaseShift(
     ky: Optional[NDArray] = None,
     dtype: DTypeLike = "float64",
     name: str = "P",
+    fftengine: str = "numpy",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Phase shift operator
 
@@ -114,6 +112,15 @@ def PhaseShift(
         .. versionadded:: 2.0.0
 
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    fftengine : :obj:`str`, optional
+        .. versionadded:: 2.6.0
+
+        Engine used for fft computation (``numpy``, ``scipy``, or ``fftw``). Choose
+        ``numpy`` when working with CuPy arrays.
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the selected fft method
 
     Returns
     -------
@@ -174,7 +181,9 @@ def PhaseShift(
             nfft=ky.size,
             real=False,
             ifftshift_before=True,
+            engine=fftengine,
             dtype=dtypefft,
+            **kwargs_fft,
         )
     Pop = _PhaseShift(vel, dz, freq, kx, ky, dtypefft)
     if ky is None:
@@ -208,7 +217,7 @@ def Deghosting(
     solver: Callable = lsqr,
     dottest: bool = False,
     dtype: DTypeLike = "complex128",
-    **kwargs_solver
+    **kwargs_solver,
 ) -> Tuple[NDArray, NDArray]:
     r"""Wavefield deghosting.
 
@@ -218,7 +227,7 @@ def Deghosting(
 
     Parameters
     ----------
-    p : :obj:`np.ndarray`
+    p : :obj:`numpy.ndarray`
         Pressure (or vertical velocity) data of of size
         :math:`\lbrack n_{r_x}\,(\times n_{r_y})
         \times n_t \rbrack` (or :math:`\lbrack n_{r_{x,\text{sub}}}\,
@@ -243,9 +252,9 @@ def Deghosting(
         .. versionadded:: 2.3.0
 
         Type of data (``p`` or ``vz``)
-    pd : :obj:`np.ndarray`, optional
+    pd : :obj:`numpy.ndarray`, optional
         Direct arrival to be subtracted from ``p``
-    win : :obj:`np.ndarray`, optional
+    win : :obj:`numpy.ndarray`, optional
         Time window to be applied to ``p`` to remove the direct arrival
         (if ``pd=None``)
     ntaper : :obj:`float` or :obj:`tuple`, optional
@@ -271,9 +280,9 @@ def Deghosting(
 
     Returns
     -------
-    pup : :obj:`np.ndarray`
+    pup : :obj:`numpy.ndarray`
         Up-going pressure (or particle velocity) wavefield
-    pdown : :obj:`np.ndarray`
+    pdown : :obj:`numpy.ndarray`
         Down-going (or particle velocity) wavefield
 
     Raises

@@ -1,6 +1,5 @@
 __all__ = ["FourierRadon2D"]
 
-import logging
 from typing import Optional, Tuple
 
 import numpy as np
@@ -20,8 +19,6 @@ if jit_message is None:
 if jit_message is None and cupy_message is None:
     from ._fourierradon2d_cuda import _aradon_inner_2d_cuda, _radon_inner_2d_cuda
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
-
 
 class FourierRadon2D(LinearOperator):
     r"""2D Fourier Radon transform
@@ -35,11 +32,11 @@ class FourierRadon2D(LinearOperator):
 
     Parameters
     ----------
-    taxis : :obj:`np.ndarray`
+    taxis : :obj:`numpy.ndarray`
         Time axis
-    haxis : :obj:`np.ndarray`
+    haxis : :obj:`numpy.ndarray`
         Spatial axis
-    pxaxis : :obj:`np.ndarray`
+    pxaxis : :obj:`numpy.ndarray`
         Axis of scanning variable :math:`p_x` of parametric curve
     nfft : :obj:`int`
         Number of samples in Fourier transform
@@ -59,11 +56,44 @@ class FourierRadon2D(LinearOperator):
 
     Attributes
     ----------
+    haxis : :obj:`numpy.ndarray`
+        Spatial axis (or squared axis when ``kind='parabolic'``)
+    nh : :obj:`int`
+        Number of samples in spatial axis.
+    nt : :obj:`int`
+        Number of samples in time axis.
+    dh : :obj:`float`
+        Sampling step in spatial axis.
+    dt : :obj:`float`
+        Sampling step in time axis.
+    px : :obj:`numpy.ndarray`
+        Axis of scanning variable :math:`p_x` of parametric curve
+    npx : :obj:`int`
+        Number of samples in :math:`p_x` axis.
+    f : :obj:`numpy.ndarray`
+        Fourier axis.
+    nfft2 : :obj:`int`
+        Number of samples in positive Fourier axis.
+    cdtype : :obj:`str`
+        Complex type associated with ``dtype``.
+    flims : :obj:`tuple`
+        Indices of lower and upper limits of Fourier axis to be used in
+    num_blocks_matvec : :obj:`tuple`
+        Number of blocks in each dimension for ``matvec`` (only when
+        ``engine=cuda``)
+    num_blocks_rmatvec : :obj:`tuple`
+        Number of blocks in each dimension for ``rmatvec`` (only when
+        ``engine=cuda``)
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Raises
     ------

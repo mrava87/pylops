@@ -3,20 +3,23 @@ __all__ = [
     "nonstationary_convmtx",
     "slope_estimate",
     "dip_estimate",
+    "pwd_slope_estimate",
 ]
 
 import warnings
 from typing import Tuple
 
 import numpy as np
-import numpy.typing as npt
 from scipy.ndimage import gaussian_filter
 
+from pylops.basicoperators import Diagonal, Smoothing2D
+from pylops.optimization.leastsquares import preconditioned_inversion
+from pylops.utils._pwd2d import _conv_allpass, _triangular_smoothing_from_boxcars
 from pylops.utils.backend import get_array_module, get_toeplitz
 from pylops.utils.typing import NDArray
 
 
-def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
+def convmtx(h: NDArray, n: int, offset: int = 0) -> NDArray:
     r"""Convolution matrix
 
     Makes a dense convolution matrix :math:`\mathbf{C}`
@@ -30,7 +33,7 @@ def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
 
     Parameters
     ----------
-    h : :obj:`np.ndarray`
+    h : :obj:`numpy.ndarray`
         Convolution filter (1D array)
     n : :obj:`int`
         Number of columns of convolution matrix
@@ -39,7 +42,7 @@ def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
 
     Returns
     -------
-    C : :obj:`np.ndarray`
+    C : :obj:`numpy.ndarray`
         Convolution matrix of size :math:`\text{len}(h)+n-1 \times n`
 
     """
@@ -63,7 +66,7 @@ def convmtx(h: npt.ArrayLike, n: int, offset: int = 0) -> NDArray:
 
 
 def nonstationary_convmtx(
-    H: npt.ArrayLike,
+    H: NDArray,
     n: int,
     hc: int = 0,
     pad: Tuple[int] = (0, 0),
@@ -77,21 +80,21 @@ def nonstationary_convmtx(
 
     Parameters
     ----------
-    H : :obj:`np.ndarray`
+    H : :obj:`numpy.ndarray`
         Convolution filters (2D array of shape
         :math:`[n_\text{filters} \times n_{h}]`
     n : :obj:`int`
         Number of columns of convolution matrix
-    hc : :obj:`np.ndarray`, optional
+    hc : :obj:`numpy.ndarray`, optional
         Index of center of first filter
-    pad : :obj:`np.ndarray`
+    pad : :obj:`numpy.ndarray`
         Zero-padding to apply to the bank of filters before and after the
         provided values (use it to avoid wrap-around or pass filters with
         enough padding)
 
     Returns
     -------
-    C : :obj:`np.ndarray`
+    C : :obj:`numpy.ndarray`
         Convolution matrix
 
     """
@@ -104,10 +107,10 @@ def nonstationary_convmtx(
 
 
 def slope_estimate(
-    d: npt.ArrayLike,
+    d: NDArray,
     dz: float = 1.0,
     dx: float = 1.0,
-    smooth: int = 5,
+    smooth: float = 5.0,
     eps: float = 0.0,
     dips: bool = False,
 ) -> Tuple[NDArray, NDArray]:
@@ -122,7 +125,7 @@ def slope_estimate(
 
     Parameters
     ----------
-    d : :obj:`np.ndarray`
+    d : :obj:`numpy.ndarray`
         Input dataset of size :math:`n_z \times n_x`
     dz : :obj:`float`, optional
         Sampling in :math:`z`-axis, :math:`\Delta z`
@@ -136,7 +139,7 @@ def slope_estimate(
         .. warning::
             Since version 1.17.0, defaults to 1.0.
 
-    smooth : :obj:`float` or :obj:`np.ndarray`, optional
+    smooth : :obj:`float` or :obj:`numpy.ndarray`, optional
         Standard deviation for Gaussian kernel. The standard deviations of the
         Gaussian filter are given for each axis as a sequence, or as a single number,
         in which case it is equal for all axes.
@@ -161,14 +164,14 @@ def slope_estimate(
 
     Returns
     -------
-    slopes : :obj:`np.ndarray`
+    slopes : :obj:`numpy.ndarray`
         Estimated local slopes. The unit is that of
         :math:`\Delta z/\Delta x`.
 
         .. warning::
             Prior to version 1.17.0, always returned dips.
 
-    anisotropies : :obj:`np.ndarray`
+    anisotropies : :obj:`numpy.ndarray`
         Estimated local anisotropies: :math:`1-\lambda_\text{min}/\lambda_\text{max}`
 
         .. note::
@@ -256,7 +259,7 @@ def slope_estimate(
 
 
 def dip_estimate(
-    d: npt.ArrayLike,
+    d: NDArray,
     dz: float = 1.0,
     dx: float = 1.0,
     smooth: int = 5,
@@ -271,13 +274,13 @@ def dip_estimate(
 
     Parameters
     ----------
-    d : :obj:`np.ndarray`
+    d : :obj:`numpy.ndarray`
         Input dataset of size :math:`n_z \times n_x`
     dz : :obj:`float`, optional
         Sampling in :math:`z`-axis, :math:`\Delta z`
     dx : :obj:`float`, optional
         Sampling in :math:`x`-axis, :math:`\Delta x`
-    smooth : :obj:`float` or :obj:`np.ndarray`, optional
+    smooth : :obj:`float` or :obj:`numpy.ndarray`, optional
         Standard deviation for Gaussian kernel. The standard deviations of the
         Gaussian filter are given for each axis as a sequence, or as a single number,
         in which case it is equal for all axes.
@@ -289,12 +292,11 @@ def dip_estimate(
 
     Returns
     -------
-    dips : :obj:`np.ndarray`
+    dips : :obj:`numpy.ndarray`
         Estimated local dips. The unit is radians,
         in the range of :math:`-\frac{\pi}{2}` to :math:`\frac{\pi}{2}`.
-    anisotropies : :obj:`np.ndarray`
+    anisotropies : :obj:`numpy.ndarray`
         Estimated local anisotropies: :math:`1-\lambda_\text{min}/\lambda_\text{max}`
-
 
     Notes
     -----
@@ -307,3 +309,100 @@ def dip_estimate(
     """
     dips, anisos = slope_estimate(d, dz=dz, dx=dx, smooth=smooth, eps=eps, dips=True)
     return dips, anisos
+
+
+def pwd_slope_estimate(
+    d: NDArray,
+    niter: int = 5,
+    liter: int = 20,
+    order: int = 2,
+    smoothing: str = "triangle",
+    nsmooth: Tuple[int, int] = (10, 10),
+    damp: float = 0.0,
+) -> NDArray:
+    r"""Plane-Wave Destruction (PWD) local slope estimation.
+
+    Local slopes are estimated using the *Plane-Wave Destruction (PWD)* algorithm [1]_ [2]_
+    with optional structure-aligned smoothing preconditioning. Slopes are returned as
+    :math:`\tan\theta`, defined in a RHS coordinate system with :math:`z`-axis
+    pointing downward.
+
+    This algorithm relies on kernels defined in ``pylops.utils._pwd2d_numba``.
+    When Numba is available the implementation is JIT-accelerated; otherwise a pure-Python
+    fallback is used.
+
+    Parameters
+    ----------
+    d : :obj:`numpy.ndarray`
+        Input 2D array of shape ``(nz, nx)``.
+    niter : :obj:`int`, optional
+        Number of outer PWD iterations. Default is ``5``.
+    liter : :obj:`int`, optional
+        Maximum number of inner least-squares iterations. Default is ``20``.
+    order : :obj:`int`, optional
+        Accuracy order of the all-pass filters. Use ``1`` (3-tap) or ``2`` (5-tap).
+        Default is ``2``.
+    smoothing : :obj:`str`, optional
+        Preconditioning choice: ``"triangle"`` (default) that applies a triangular
+        smoother (two boxcar passes), or ``"boxcar"`` that applies a single-pass boxcar.
+    nsmooth : :obj:`tuple` of :obj:`int`, optional
+        Smoothing lengths ``(ny, nx)`` for the preconditioner. Default ``(10, 10)``.
+    damp : :obj:`float`, optional
+        Damping factor for the least-squares solve. Default ``0.0``.
+
+    Returns
+    -------
+    sigma : :obj:`numpy.ndarray`
+        Estimated slope field of shape ``(nz, nx)`` in samples per trace
+        (:math:`\Delta z / \Delta x`).
+
+    Raises
+    ------
+    ValueError
+        If ``order`` is not ``1`` or ``2``.
+    ValueError
+        If input array ``d`` is not 2-D.
+
+    .. [1] Claerbout, J., and Brown, M., "Two-dimensional textures and prediction-error
+       filters", EAGE Annual Meeting, Expanded Abstracts. 1999.
+    .. [2] Fomel, S., "Applications of plane‐wave destruction filters",
+       Geophysics. 2002.
+
+    """
+    if order not in (1, 2):
+        raise ValueError("order must be 1 (B3) or 2 (B5)")
+    if d.ndim != 2:
+        raise ValueError("input data must be 2-D")
+
+    dtype = d.dtype
+    nz, nx = d.shape
+    sigma = np.zeros_like(d)
+    delta_sigma = np.zeros_like(sigma)
+    u1 = np.zeros_like(sigma)
+    u2 = np.zeros_like(sigma)
+
+    if smoothing == "triangle":
+        Sop = _triangular_smoothing_from_boxcars(
+            nsmooth=nsmooth, dims=(nz, nx), dtype=dtype
+        )
+    elif smoothing == "boxcar":
+        Sop = Smoothing2D(nsmooth=nsmooth, dims=(nz, nx), dtype=dtype)
+    else:
+        raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
+
+    for _ in range(niter):
+        _conv_allpass(d, sigma, order, u1, u2)
+
+        Dop = Diagonal(u1.ravel(), dtype=dtype)
+        delta_sigma[:] = preconditioned_inversion(
+            Dop,
+            -u2.ravel(),
+            Sop,
+            damp=damp,
+            iter_lim=liter,
+            show=False,
+        )[0].reshape(nz, nx)
+
+        sigma += delta_sigma
+
+    return sigma

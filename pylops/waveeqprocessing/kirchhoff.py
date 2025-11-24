@@ -34,7 +34,7 @@ if jit_message is None:
 else:
     prange = range
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class Kirchhoff(LinearOperator):
@@ -121,11 +121,84 @@ class Kirchhoff(LinearOperator):
 
     Attributes
     ----------
+    ndims : :obj:`int`
+        Number of spatial dimensions (2 or 3).
+    ny : :obj:`int`
+        Number of samples in ``y`` axis (1 if ``ndims=2``).
+    nx : :obj:`int`
+        Number of samples in ``x`` axis.
+    nz : :obj:`int`
+        Number of samples in ``z`` axis.
+    dt : :obj:`float`
+        Sampling step in time axis.
+    nt : :obj:`int`
+        Number of samples in time axis.
+    nsnr : :obj:`int`
+        Number of source-receiver pairs.
+    ni : :obj:`int`
+        Number of image points (``ni=nx*nz`` if ``ndims=2`` and
+        ``ni=ny*nx*nz`` if ``ndims=3``).
+    six : :obj:`numpy.ndarray`
+        ix locations of sources (1d array of size ``ns*nr``).
+    rix : :obj:`numpy.ndarray`
+        ix locations of receivers (1d array of size ``ns*nr``).
+    travsrcrec : :obj:`bool`
+        Whether separate traveltime tables for sources and receivers are used (``True``)
+        or a single traveltime table for source-receiver pairs (``False``).
+    trav_srcs : :obj:`numpy.ndarray`
+        Traveltime table from sources to image points of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s \rbrack`.
+    trav_recs : :obj:`numpy.ndarray`
+        Traveltime table from image points to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_r \rbrack`.
+    trav : :obj:`numpy.ndarray`
+        Traveltime table from sources to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s n_r \rbrack`.
+    itrav : :obj:`numpy.ndarray`
+        Integer traveltime table (in samples) from sources to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s n_r \rbrack` (only if
+        ``travsrcrec=False``).
+    travd : :obj:`numpy.ndarray`
+        Fractional part of the traveltime table from sources to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s n_r \rbrack` (only if
+        ``travsrcrec=False``).
+    maxdist : :obj:`float`
+        Maximum distance between sources/receivers and image points.
+    amp_srcs : :obj:`numpy.ndarray`
+        Amplitude table from sources to image points of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s \rbrack`.
+    amp_recs : :obj:`numpy.ndarray`
+        Amplitude table from image points to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_r \rbrack`.
+    angle_srcs : :obj:`numpy.ndarray`
+        Incident angle table from sources to image points of size
+        :math:`\lbrack (n_y) n_x n_z \times n_s \rbrack` (
+        only if ``dynamic=True``).
+    angle_recs : :obj:`numpy.ndarray`
+        Emerging angle table from image points to receivers of size
+        :math:`\lbrack (n_y) n_x n_z \times n_r \rbrack` (
+        only if ``dynamic=True``).
+    cop : :obj:`pylops.Convolve1D`
+        Wavelet convolution operator of size :math:`\lbrack n_t \times n_t \rbrack`.
+    aperturetap : :obj:`numpy.ndarray`
+        Aperture taper
+    aperture : :obj:`tuple` or :obj:`numpy.ndarray`
+        Aperture limits (in terms of offset over depth)
+    apertureangle : :obj:`numpy.ndarray`
+        Angle aperture limits (in degrees)
+    vel : :obj:`numpy.ndarray`
+        Velocity model of size :math:`\lbrack (n_y\,\times)\; n_x
+        \times n_z \rbrack`
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Raises
     ------
@@ -245,8 +318,8 @@ class Kirchhoff(LinearOperator):
         mode: str = "eikonal",
         wavfilter: bool = False,
         dynamic: bool = False,
-        trav: Optional[NDArray] = None,
-        amp: Optional[NDArray] = None,
+        trav: Optional[Union[NDArray, Tuple[NDArray, NDArray]]] = None,
+        amp: Optional[Union[NDArray, Tuple[NDArray, NDArray]]] = None,
         aperture: Optional[Tuple[float, float]] = None,
         angleaperture: Union[float, Tuple[float, float]] = 90.0,
         snell: Optional[Tuple[float, float]] = None,
@@ -385,7 +458,7 @@ class Kirchhoff(LinearOperator):
                     )
                 ).reshape(np.prod(dims), ns)
                 self.angle_recs = (
-                    np.sign(trav_srcs_grad[1])
+                    np.sign(trav_recs_grad[1])
                     * np.arccos(
                         trav_recs_grad[-1]
                         / np.sqrt(np.sum(trav_recs_grad**2, axis=0))
@@ -1034,7 +1107,7 @@ class Kirchhoff(LinearOperator):
             self._kirch_rmatvec = self.cuda_helper._rmatvec_cuda
         else:
             if engine == "numba" and jit_message is not None:
-                logging.warning(jit_message)
+                logger.warning(jit_message)
             if self.dynamic and self.travsrcrec:
                 self._kirch_matvec = self._ampsrcrec_kirch_matvec
                 self._kirch_rmatvec = self._ampsrcrec_kirch_rmatvec

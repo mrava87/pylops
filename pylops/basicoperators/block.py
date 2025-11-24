@@ -1,6 +1,5 @@
 __all__ = ["Block"]
 
-import multiprocessing as mp
 from typing import Iterable, Optional
 
 from pylops import LinearOperator
@@ -22,22 +21,22 @@ class _Block(LinearOperator):
         dtype: Optional[DTypeLike] = None,
         _HStack=HStack,
         _VStack=VStack,
-        args_HStack: Optional[dict] = None,
-        args_VStack: Optional[dict] = None,
+        _args_HStack: Optional[dict] = None,
+        _args_VStack: Optional[dict] = None,
         name: str = "B",
     ):
-        if args_HStack is None:
-            self.args_HStack = {}
+        if _args_HStack is None:
+            self._args_HStack = {}
         else:
-            self.args_HStack = args_HStack
-        if args_VStack is None:
-            self.args_VStack = {}
+            self._args_HStack = _args_HStack
+        if _args_VStack is None:
+            self._args_VStack = {}
         else:
-            self.args_VStack = args_VStack
-        hblocks = [_HStack(hblock, dtype=dtype, **self.args_HStack) for hblock in ops]
+            self._args_VStack = _args_VStack
+        hblocks = [_HStack(hblock, dtype=dtype, **self._args_HStack) for hblock in ops]
         super().__init__(
             Op=_VStack(
-                ops=hblocks, forceflat=forceflat, dtype=dtype, **self.args_VStack
+                ops=hblocks, forceflat=forceflat, dtype=dtype, **self._args_VStack
             ),
             name=name,
         )
@@ -53,6 +52,10 @@ class Block(_Block):
     r"""Block operator.
 
     Create a block operator from N lists of M linear operators each.
+    Note that in case one or more operators are filled with zeros, it is
+    recommended to use the :py:class:`pylops.Zero` operator instead of e.g.,
+    :py:class:`pylops.MatrixMult` with a matrix of zeros, as the former will
+    be simply by-passed both in the forward and adjoint steps.
 
     Parameters
     ----------
@@ -61,22 +64,30 @@ class Block(_Block):
         Alternatively, :obj:`numpy.ndarray` or :obj:`scipy.sparse` matrices
         can be passed in place of one or more operators.
     nproc : :obj:`int`, optional
-        Number of processes used to evaluate the N operators in parallel using
-        ``multiprocessing``. If ``nproc=1``, work in serial mode.
+        Number of processes/threads used to evaluate the N operators in parallel using
+        ``multiprocessing``/``concurrent.futures``. If ``nproc=1``, work in serial mode.
     forceflat : :obj:`bool`, optional
         .. versionadded:: 2.2.0
 
         Force an array to be flattened after rmatvec.
+    parallel_kind : :obj:`str`, optional
+        .. versionadded:: 2.6.0
+
+        Parallelism kind when ``nproc>1``. Can be ``multiproc`` (using
+        :mod:`multiprocessing`) or ``multithread`` (using
+        :class:`concurrent.futures.ThreadPoolExecutor`). Defaults
+        to ``multiproc``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
     Attributes
     ----------
+    pool : :obj:`multiprocessing.Pool` or :obj:`concurrent.futures.ThreadPoolExecutor` or :obj:`None`
+        Pool of workers used to evaluate the N operators in parallel.
+        When ``nproc=1``, no pool is created (i.e.,
+        ``pool=None``).
     shape : :obj:`tuple`
-        Operator shape
-    explicit : :obj:`bool`
-        Operator contains a matrix that can be solved explicitly (``True``) or
-        not (``False``)
+        Operator shape.
 
     Notes
     -----
@@ -143,10 +154,12 @@ class Block(_Block):
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
         forceflat: bool = None,
+        parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ):
-        if nproc > 1:
-            self.pool = mp.Pool(processes=nproc)
         super().__init__(
-            ops=ops, forceflat=forceflat, dtype=dtype, args_VStack={"nproc": nproc}
+            ops=ops,
+            forceflat=forceflat,
+            dtype=dtype,
+            _args_VStack={"nproc": nproc, "parallel_kind": parallel_kind},
         )

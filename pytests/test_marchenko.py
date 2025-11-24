@@ -2,12 +2,10 @@ import os
 
 if int(os.environ.get("TEST_CUPY_PYLOPS", 0)):
     import cupy as np
-    from cupy.testing import assert_array_almost_equal, assert_array_equal
 
     backend = "cupy"
 else:
     import numpy as np
-    from numpy.testing import assert_array_almost_equal, assert_array_equal
 
     backend = "numpy"
 import numpy as npp
@@ -86,11 +84,16 @@ Rtwosided_fft = Rtwosided_fft[..., :nfmax]
 R1twosided_fft = npp.fft.rfft(R1twosided, 2 * nt - 1, axis=-1) / npp.sqrt(2 * nt - 1)
 R1twosided_fft = R1twosided_fft[..., :nfmax]
 
-
-par1 = {"niter": 10, "prescaled": False, "fftengine": "numpy"}
-par2 = {"niter": 10, "prescaled": True, "fftengine": "numpy"}
-par3 = {"niter": 10, "prescaled": False, "fftengine": "scipy"}
-par4 = {"niter": 10, "prescaled": False, "fftengine": "fftw"}
+# Test parameters
+par1 = {"niter": 10, "prescaled": False, "fftengine": "numpy", "kwargs_fft": None}
+par2 = {"niter": 10, "prescaled": True, "fftengine": "numpy", "kwargs_fft": None}
+par3 = {
+    "niter": 10,
+    "prescaled": False,
+    "fftengine": "scipy",
+    "kwargs_fft": dict(workers=4),
+}
+par4 = {"niter": 10, "prescaled": False, "fftengine": "fftw", "kwargs_fft": None}
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4)])
@@ -111,6 +114,7 @@ def test_Marchenko_freq(par):
         nsmooth=nsmooth,
         prescaled=par["prescaled"],
         fftengine=par["fftengine"] if backend == "numpy" else "numpy",
+        kwargs_fft=par["kwargs_fft"] if backend == "numpy" else None,
     )
 
     solver_dict = (

@@ -116,6 +116,8 @@ Signal processing
     FourierRadon3D
     ChirpRadon2D
     ChirpRadon3D
+    PWSprayer2D
+    PWSmoother2D
     Sliding1D
     Sliding2D
     Sliding3D
@@ -156,6 +158,17 @@ Geophysical subsurface characterization
     poststack.PoststackLinearModelling
     prestack.PrestackLinearModelling
     prestack.PrestackWaveletModelling
+
+
+Medical imaging
+~~~~~~~~~~~~~~~
+
+.. currentmodule:: pylops.medical
+
+.. autosummary::
+   :toctree: generated/
+
+    CT2D
 
 
 Solvers
@@ -249,6 +262,9 @@ Callbacks
    :toctree: generated/
 
     Callbacks
+    CostNanInfCallback
+    CostToDataCallback
+    CostToInitialCallback
     MetricsCallback
 
 

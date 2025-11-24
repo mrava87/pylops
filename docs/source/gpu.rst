@@ -473,10 +473,18 @@ Signal processing:
    * - :class:`pylops.signalprocessing.ChirpRadon2D`
      - |:white_check_mark:|
      - |:white_check_mark:|
-     - |:red_circle:|
+     - |:white_check_mark:|
    * - :class:`pylops.signalprocessing.ChirpRadon3D`
      - |:white_check_mark:|
      - |:white_check_mark:|
+     - |:white_check_mark:|
+   * - :class:`pylops.signalprocessing.PWSprayer2D`
+     - |:white_check_mark:|
+     - |:red_circle:|
+     - |:red_circle:|
+   * - :class:`pylops.signalprocessing.PWSmoother2D`
+     - |:white_check_mark:|
+     - |:red_circle:|
      - |:red_circle:|
    * - :class:`pylops.signalprocessing.Sliding1D`
      - |:white_check_mark:|
@@ -578,6 +586,22 @@ Geophysical subsurface characterization:
      - |:white_check_mark:|
      - |:white_check_mark:|
      - |:warning:|
+
+
+Medical:
+
+.. list-table::
+   :widths: 50 25 25 25
+   :header-rows: 1
+
+   * - Operator/method
+     - CPU
+     - GPU with CuPy
+     - GPU/TPU with JAX
+   * - :class:`pylops.medical.ct.CT2D`
+     - |:white_check_mark:|
+     - |:white_check_mark:|
+     - |:white_check_mark:|
 
 .. warning::
 

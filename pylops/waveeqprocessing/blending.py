@@ -4,6 +4,8 @@ __all__ = [
     "BlendingHalf",
 ]
 
+from typing import Optional
+
 import numpy as np
 
 from pylops import LinearOperator
@@ -31,15 +33,42 @@ class BlendingContinuous(LinearOperator):
         Number of sources
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source
     shiftall : :obj:`bool`, optional
         Shift all shots together (``True``) or one at the time (``False``). Defaults to ``shiftall=False`` (original
         implementation), however ``shiftall=True`` should be preferred when ``nr`` is small.
+    nttot : :obj:`int`
+        Total number of time samples in blended data (if ``None``, computed internally
+        based on the the maximum ignition time in ``times``)
     dtype : :obj:`str`, optional
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
+
+    Attributes
+    ----------
+    PadOp : :obj:`pylops.basicoperators.Pad`
+        Padding operator used to add one zero at the end of each
+        shot gather to avoid boundary effects when shifting
+    shifts : :obj:`list` or :obj:`numpy.ndarray`
+        Integer part of the time shifts (in number of samples)
+    ShiftOps : :obj:`list` of :obj:`pylops.signalprocessing.Shift` or :obj:`pylops.signalprocessing.Shift`
+        Shift operator(s) used to apply the fractional part of the time shifts
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape.
 
     Notes
     -----
@@ -66,8 +95,10 @@ class BlendingContinuous(LinearOperator):
         dt: float,
         times: NDArray,
         shiftall: bool = False,
+        nttot: Optional[int] = None,
         dtype: DTypeLike = "float64",
         name: str = "B",
+        **kwargs_fft,
     ) -> None:
         self.dtype = np.dtype(dtype)
         self.nt = nt
@@ -76,7 +107,11 @@ class BlendingContinuous(LinearOperator):
         self.dt = dt
         self.times = times
         self.shiftall = shiftall
-        self.nttot = int(np.max(self.times) / self.dt + self.nt + 1)
+        self.nttot = (
+            nttot
+            if nttot is not None
+            else int(np.max(self.times) / self.dt + self.nt + 1)
+        )
         if not self.shiftall:
             # original implementation, where each source is shifted indipendently
             self.PadOp = Pad((self.nr, self.nt), ((0, 0), (0, 1)), dtype=self.dtype)
@@ -101,6 +136,7 @@ class BlendingContinuous(LinearOperator):
                             sampling=self.dt,
                             real=True,
                             dtype=self.dtype,
+                            **kwargs_fft,
                         )
                     )
         else:
@@ -119,6 +155,7 @@ class BlendingContinuous(LinearOperator):
                 sampling=self.dt,
                 real=True,
                 dtype=self.dtype,
+                **kwargs_fft,
             )
             self.diff = diff
 
@@ -220,6 +257,7 @@ def BlendingGroup(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Group blending operator
 
@@ -237,12 +275,12 @@ def BlendingGroup(
     nr : :obj:`int`
         Number of receivers
     ns : :obj:`int`
-        Number of sources. Equal to group_size x n_groups
+        Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
-        :math:`n_{groups} \times group_{size}`, where each row contains the
+        :math:`group_{size} \times n_{groups}`, where each column contains the
         firing times for every group.
     group_size : :obj:`int`
         The number of sources per group
@@ -254,6 +292,10 @@ def BlendingGroup(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -269,7 +311,7 @@ def BlendingGroup(
     Group blending refers to an acquisition scenario where two or more sources are towed behind a single vessel
     and fired at short time differences. The same experiment is repeated :math:`n_{groups}` times to create
     :math:`n_{groups}` blended recordings. For the case of 2 sources and an overall number of
-    :math:`N=n_{groups}*group_{size}` shots, the modelling operator is
+    :math:`N=2*n_{groups}` shots, the modelling operator is
 
     .. math::
         \Phi = \begin{bmatrix}
@@ -290,7 +332,13 @@ def BlendingGroup(
         Hop = []
         for j in range(group_size):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             Hop.append(ShiftOp)
         Bop.append(HStack(Hop))
@@ -312,6 +360,7 @@ def BlendingHalf(
     nproc: int = 1,
     dtype: DTypeLike = "float64",
     name: str = "B",
+    **kwargs_fft,
 ) -> LinearOperator:
     r"""Half blending operator
 
@@ -329,13 +378,13 @@ def BlendingHalf(
     nr : :obj:`int`
         Number of receivers
     ns : :obj:`int`
-        Number of sources. Equal to group_size x n_groups
+        Number of sources. Equal to :math:`group_{size} \cdot n_{groups}`
     dt : :obj:`float`
         Time sampling in seconds
-    times : :obj:`np.ndarray`
+    times : :obj:`numpy.ndarray`
         Absolute ignition times for each source. This should have dimensions
-        :math`n_{groups} \times group_{size}`, where each row contains the firing
-        times for every group.
+        :math:`group_{size} \times n_{groups}`, where each column contains the
+        firing times for every group.
     group_size : :obj:`int`
         The number of sources per group
     n_groups : :obj:`int`
@@ -346,6 +395,10 @@ def BlendingHalf(
         Operator dtype
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`)
+    **kwargs_fft
+        .. versionadded:: 2.6.0
+
+        Arbitrary keyword arguments to be passed to the Shift operator
 
     Returns
     -------
@@ -360,7 +413,7 @@ def BlendingHalf(
 
     Half blending refers to an acquisition scenario where two or more vessels, each with a source are fired at
     short time differences. The same experiment is repeated :math:`n_{groups}` times to create :math:`n_{groups}`
-    blended recordings. For the case of 2 sources and an overall number of :math:`N=n_{groups}*group_{size}` shots
+    blended recordings. For the case of 2 sources and an overall number of :math:`N=2*n_{groups}` shots
 
     .. math::
         \Phi = \begin{bmatrix}
@@ -382,7 +435,13 @@ def BlendingHalf(
         OpShift = []
         for i in range(n_groups):
             ShiftOp = Shift(
-                (nr, nt), times[j, i], axis=1, sampling=dt, real=False, dtype=dtype
+                (nr, nt),
+                times[j, i],
+                axis=1,
+                sampling=dt,
+                real=False,
+                dtype=dtype,
+                **kwargs_fft,
             )
             OpShift.append(ShiftOp)
         Dop = BlockDiag(OpShift, nproc=nproc)
