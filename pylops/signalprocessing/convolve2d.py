@@ -36,7 +36,7 @@ class Convolve2D(ConvolveND):
 
     Attributes
     ----------
-    nh : :obj:`int`
+    nh : :obj:`tuple`
         Length of the filter
     convolve : :obj:`callable`
         Convolution function

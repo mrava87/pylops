@@ -3,7 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
-from pylops.basicoperators import Smoothing2D
+from pylops.basicoperators import Smoothing2D, SmoothingND
 from pylops.utils import deps
 from pylops.utils.typing import NDArray
 
@@ -18,15 +18,31 @@ else:
 def _conv_allpass_python(
     din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
 ) -> None:
-    """Pure-Python fallback for PWD all-pass filtering used in
-    :func:`pylops.utils.signalprocessing.pwd_slope_estimate`."""
-    n1, n2 = din.shape
+    """All-pass convolution.
+
+    Pure-Python fallback for PWD all-pass filtering used in
+    :func:`pylops.utils.signalprocessing.pwd_slope_estimate`.
+
+    Parameters
+    ----------
+    din : :obj:`numpy.ndarray`
+        Input data array.
+    dip : :obj:`numpy.ndarray`
+        Dip array.
+    order : :obj:`int`
+        Order of the all-pass filters: ``1`` (3-tap) or ``2`` (5-tap).
+    u1 : :obj:`numpy.ndarray`
+        Output array for first derivative over the first axis.
+    u2 : :obj:`numpy.ndarray`
+        Output array for first derivative over the second axis.
+
+    """
+    n1, n2 = din.shape[:2]
     nw = 1 if order == 1 else 2
 
-    for j in range(n1):
-        for i in range(n2):
-            u1[j, i] = 0.0
-            u2[j, i] = 0.0
+    # Clear derivative arrays
+    u1[:] = 0.0
+    u2[:] = 0.0
 
     def b3(sig: float):
         b0 = (1.0 - sig) * (2.0 - sig) / 12.0
@@ -126,7 +142,25 @@ def _conv_allpass_python(
 def _conv_allpass(
     din: NDArray, dip: NDArray, order: int, u1: NDArray, u2: NDArray
 ) -> None:
-    """Dispatch to numba kernel when available, otherwise use Python fallback."""
+    """All-pass convolution dispatcher.
+
+    Perform All-pass convolution. Dispatch to numba kernel when
+    available, otherwise use Python fallback.
+
+    Parameters
+    ----------
+    din : :obj:`numpy.ndarray`
+        Input data array.
+    dip : :obj:`numpy.ndarray`
+        Dip array.
+    order : :obj:`int`
+        Order of the all-pass filters: ``1`` (3-tap) or ``2`` (5-tap).
+    u1 : :obj:`numpy.ndarray`
+        Output array for first derivative over the first axis.
+    u2 : :obj:`numpy.ndarray`
+        Output array for first derivative over the second axis.
+
+    """
     if _conv_allpass_numba is not None:
         _conv_allpass_numba(din, dip, order, u1, u2)
     else:
@@ -135,15 +169,35 @@ def _conv_allpass(
 
 
 def _triangular_smoothing_from_boxcars(
-    nsmooth: Tuple[int, int],
-    dims: Tuple[int, int],
+    nsmooth: Tuple[int, ...],
+    dims: Tuple[int, ...],
     dtype: str | np.dtype = "float64",
 ):
-    """Build a triangular smoother as the composition of two boxcar passes."""
+    """Triangular smoother
 
-    ny, nx = nsmooth
-    ly = (ny + 1) // 2
-    lx = (nx + 1) // 2
+    Build a triangular smoother as the composition of two
+    boxcar passes.
 
-    box = Smoothing2D(nsmooth=(ly, lx), dims=dims, dtype=dtype)
-    return box @ box
+    Parameters
+    ----------
+    nsmooth : :obj:`tuple` of :obj:`int`
+        Length of smoothing operator in the chosen dimensions
+        (must be odd, if even it will be increased by 1).
+    dims : :obj:`tuple` of :obj:`int`
+        Number of samples for each dimension.
+    dtype : :obj:`str` or :obj:`numpy.dtype`, optional
+        Type of elements in input array.
+
+    Returns
+    -------
+    Box2 : :obj:`pylops.LinearOperator`
+        Triangular smoothing operator.
+
+    """
+
+    nsmooth2 = [(nsm + 1) // 2 for nsm in nsmooth]
+    smoothcls = Smoothing2D if dims == 2 else SmoothingND
+
+    Box = smoothcls(nsmooth=nsmooth2, dims=dims, dtype=dtype)
+    Box2 = Box @ Box
+    return Box2

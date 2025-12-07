@@ -1,29 +1,27 @@
-__all__ = ["Smoothing2D"]
+__all__ = ["SmoothingND"]
 
 from typing import Union
 
 import numpy as np
 
-from pylops.signalprocessing import Convolve2D
+from pylops.signalprocessing import ConvolveND
 from pylops.utils.typing import DTypeLike, InputDimsLike
 
 
-class Smoothing2D(Convolve2D):
-    r"""2D Smoothing.
+class SmoothingND(ConvolveND):
+    r"""ND Smoothing.
 
-    Apply smoothing to model (and data) along two ``axes`` of a
-    multi-dimensional array.
+    Apply smoothing to model (and data) along  the
+    ``axes`` of a n-dimensional array.
 
     Parameters
     ----------
     nsmooth : :obj:`tuple` or :obj:`list`
-        Length of smoothing operator in 1st and 2nd dimensions
+        Length of smoothing operator in the chosen dimensions
         (must be odd, if even it will be increased by 1).
     dims : :obj:`tuple`
         Number of samples for each dimension
     axes : :obj:`int`, optional
-        .. versionadded:: 2.0.0
-
         Axes along which model (and data) are smoothed.
     dtype : :obj:`str`, optional
         Type of elements in input array.
@@ -48,22 +46,23 @@ class Smoothing2D(Convolve2D):
 
     See Also
     --------
-    pylops.signalprocessing.Convolve2D : 2D convolution
+    pylops.signalprocessing.ConvolveND : ND convolution
 
     Notes
     -----
-    The 2D Smoothing operator is a special type of convolutional operator that
-    convolves the input model (or data) with a constant 2d filter of size
-    :math:`n_{\text{smooth}, 1} \times n_{\text{smooth}, 2}`:
+    The ND Smoothing operator is a special type of convolutional operator that
+    convolves the input model (or data) with a constant nd filter of size
+    :math:`n_{\text{smooth}, 1} \times n_{\text{smooth}, 2} \times n_{\text{smooth}, 3}`:
 
-    Its application to a two dimensional input signal is:
+    Its application to a three dimensional input signal is:
 
     .. math::
-        y[i,j] = 1/(n_{\text{smooth}, 1}\cdot n_{\text{smooth}, 2})
+        y[i,j,k] = 1/(n_{\text{smooth}, 1}\cdot n_{\text{smooth}, 2}\cdot n_{\text{smooth}, 3})
         \sum_{l=-(n_{\text{smooth},1}-1)/2}^{(n_{\text{smooth},1}-1)/2}
-        \sum_{m=-(n_{\text{smooth},2}-1)/2}^{(n_{\text{smooth},2}-1)/2} x[l,m]
+        \sum_{m=-(n_{\text{smooth},2}-1)/2}^{(n_{\text{smooth},2}-1)/2}
+        \sum_{n=-(n_{\text{smooth},3}-1)/2}^{(n_{\text{smooth},3}-1)/2} x[l,m,n]
 
-    Note that since the filter is symmetrical, the *Smoothing2D* operator is
+    Note that since the filter is symmetrical, the *Smoothing3D* operator is
     self-adjoint.
 
     """
@@ -77,12 +76,11 @@ class Smoothing2D(Convolve2D):
         name: str = "S",
     ):
         nsmooth = list(nsmooth)
-        if nsmooth[0] % 2 == 0:
-            nsmooth[0] += 1
-        if nsmooth[1] % 2 == 0:
-            nsmooth[1] += 1
-        h = np.ones((nsmooth[0], nsmooth[1])) / float(nsmooth[0] * nsmooth[1])
-        offset = [(nsmooth[0] - 1) // 2, (nsmooth[1] - 1) // 2]
+        for i in range(len(nsmooth)):
+            if nsmooth[i] % 2 == 0:
+                nsmooth[i] += 1
+        h = np.ones(nsmooth) / float(np.prod(nsmooth))
+        offset = [(nsm - 1) // 2 for nsm in nsmooth]
         super().__init__(
             dims=dims, h=h, offset=offset, axes=axes, dtype=dtype, name=name
         )
