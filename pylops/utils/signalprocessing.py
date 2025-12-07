@@ -363,8 +363,9 @@ def pwd_slope_estimate(
     Returns
     -------
     sigma : :obj:`numpy.ndarray`
-        Estimated slope field of shape ``(nz, nx)`` in samples per trace
-        (:math:`\Delta z / \Delta x`).
+        Estimated slope field of size
+        :math:`[n_z \times n_x\,(\times n_y)]` in samples per trace
+        (:math:`\Delta z / \Delta x/y`).
 
     Raises
     ------
@@ -401,6 +402,7 @@ def pwd_slope_estimate(
     u1 = np.zeros_like(sigma)
     u2 = np.zeros_like(sigma)
 
+    # Define smoother
     if smoothing == "triangle":
         Sop = _triangular_smoothing_from_boxcars(
             nsmooth=nsmooth, dims=dims, dtype=dtype
@@ -410,6 +412,7 @@ def pwd_slope_estimate(
     else:
         raise ValueError("smoothing must be either 'triangle' or 'boxcar'")
 
+    # Estimate slopes
     for _ in range(niter):
         _conv_allpass(d, sigma, order, u1, u2)
 
