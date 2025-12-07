@@ -74,6 +74,7 @@ Smoothing and derivatives
 
    Smoothing1D
    Smoothing2D
+   SmoothingND
    FirstDerivative
    SecondDerivative
    Laplacian
