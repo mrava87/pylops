@@ -32,6 +32,7 @@ A list of operators present in pylops.basicoperators :
     Conj                            Conj operator.
     Smoothing1D                     1D Smoothing.
     Smoothing2D	                    2D Smoothing.
+    SmoothingND	                    ND Smoothing.
     FirstDerivative                 First derivative.
     SecondDerivative                Second derivative.
     Laplacian                       Laplacian.
@@ -67,6 +68,7 @@ from .imag import *
 from .conj import *
 from .smoothing1d import *
 from .smoothing2d import *
+from .smoothingnd import *
 from .causalintegration import *
 from .firstderivative import *
 from .secondderivative import *
@@ -103,6 +105,7 @@ __all__ = [
     "Conj",
     "Smoothing1D",
     "Smoothing2D",
+    "SmoothingND",
     "CausalIntegration",
     "FirstDerivative",
     "SecondDerivative",

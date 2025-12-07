@@ -164,22 +164,27 @@ fig.tight_layout()
 
 ###############################################################################
 # Let's now compute the PWD slopes along both ``y`` and ``x`` directions.
-pwd_slope_fun = partial(
-    pwd_slope_estimate,
+pwd_slope3d_y = pwd_slope_estimate(
+    sigmoid3d.transpose(1, 2, 0),
     niter=5,
     liter=20,
     order=2,
-    nsmooth=(12, 12),
+    nsmooth=(12, 12, 5),
     damp=6e-4,
     smoothing="triangle",
-)
-pwd_slope3d_y = np.concatenate(
-    [pwd_slope_fun(sigmoid3d[i])[None].astype(np.float32) for i in range(ny)]
-)
+    axis=1,
+).transpose(2, 0, 1)
 
-pwd_slope3d_x = np.concatenate(
-    [pwd_slope_fun(sigmoid3d[:, :, i].T)[None].astype(np.float32) for i in range(nx)]
-).transpose(2, 1, 0)
+pwd_slope3d_x = pwd_slope_estimate(
+    sigmoid3d.transpose(1, 2, 0),
+    niter=5,
+    liter=20,
+    order=2,
+    nsmooth=(12, 5, 12),
+    damp=6e-4,
+    smoothing="triangle",
+    axis=2,
+).transpose(2, 0, 1)
 
 ###############################################################################
 v = np.max(np.abs(pwd_slope3d_y))
@@ -209,7 +214,8 @@ create_colorbar(im1, ax=ax[1])
 fig.tight_layout()
 
 ###############################################################################
-# Let's now compute the PWD slopes along both ``y`` and ``x`` directions.
+# Finally we perform structure-aligned smoothing along both ``y`` and ``x``
+# directions.
 PWSmoother2D_ = partial(PWSmoother2D, radius=radius, alpha=alpha, dtype="float32")
 noise3d = np.random.uniform(-1.0, 1.0, size=(ny, nz, nx)).astype(np.float32)
 

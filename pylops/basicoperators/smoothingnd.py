@@ -1,23 +1,23 @@
-__all__ = ["Smoothing2D"]
+__all__ = ["SmoothingND"]
 
 from typing import Union
 
 import numpy as np
 
-from pylops.signalprocessing import Convolve2D
+from pylops.signalprocessing import ConvolveND
 from pylops.utils.typing import DTypeLike, InputDimsLike
 
 
-class Smoothing2D(Convolve2D):
+class SmoothingND(ConvolveND):
     r"""2D Smoothing.
 
-    Apply smoothing to model (and data) along two ``axes`` of a
-    multi-dimensional array.
+    Apply smoothing to model (and data) along  the
+    ``axes`` of a n-dimensional array.
 
     Parameters
     ----------
     nsmooth : :obj:`tuple` or :obj:`list`
-        Length of smoothing operator in 1st and 2nd dimensions
+        Length of smoothing operator in the chosen dimensions
         (must be odd, if even it will be increased by 1).
     dims : :obj:`tuple`
         Number of samples for each dimension
@@ -48,11 +48,11 @@ class Smoothing2D(Convolve2D):
 
     See Also
     --------
-    pylops.signalprocessing.Convolve2D : 2D convolution
+    pylops.signalprocessing.ConvolveND : ND convolution
 
     Notes
     -----
-    The 2D Smoothing operator is a special type of convolutional operator that
+    The ND Smoothing operator is a special type of convolutional operator that
     convolves the input model (or data) with a constant 2d filter of size
     :math:`n_{\text{smooth}, 1} \times n_{\text{smooth}, 2}`:
 
@@ -77,12 +77,11 @@ class Smoothing2D(Convolve2D):
         name: str = "S",
     ):
         nsmooth = list(nsmooth)
-        if nsmooth[0] % 2 == 0:
-            nsmooth[0] += 1
-        if nsmooth[1] % 2 == 0:
-            nsmooth[1] += 1
-        h = np.ones((nsmooth[0], nsmooth[1])) / float(nsmooth[0] * nsmooth[1])
-        offset = [(nsmooth[0] - 1) // 2, (nsmooth[1] - 1) // 2]
+        for i in range(len(nsmooth)):
+            if nsmooth[i] % 2 == 0:
+                nsmooth[i] += 1
+        h = np.ones(nsmooth) / float(np.prod(nsmooth))
+        offset = [(nsm - 1) // 2 for nsm in nsmooth]
         super().__init__(
             dims=dims, h=h, offset=offset, axes=axes, dtype=dtype, name=name
         )

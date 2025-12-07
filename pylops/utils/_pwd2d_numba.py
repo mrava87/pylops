@@ -100,13 +100,12 @@ def _conv_allpass_numba(
 ) -> None:
     """Numba kernel for PWD all-pass filtering used in
     :func:`pylops.utils.signalprocessing.pwd_slope_estimate`."""
-    n1, n2 = din.shape
+    n1, n2 = din.shape[:2]
     nw = 1 if order == 1 else 2
 
-    for j in prange(n1):
-        for i in range(n2):
-            u1[j, i] = 0.0
-            u2[j, i] = 0.0
+    # Clear derivative arrays
+    u1[:] = 0.0
+    u2[:] = 0.0
 
     for i1 in prange(nw, n1 - nw):
         for i2 in range(0, n2 - 1):
