@@ -53,6 +53,22 @@ par6 = {
     "dtype": "complex128",
     "kind": "sinc",
 }  # complex, sinc
+par7 = {
+    "ny": 21,
+    "nx": 11,
+    "nt": 20,
+    "imag": 0,
+    "dtype": "float64",
+    "kind": "cubic_spline",
+}  # real, cubic spline
+par8 = {
+    "ny": 21,
+    "nx": 11,
+    "nt": 20,
+    "imag": 1j,
+    "dtype": "complex128",
+    "kind": "cubic_spline",
+}  # complex, cubic spline
 
 # subsampling factor
 perc_subsampling = 0.4
@@ -88,7 +104,19 @@ def test_sincinterp():
     assert_array_almost_equal(xsub[20:-20], y, decimal=1)
 
 
-@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par2),
+        (par3),
+        (par4),
+        (par5),
+        (par6),
+        (par7),
+        (par8),
+    ],
+)
 def test_Interp_1dsignal(par):
     """Dot-test and forward for Interp operator for 1d signal"""
     np.random.seed(1)
@@ -123,7 +151,19 @@ def test_Interp_1dsignal(par):
         assert_array_almost_equal(ydec, x[iava])
 
 
-@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par2),
+        (par3),
+        (par4),
+        (par5),
+        (par6),
+        (par7),
+        (par8),
+    ],
+)
 def test_Interp_2dsignal(par):
     """Dot-test and forward for Restriction operator for 2d signal"""
     np.random.seed(1)

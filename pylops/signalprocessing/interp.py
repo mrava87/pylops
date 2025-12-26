@@ -1,22 +1,56 @@
 __all__ = ["Interp"]
 
 import warnings
-from typing import Tuple, Union
+from typing import Literal, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from pylops import LinearOperator, aslinearoperator
 from pylops.basicoperators import Diagonal, MatrixMult, Restriction, Transpose
+from pylops.signalprocessing._interp_cubic_spline import CubicSplineInterpolator
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module
-from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray
+from pylops.utils.typing import (
+    DTypeLike,
+    Float64Vector,
+    InputDimsLike,
+    IntNDArray,
+    NumericNDArray,
+)
 
 
-def _checkunique(iava: npt.ArrayLike) -> None:
+def ensure_iava_is_unique(iava: NumericNDArray) -> None:
     _, count = np.unique(iava, return_counts=True)
     if np.any(count > 1):
-        raise ValueError("Repeated values in iava array")
+        raise ValueError("Found repeated values in iava.")
+
+    return
+
+
+def normalize_iava(
+    iava: NumericNDArray,
+    iava_max: int,
+) -> None:
+    # ensure that samples are not beyond the last sample, in that case set to
+    # penultimate sample and raise a warning
+    outside = iava >= iava_max
+    if np.any(outside):
+        warnings.warn(
+            f"At least one value in iava is beyond the penultimate sample index "
+            f"{iava_max}. Out-of-bound-values are forced below penultimate sample"
+        )
+        # TODO: the following operation is quite dangerous because for example
+        # >>> a = 5_000_000
+        # >>> a - 1e-10 - a
+        # 0.0
+        # so for high values of ``iava_max``, this operation is invalidated;
+        # it should be iava_max * (1.0 - 1e5 * np.finfo(np.float64).eps) to avoid this
+        # and achieve a similar behaviour, but this would be a breaking change
+        iava[np.where(outside)] = iava_max - 1e-10
+
+    ensure_iava_is_unique(iava=iava)
+
+    return
 
 
 def _nearestinterp(
@@ -27,8 +61,8 @@ def _nearestinterp(
 ):
     """Nearest neighbour interpolation."""
     iava = np.round(iava).astype(int)
-    _checkunique(iava)
-    return Restriction(dims, iava, axis=axis, dtype=dtype), iava
+    ensure_iava_is_unique(iava=iava)
+    return (Restriction(dims, iava, axis=axis, dtype=dtype), iava)
 
 
 def _linearinterp(
@@ -50,14 +84,7 @@ def _linearinterp(
 
     # ensure that samples are not beyond the last sample, in that case set to
     # penultimate sample and raise a warning
-    outside = iava >= lastsample - 1
-    if sum(outside) > 0:
-        warnings.warn(
-            "At least one value is beyond the penultimate sample, "
-            "forced to be at penultimate sample"
-        )
-    iava[outside] = lastsample - 1 - 1e-10
-    _checkunique(iava)
+    normalize_iava(iava=iava, iava_max=lastsample - 1)
 
     # find indices and weights
     iva_l = ncp.floor(iava).astype(int)
@@ -81,7 +108,9 @@ def _sincinterp(
 ):
     """Sinc interpolation."""
     ncp = get_array_module(iava)
-    _checkunique(iava)
+
+    # TODO: is ``iava`` bound to an integer dtype
+    ensure_iava_is_unique(iava=iava)
 
     # create sinc interpolation matrix
     nreg = dims[axis]
@@ -107,11 +136,81 @@ def _sincinterp(
     return Op, dims, dimsd
 
 
+def _cubic_spline_interp(
+    dims: Tuple,
+    iava: NumericNDArray,
+    axis: int,
+    dtype: DTypeLike,
+    name: str,
+) -> Tuple[CubicSplineInterpolator, Float64Vector, Tuple, Tuple]:
+    """Cubic Spline interpolation"""
+
+    # --- Input Validation ---
+
+    ndim = len(dims)
+    if ndim > 2:
+        raise ValueError(
+            f"Cubic Spline interpolations is currently only supported for 1D- or "
+            f"2D-input, but got {len(dims) = }."
+        )
+
+    if axis < 0:
+        axis = ndim + axis  # type: ignore
+
+    # NOTE: the actual check would be ``axis in {0, 1}``, but this is more flexible in
+    #       case higher dimensions are supported in the future
+    if not 0 <= axis < ndim:
+        raise ValueError(f"Cannot access {axis = } when {len(dims) = }.")
+
+    num_cols = dims[axis]
+    if num_cols < 4:
+        raise ValueError(
+            f"A cubic spline requires at least 4 data points to interpolate, but "
+            f"got {dims[axis] = }."
+        )
+
+    iava = np.asarray(iava, dtype=np.float64)
+    normalize_iava(iava=iava, iava_max=num_cols - 1)
+
+    int64_info = np.iinfo(np.int64)
+    if np.any(
+        np.logical_or(
+            iava < int64_info.min,
+            iava > int64_info.max,
+        )
+    ):
+        raise OverflowError("iava contains indices that make numpy.int64 overflow.")
+
+    dtype = np.dtype(dtype)
+    if dtype.type not in {np.float64, np.complex128}:
+        raise TypeError(
+            f"Expected dtype fo cubic spline interpolator to be either float64 or "
+            f"complex128 to achieve the required accuracy, but got {dtype}."
+        )
+
+    # --- Setup ---
+
+    dimsd = list(dims)
+    dimsd[axis] = len(iava)
+    dimsd = tuple(dimsd)
+
+    Op = CubicSplineInterpolator(
+        dims=dims,
+        dimsd=dimsd,
+        iava=iava,
+        axis=axis,  # type: ignore
+        dtype=dtype.type,
+        name=name,
+    )
+
+    return Op, iava, dims, dimsd
+
+
 def Interp(
     dims: Union[int, InputDimsLike],
     iava: IntNDArray,
     axis: int = -1,
-    kind: str = "linear",
+    kind: Literal["linear", "nearest", "sinc", "cubic_spline"] = "linear",
     dtype: DTypeLike = "float64",
     name: str = "I",
 ) -> Tuple[LinearOperator, IntNDArray]:
@@ -136,11 +235,18 @@ def Interp(
       cost as it involves multiplying the input data by a matrix of size
       :math:`N \times M`.
 
+    - *Cubic Spline interpolation* relies on a cubic spline, i.e., a 2-times
+      continuously differentiable piecewise third order polynomial with equally spaced
+      knots. It is interpolated at the locations ``iava`` by evaluating the respective
+      polynomial fitted between ``np.floor(iava)`` and ``np.floor(iava) + 1``.
+      It offers an excellent tradeoff between accuracy and computational complexity
+      and its results oscillate less than those obtained from sinc interpolation.
+
     .. note:: The vector ``iava`` should contain unique values. If the same
       index is repeated twice an error will be raised. This also applies when
       values beyond the last element of the input array for
-      *linear interpolation* as those values are forced to be just before this
-      element.
+      *linear interpolation* and *cubic spline interpolation* as those values are forced
+      to be just before this element.
 
     Parameters
     ----------
@@ -153,8 +259,13 @@ def Interp(
 
         Axis along which interpolation is applied.
     kind : :obj:`str`, optional
-        Kind of interpolation (``nearest``, ``linear``, and ``sinc`` are
-        currently supported)
+        Kind of interpolation.
+        Currently, ``"nearest"``, ``"linear"``, ``"sinc"``, and ``"cubic_spline"`` are
+        available.
+
+        .. versionadded:: 2.0.0
+
+        The ``"cubic_spline"``-interpolation was added.
     dtype : :obj:`str`, optional
         Type of elements in input array.
     name : :obj:`str`, optional
@@ -224,11 +335,25 @@ def Interp(
         interpop, iava, dims, dimsd = _linearinterp(dims, iava, axis=axis, dtype=dtype)
     elif kind == "sinc":
         interpop, dims, dimsd = _sincinterp(dims, iava, axis=axis, dtype=dtype)
+    elif kind == "cubic_spline":
+        (
+            interpop,
+            iava,
+            dims,
+            dimsd,
+        ) = _cubic_spline_interp(
+            dims=dims,
+            iava=iava,
+            axis=axis,  # type: ignore
+            dtype=dtype,
+            name=name,
+        )
+
     else:
-        raise NotImplementedError("kind is not correct...")
+        raise NotImplementedError(f"{kind} interpolation could not be found.")
     # add dims and dimsd to composite operators (not needed for neareast as
     # interpop is a Restriction operator already
-    if kind != "nearest":
+    if kind not in {"nearest"}:
         interpop = aslinearoperator(interpop)
         interpop.dims = dims
         interpop.dimsd = dimsd
