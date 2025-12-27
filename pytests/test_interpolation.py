@@ -261,7 +261,19 @@ def test_Interp_2dsignal(par):
         assert_array_almost_equal(ydec, x[:, iava])
 
 
-@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
+@pytest.mark.parametrize(
+    "par",
+    [
+        (par1),
+        (par2),
+        (par3),
+        (par4),
+        (par5),
+        (par6),
+        (par7),
+        (par8),
+    ],
+)
 def test_Interp_3dsignal(par):
     """Dot-test and forward  for Interp operator for 3d signal"""
     np.random.seed(1)

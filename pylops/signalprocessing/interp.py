@@ -9,7 +9,7 @@ from pylops import LinearOperator, aslinearoperator
 from pylops.basicoperators import Diagonal, MatrixMult, Restriction, Transpose
 from pylops.signalprocessing._interp_cubic_spline import CubicSplineInterpolator
 from pylops.utils._internal import _value_or_sized_to_tuple
-from pylops.utils.backend import get_array_module
+from pylops.utils.backend import get_array_module, get_normalize_axis_index
 from pylops.utils.typing import (
     DTypeLike,
     Float64Vector,
@@ -145,22 +145,7 @@ def _cubic_spline_interp(
 ) -> Tuple[CubicSplineInterpolator, Float64Vector, Tuple, Tuple]:
     """Cubic Spline interpolation"""
 
-    # --- Input Validation ---
-
-    ndim = len(dims)
-    if ndim > 2:
-        raise ValueError(
-            f"Cubic Spline interpolations is currently only supported for 1D- or "
-            f"2D-input, but got {len(dims) = }."
-        )
-
-    if axis < 0:
-        axis = ndim + axis  # type: ignore
-
-    # NOTE: the actual check would be ``axis in {0, 1}``, but this is more flexible in
-    #       case higher dimensions are supported in the future
-    if not 0 <= axis < ndim:
-        raise ValueError(f"Cannot access {axis = } when {len(dims) = }.")
+    axis = get_normalize_axis_index()(axis, len(dims))
 
     num_cols = dims[axis]
     if num_cols < 4:
@@ -336,12 +321,7 @@ def Interp(
     elif kind == "sinc":
         interpop, dims, dimsd = _sincinterp(dims, iava, axis=axis, dtype=dtype)
     elif kind == "cubic_spline":
-        (
-            interpop,
-            iava,
-            dims,
-            dimsd,
-        ) = _cubic_spline_interp(
+        (interpop, iava, dims, dimsd,) = _cubic_spline_interp(
             dims=dims,
             iava=iava,
             axis=axis,  # type: ignore

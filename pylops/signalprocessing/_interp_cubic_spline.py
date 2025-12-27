@@ -7,6 +7,8 @@ from scipy.linalg import get_lapack_funcs
 from scipy.sparse import csr_matrix
 
 from pylops import LinearOperator
+from pylops.utils.backend import get_normalize_axis_index
+from pylops.utils.decorators import reshaped
 from pylops.utils.typing import Float64Vector, Int64Vector
 
 ONE_SIXTH: Final[float] = 1.0 / 6.0
@@ -22,14 +24,16 @@ _InexactArray = Union[_InexactVector, _InexactMatrix]
 def _second_order_finite_differences_zero_padded(
     x: _InexactVector,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactVector: ...
+) -> _InexactVector:
+    ...
 
 
 @overload
 def _second_order_finite_differences_zero_padded(
     x: _InexactMatrix,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactMatrix: ...
+) -> _InexactMatrix:
+    ...
 
 
 def _second_order_finite_differences_zero_padded(
@@ -75,7 +79,8 @@ def _second_order_finite_differences_zero_padded_transposed(
     x: _InexactVector,
     x_slice: slice,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactVector: ...
+) -> _InexactVector:
+    ...
 
 
 @overload
@@ -83,7 +88,8 @@ def _second_order_finite_differences_zero_padded_transposed(
     x: _InexactMatrix,
     x_slice: slice,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactMatrix: ...
+) -> _InexactMatrix:
+    ...
 
 
 def _second_order_finite_differences_zero_padded_transposed(
@@ -281,14 +287,16 @@ class _TridiagonalLUDecomposition:
         self,
         rhs: _InexactVector,
         lapack_solver: Callable,
-    ) -> _InexactVector: ...
+    ) -> _InexactVector:
+        ...
 
     @overload
     def solve(
         self,
         rhs: _InexactMatrix,
         lapack_solver: Callable,
-    ) -> _InexactMatrix: ...
+    ) -> _InexactMatrix:
+        ...
 
     def solve(
         self,
@@ -482,7 +490,7 @@ class CubicSplineInterpolator(LinearOperator):
         self.dims: Tuple = dims
         self.dimsd: Tuple = dimsd
         self.iava: Float64Vector = iava
-        self.axis: int = axis
+        self.axis: int = get_normalize_axis_index()(axis, len(dims))
 
         ndim = len(self.dims)
         num_cols = self.dims[self.axis]
@@ -556,16 +564,19 @@ class CubicSplineInterpolator(LinearOperator):
     def num_cols(self) -> int:
         return self.dims[self.axis]
 
+    @reshaped(swapaxis=True, axis=0)
     def _matvec(self, x: _InexactArray) -> _InexactArray:
         m_coeffs = self.lhs_matrix_lu.solve(
-            rhs=self.matvec_difference_method(x),
+            rhs=self.matmat_difference_method(x).reshape(x.shape[0], -1),
             lapack_solver=self._tridiag_lu_solve,
         )
-
-        return self.X_matrix @ np.concatenate(
-            (x, m_coeffs),
-            axis=0,
-        )
+        return (
+            self.X_matrix
+            @ np.concatenate(
+                (x.reshape(x.shape[0], -1), m_coeffs),
+                axis=0,
+            )
+        ).reshape(-1, *x.shape[1:])
 
     def _matmat(self, x: _InexactArray) -> _InexactArray:
         m_coeffs = self.lhs_matrix_lu.solve(
@@ -578,13 +589,15 @@ class CubicSplineInterpolator(LinearOperator):
             axis=0,
         )
 
+    @reshaped(swapaxis=True, axis=0)
     def _rmatvec(self, x: _InexactArray) -> _InexactArray:
-        x_mod = self.X_matrix_transposed @ x
-        return x_mod[0 : self.num_cols] + self.rmatvec_difference_method(
+        shape = (self.num_cols, *x.shape[1:])
+        x_mod = self.X_matrix_transposed @ x.reshape(x.shape[0], -1)
+        return x_mod[0 : self.num_cols].reshape(shape) + self.rmatmat_difference_method(
             self.lhs_matrix_transposed_lu.solve(
                 rhs=x_mod[self.num_cols : x_mod.size],
                 lapack_solver=self._tridiag_lu_solve,
-            )
+            ).reshape(shape)
         )
 
     def _rmatmat(self, x: _InexactArray) -> _InexactArray:
