@@ -7,7 +7,7 @@ import numpy as np
 
 from pylops import LinearOperator, aslinearoperator
 from pylops.basicoperators import Diagonal, MatrixMult, Restriction, Transpose
-from pylops.signalprocessing._interp_cubic_spline import CubicSplineInterpolator
+from pylops.signalprocessing.interpspline import CubicSplineInterpolator
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module, get_normalize_axis_index
 from pylops.utils.typing import (
@@ -321,7 +321,12 @@ def Interp(
     elif kind == "sinc":
         interpop, dims, dimsd = _sincinterp(dims, iava, axis=axis, dtype=dtype)
     elif kind == "cubic_spline":
-        (interpop, iava, dims, dimsd,) = _cubic_spline_interp(
+        (
+            interpop,
+            iava,
+            dims,
+            dimsd,
+        ) = _cubic_spline_interp(
             dims=dims,
             iava=iava,
             axis=axis,  # type: ignore
