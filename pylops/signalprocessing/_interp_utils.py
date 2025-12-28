@@ -13,13 +13,13 @@ def ensure_iava_is_unique(iava: NumericNDArray) -> None:
     return
 
 
-def clip_iava_below_last_sample_index(
+def clip_iava_above_last_sample_index(
     iava: NumericNDArray,
-    size: int,
+    sample_size: int,
 ) -> None:
     # ensure that samples are not beyond the last sample, in that case set to
     # penultimate sample and raise a warning
-    last_sample_index = size - 1
+    last_sample_index = sample_size - 1
     outside = iava >= last_sample_index
     if np.any(outside):
         warnings.warn(
