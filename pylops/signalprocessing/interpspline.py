@@ -1,3 +1,7 @@
+__all__ = [
+    "InterpCubicSpline",
+]
+
 from dataclasses import dataclass
 from functools import cached_property, partial
 from typing import Callable, Final, Tuple, Union, overload
