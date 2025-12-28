@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 from functools import cached_property, partial
-from typing import Callable, Final, Literal, Tuple, Type, Union, overload
+from typing import Callable, Final, Tuple, Union, overload
 
 import numpy as np
 from scipy.linalg import get_lapack_funcs
 from scipy.sparse import csr_matrix
 
 from pylops import LinearOperator
+from pylops.signalprocessing._interp_utils import clip_iava_above_last_sample_index
+from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_normalize_axis_index
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import Float64Vector, Int64Vector
+from pylops.utils.typing import DTypeLike, Float64Vector, Int64Vector, SamplingLike
 
 ONE_SIXTH: Final[float] = 1.0 / 6.0
 TWO_THIRDS: Final[float] = 2.0 / 3.0
@@ -454,39 +456,104 @@ def _make_cubic_spline_x_csr(
     )
 
 
-class CubicSplineInterpolator(LinearOperator):
+class InterpCubicSpline(LinearOperator):
     """
-    Custom cubic spline interpolator.
+    Cubic spline interpolation operator.
+
+    Interpolate a regularly sampled input vector along ``axis`` a fractional positions
+    ``iava`` using a cubic spline.
+
+    Currently, only cubic splines with natural boundary conditions are supported, i.e.,
+    the second derivatives at the first and last sampling point are both zero.
+
+    .. note:: The vector ``iava`` should contain unique values. If the same fractional
+      index is present multiple times, an error will be raised. Elements that exceed
+      the last index ``dims[axis] - 1`` are clipped to the closest float value right
+      below ``dims[axis] - 1`` to avoid extrapolation.
 
     Parameters
     ----------
     dims : :obj:`int`
         The number of points the spline should interpolate.
-    iava : Array-like of shape ``(n,)``
+        A cubic spline requires ``dims[axis] > TODO``.
+    iava : :obj:`list` or :obj:`numpy.ndarray`
         Floating indices of the locations to which the spline should interpolate.
-    dtype :
+    axis : :obj:`int`, optional
+        Axis along which interpolation is applied.
+    dtype : ``numpy.dtype``-like, default=``"float64"``
         The data type of the input and output arrays.
+        For complex input, both the real and the imaginary parts are interpolated
+        separately.
+        Only double precision versions of ``numpy.inexact`` are supported, i.e., either
+        ``"float64"`` or ``"complex128"``.
+        Multiplication of the operator with data with less precise data types will
+        result in a type promotion.
+    name : :obj:`str`, default=``"S"``
+        Name of operator (to be used by :func:`pylops.utils.describe.describe`).
+
+    Returns
+    -------
+    op : :obj:`pylops.LinearOperator`
+        Linear interpolation operator
+    iava : :obj:`numpy.ndarray` of dtype ``numpy.float64``
+        Corrected indices of locations of available samples
+        (samples at ``dims[axis] - 1`` or beyond are clipped to the closest float value
+        right below ``dims[axis] - 1`` to avoid extrapolation.
+
+    Raises
+    ------
+    ValueError
+        If ``dims[axis]``
+    ValueError
+        If the ``iava`` contains duplicate values.
+
+    See Also
+    --------
+    pylops.signalprocessing.Interp : General interpolation operator
 
     """
 
     def __init__(
         self,
         dims: Tuple,
-        dimsd: Tuple,
-        iava: Float64Vector,
-        axis: Literal[0, 1],
-        dtype: Type,
+        iava: SamplingLike,
+        axis: int = -1,
+        dtype: DTypeLike = "float64",
         name: str = "S",
     ) -> None:
 
+        # --- Input Validation and Standardization ---
+
+        dims = _value_or_sized_to_tuple(dims)
+        axis = get_normalize_axis_index()(axis, len(dims))
+        num_cols = dims[axis]
+
+        if num_cols < 4:
+            raise ValueError(
+                f"A cubic spline requires at least 4 data points to interpolate, but "
+                f"got {dims[axis] = }."
+            )
+
+        iava = np.asarray(iava, dtype=np.float64)
+        clip_iava_above_last_sample_index(iava=iava, sample_size=num_cols)
+
+        dtype = np.dtype(dtype)
+        if dtype.type not in {np.float64, np.complex128}:
+            raise TypeError(
+                f"Expected dtype fo cubic spline interpolator to be either float64 or "
+                f"complex128 to achieve the required accuracy, but got {dtype}."
+            )
+
         # --- Operator Initialization ---
+
+        dimsd = list(dims)
+        dimsd[axis] = len(iava)
+        dimsd = tuple(dimsd)
 
         self.dims: Tuple = dims
         self.dimsd: Tuple = dimsd
         self.iava: Float64Vector = iava
-        self.axis: int = get_normalize_axis_index()(axis, len(dims))
-
-        num_cols = self.dims[self.axis]
+        self.axis: int = axis
 
         super().__init__(
             dtype=dtype,
@@ -500,7 +567,7 @@ class CubicSplineInterpolator(LinearOperator):
         # NOTE: the LU-factorization will always be performed on ``float64`` while
         #       the LU-solve type depends on the actual dtype, which might also be
         #       complex
-        self._tridiag_factorize = get_lapack_funcs(("gttrf",), dtype=np.float64)[0]
+        self._tridiag_factorize = get_lapack_funcs(("gttrf",), dtype=self.iava.dtype)[0]
         self._tridiag_lu_solve = get_lapack_funcs(("gttrs",), dtype=self.dtype)[0]
 
         lhs_matrix: _TridiagonalMatrix = _make_cubic_spline_left_hand_side(
