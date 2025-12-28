@@ -170,9 +170,20 @@ class _TridiagonalMatrix:
                     f"{ndim}-dimensional."
                 )
 
+        main_diagonal_dtype = self.main_diagonal.dtype.type
         main_diagonal_size = self.main_diagonal.size
         for which in ("super", "sub"):
-            size = getattr(self, f"{which}_diagonal").size
+            diag = getattr(self, f"{which}_diagonal")
+            dtype = diag.dtype.type
+            size = diag.size
+
+            if dtype != main_diagonal_dtype:
+                raise TypeError(
+                    f"Expected {which} diagonal to have the same dtype as the main "
+                    f"diagonal, but its dtype is {repr(dtype)} and the main diagonal "
+                    f"has dtype {repr(main_diagonal_dtype)}."
+                )
+
             if size != main_diagonal_size - 1:
                 raise ValueError(
                     f"Expected {which} diagonal to have 1 entry less than the main "
@@ -195,6 +206,18 @@ class _TridiagonalMatrix:
 
         return
 
+    def __len__(self) -> int:
+        """
+        Returns the number of rows of the tridiagonal matrix.
+
+        """
+
+        return self.main_diagonal.size
+
+    @property
+    def dtype(self) -> DTypeLike:
+        return self.main_diagonal.dtype
+
     @property
     def T(self) -> "_TridiagonalMatrix":
         """
@@ -210,6 +233,136 @@ class _TridiagonalMatrix:
 
 
 @dataclass
+class _BandedLUDecomposition:
+    """
+    Represents the LU decomposition of a general banded matrix as performed by the
+    LAPACK routines ``?gbtrf``.
+    This class was implemented for spline interpolations between only 2 data points
+    because the class :class:`_BandedLUDecomposition` uses the LAPACK routines
+    ``?gttrf`` that cannot handle 2 x 2 tridiagonal matrices.
+
+    """
+
+    lu_banded: _InexactMatrix
+    pivot_indices: Int64Vector
+    num_sub: int
+    num_super: int
+
+    @staticmethod
+    def from_tridiagonal_matrix(
+        matrix: _TridiagonalMatrix,
+        lapack_factorizer: Callable,
+    ) -> "_BandedLUDecomposition":
+        """
+        Computes the LU decomposition of a tridiagonal matrix using the LAPACK routine
+        ``?gbtrf``.
+
+        Parameters
+        ----------
+        matrix : :obj:`_TridiagonalMatrix`
+            The tridiagonal matrix to decompose.
+        lapack_factorizer : callable
+            The LAPACK routine ``?gbtrf`` to use for the decomposition.
+
+        Returns
+        -------
+        lu_decomposition : :obj:`_BandedLUDecomposition`
+            The LU decomposition of the tridiagonal matrix.
+
+        """
+
+        banded_representation = np.empty(
+            shape=(4, len(matrix)),
+            dtype=matrix.dtype,
+        )
+        banded_representation[1, 1::] = matrix.super_diagonal
+        banded_representation[2, ::] = matrix.main_diagonal
+        banded_representation[3, 0:-1] = matrix.sub_diagonal
+
+        (
+            lu_banded,
+            pivot_indices,
+            info,
+        ) = lapack_factorizer(
+            ab=banded_representation,
+            kl=1,
+            ku=1,
+        )
+
+        if info == 0:
+            return _BandedLUDecomposition(
+                lu_banded=lu_banded,
+                pivot_indices=pivot_indices,
+                num_sub=1,
+                num_super=1,
+            )
+
+        raise np.linalg.LinAlgError(
+            f"Could not LU-factorize tridiagonal matrix! Got {info = }."
+        )
+
+    @overload
+    def solve(
+        self,
+        rhs: _InexactVector,
+        lapack_solver: Callable,
+    ) -> _InexactVector: ...
+
+    @overload
+    def solve(
+        self,
+        rhs: _InexactMatrix,
+        lapack_solver: Callable,
+    ) -> _InexactMatrix: ...
+
+    def solve(
+        self,
+        rhs: _InexactArray,
+        lapack_solver: Callable,
+    ) -> _InexactArray:
+        """
+        Solves the linear system of equations ``A @ x = rhs`` where ``A`` is the
+        tridiagonal matrix represented by the LU decomposition. For this, the LAPACK
+        routine ``?gbtrs`` is used.
+
+        Parameters
+        ----------
+        rhs : :obj:`numpy.ndarray` of shape ``(n,)``  or shape ``(m, n)``
+            The right-hand side(s) of the linear system of equations.
+            It is processed along axis 0, i.e.,
+
+            - a 1D-Array is treated as a single right hand side.
+            - each colum of a 2D-Array is treated as a single right hand side.
+
+        lapack_solver : callable
+            The LAPACK routine ``?gbtrs`` to use for solving the system.
+
+        Returns
+        -------
+        x : :obj:`numpy.ndarray` of shape ``(n,)``  or shape ``(m, n)``
+            The solution of the linear system(s) of equations.
+            For 2D-Arrays, the ``j``-th column is the solution of the respective
+            ``rhs[::, j]``.
+
+        """
+
+        x, info = lapack_solver(
+            self.lu_banded,
+            self.num_sub,
+            self.num_super,
+            rhs,
+            self.pivot_indices,
+        )
+
+        if info == 0:
+            return x
+
+        raise np.linalg.LinAlgError(
+            f"Could not solve LU-factorization of tridiagonal matrix! Got {info = }."
+        )
+
+
+@dataclass
 class _TridiagonalLUDecomposition:
     """
     Represents the LU decomposition of a tridiagonal matrix as performed by the LAPACK
@@ -221,7 +374,7 @@ class _TridiagonalLUDecomposition:
     main_diagonal_lu: _InexactVector
     super_diagonal_lu: _InexactVector
     super_two_diagonal_lu: _InexactVector
-    pivot_indices: np.ndarray[tuple[int], np.dtype[np.int64]]
+    pivot_indices: Int64Vector
 
     def __iter__(self):
         """
@@ -250,14 +403,14 @@ class _TridiagonalLUDecomposition:
 
         Parameters
         ----------
-        matrix : :obj:`TridiagonalMatrix`
+        matrix : :obj:`_TridiagonalMatrix`
             The tridiagonal matrix to decompose.
         lapack_factorizer : callable
             The LAPACK routine ``?gttrf`` to use for the decomposition.
 
         Returns
         -------
-        lu_decomposition : :obj:`TridiagonalLUDecomposition`
+        lu_decomposition : :obj:`_TridiagonalLUDecomposition`
             The LU decomposition of the tridiagonal matrix.
 
         """
@@ -479,7 +632,7 @@ class InterpCubicSpline(LinearOperator):
     ----------
     dims : :obj:`int`
         The number of points the spline should interpolate.
-        A cubic spline requires ``dims[axis] > TODO``.
+        A cubic spline requires ``dims[axis] > 2``.
     iava : :obj:`list` or :obj:`numpy.ndarray`
         Floating indices of the locations to which the spline should interpolate.
     axis : :obj:`int`, optional
@@ -532,9 +685,9 @@ class InterpCubicSpline(LinearOperator):
         axis = get_normalize_axis_index()(axis, len(dims))
         num_cols = dims[axis]
 
-        if num_cols < 4:
+        if num_cols < 2:
             raise ValueError(
-                f"A cubic spline requires at least 4 data points to interpolate, but "
+                f"A cubic spline requires at least 2 data points to interpolate, but "
                 f"got {dims[axis] = }."
             )
 
@@ -571,21 +724,35 @@ class InterpCubicSpline(LinearOperator):
         # NOTE: the LU-factorization will always be performed on ``float64`` while
         #       the LU-solve type depends on the actual dtype, which might also be
         #       complex
-        self._tridiag_factorize = get_lapack_funcs(("gttrf",), dtype=self.iava.dtype)[0]
-        self._tridiag_lu_solve = get_lapack_funcs(("gttrs",), dtype=self.dtype)[0]
+        if num_cols >= 3:
+            lapack_factorizer = ("gttrf",)
+            lapack_solver = ("gttrs",)
+            lu_format = _TridiagonalLUDecomposition
+        else:
+            lapack_factorizer = ("gbtrf",)
+            lapack_solver = ("gbtrs",)
+            lu_format = _BandedLUDecomposition
+
+        self._tridiag_factorize = get_lapack_funcs(
+            lapack_factorizer,
+            dtype=self.iava.dtype,
+        )[0]
+        self._tridiag_lu_solve = get_lapack_funcs(
+            lapack_solver,
+            dtype=self.dtype,
+        )[0]
 
         lhs_matrix: _TridiagonalMatrix = _make_cubic_spline_left_hand_side(
             dims=num_cols
         )
-        self.lhs_matrix_lu = _TridiagonalLUDecomposition.from_tridiagonal_matrix(
+
+        self.lhs_matrix_lu = lu_format.from_tridiagonal_matrix(
             matrix=lhs_matrix,
             lapack_factorizer=self._tridiag_factorize,
         )
-        self.lhs_matrix_transposed_lu = (
-            _TridiagonalLUDecomposition.from_tridiagonal_matrix(
-                matrix=lhs_matrix.T,
-                lapack_factorizer=self._tridiag_factorize,
-            )
+        self.lhs_matrix_transposed_lu = lu_format.from_tridiagonal_matrix(
+            matrix=lhs_matrix.T,
+            lapack_factorizer=self._tridiag_factorize,
         )
 
         # --- Pre-computation of the Interpolator Matrices ---
