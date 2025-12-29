@@ -14,6 +14,7 @@ dependencies:
   - sympy
   - pymc>=5
   - pytensor
+  - astra-toolbox>=2.3.0
   - matplotlib
   - ipython
   - pytest
