@@ -2,12 +2,12 @@ r"""
 22. Time-shift estimation
 =========================
 This tutorial showcases how one can leverage the extensive suite of PyLops operators
-to solve nonlinear inverse problems with minimal additional boilerplate code to create
-simple nonlinear solvers or to take advantage of existing solvers provided by third-party
-library such as SciPy.
+to solve nonlinear inverse problems with minimal additional boilerplate code. We will
+both create a simple nonlinear solver and take advantage of existing solvers provided
+by third-party library such as SciPy.
 
 We are going to consider a classic problem in signal processing, namely the registration
-of two signals where one signal is the non-stationary shifted versions of the other:
+of two signals where one signal is a non-stationary shifted version of the other:
 
 .. math::
     d_2(t) = d_1(t - \delta t(t))
@@ -119,7 +119,6 @@ ddiff = d2 - d1
 
 # Jacobian
 DOp = pylops.FirstDerivative(nt, sampling=dt, edge=True)
-
 J = -pylops.Diagonal(DOp @ d1)
 
 # second derivative regularization
@@ -159,8 +158,8 @@ fig.tight_layout()
 ###############################################################################
 # We can see that the estimated time-shift closely matches the true one and
 # that the corrected signal is very similar to the original one. However, we
-# have so far discared the higher order terms in the Taylor expansion of
-# :math:`d_2(t - \delta t(t))`. We can therefore try to improve our estimate
+# have so far discarded the higher order terms in the Taylor expansion of
+# :math:`d_1(t - \delta t(t))`. We can therefore try to improve our estimate
 # by iterating the above procedure a few times, updating the Jacobian at each
 # iteration with the current estimate of the time-shift function. In other
 # words, at each iteration :math:`i=0,1,...`, we perform the following steps:
@@ -180,7 +179,7 @@ fig.tight_layout()
 # - Time shift :math:`d_1^{i+1}(t)` with the current estimate of the time-shift
 #   function: :math:`\tilde{d}_1^{i+1}(t) = d_1^i(t + \delta t^{i+1}(t))`
 #
-# with :math:`\delta t^0(t)=0` and :math:`\tilde{d}_1(t)^0=d_1(t)`.
+# with :math:`\delta t^0(t)=0` and :math:`\tilde{d}_1^0(t)=d_1(t)`.
 
 # number of outer iterations
 niter = 10
@@ -262,7 +261,7 @@ fig.tight_layout()
 #
 # Next, we will see that if we sligthly reformulate our problem in such a way
 # that partial shifting is not required, we can take advantage of an existing
-# solver provided by third-party library such as SciPy. To begin with, let's
+# solver provided by a third-party library such as SciPy. To begin with, let's
 # rewrite a generic Taylor expansion for :math:`d_1(t - \delta t^{i+1}(t))`
 # around :math:`\delta t^i(t)`:
 #
@@ -289,7 +288,7 @@ fig.tight_layout()
 #      \boldsymbol \delta \mathbf{t}^i)||_2^2
 #
 # where :math:`\tilde{d}_1^i(t) = d_1^i(t + \delta t^i(t))`, :math:`\delta t^0(t)=0`,
-# and :math:`\tilde{d}_1(t)^0=d_1(t)`. This series of problems now amenable to the
+# and :math:`\tilde{d}_1^0(t)=d_1(t)`. This series of problems now amenable to the
 # `scipy.optimize.least_squares <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html>`_
 # method. In practice, all we need to be able to create is two methods: the first, called ``fun``, must return
 # the inner part of the objective function, the latter, called ``jacobian`` must create a linear operator that
