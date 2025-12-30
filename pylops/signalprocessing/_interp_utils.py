@@ -5,10 +5,18 @@ import numpy as np
 from pylops.utils.typing import NumericNDArray
 
 
-def ensure_iava_is_unique(iava: NumericNDArray) -> None:
-    _, count = np.unique(iava, return_counts=True)
+def ensure_iava_is_unique(
+    iava: NumericNDArray,
+    axis: int | None = None,
+) -> None:
+    _, count = np.unique(
+        iava,
+        axis=axis,
+        return_counts=True,
+    )
+
     if np.any(count > 1):
-        raise ValueError("Found repeated values in iava.")
+        raise ValueError("Found repeated/non-unique values in iava.")
 
     return
 
