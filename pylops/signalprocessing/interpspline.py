@@ -805,19 +805,18 @@ class InterpCubicSpline(LinearOperator):
     the corresponding base polynomials. For
     :math:`\mathbf{k}_{i}\le t_{j} < \mathbf{k}_{i + 1}`, this means
 
-    .. math:
+    .. math::
         \left(\mathbf{S}\mathbf{x}\right)_{j} =
         \mathbf{x}_{i}\cdot p_{j,0}\left(t_{j}\right) +
         \mathbf{x}_{i + 1}\cdot p_{j,1}\left(t_{j}\right) +
         \mathbf{m}_{i}\cdot p_{j,2}\left(t_{j}\right) +
         \mathbf{m}_{i + 1}\cdot p_{j,3}\left(t_{j}\right)
 
-    The adjoint :math:`\mathbf{S}^{H}` can be derived directly using the matrix
-    representation above. Since all involved matrices are purely real, it follows that
-    :math:`\mathbf{S}^{H}=\mathbf{S}^{T}` which is given by
-
+    The adjoint operator :math:`\mathbf{S}^{H}` can be derived by rearranging the
+    involved operators. All of them are purely real and consequently, a transpose is
+    sufficient. This yields
     .. math::
-        \mathbf{S}^{T} = \mathbf{F}^{T}\mathbf{P}^{T} = \begin{bmatrix}
+        \mathbf{S}^{H}=\mathbf{S}^{T} = \mathbf{F}^{T}\mathbf{P}^{T} = \begin{bmatrix}
            \mathbf{I}_{N} & {\mathbf{D}_{2}}^{T} \mathbf{B}^{-T}
         \end{bmatrix} \mathbf{P}^{T}
 
