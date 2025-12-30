@@ -4,7 +4,7 @@ __all__ = [
 
 from dataclasses import dataclass
 from functools import cached_property, partial
-from typing import Callable, Final, Tuple, Union, overload
+from typing import Callable, Final, Literal, Tuple, Union, overload
 
 import numpy as np
 from scipy.linalg import get_lapack_funcs
@@ -623,10 +623,10 @@ class InterpCubicSpline(LinearOperator):
     Currently, only cubic splines with natural boundary conditions are supported, i.e.,
     the second derivatives at the first and last sampling point are both zero.
 
-    .. note:: The vector ``iava`` should contain unique values. If the same fractional
-      index is present multiple times, an error will be raised. Elements that exceed
-      the last index ``dims[axis] - 1`` are clipped to the closest float value right
-      below ``dims[axis] - 1`` to avoid extrapolation.
+    .. note:: The vector ``iava`` should contain unique values only. If the same
+      fractional index is present multiple times, an error will be raised. Elements that
+      exceed the last index ``dims[axis] - 1`` are clipped to the closest float value
+      right below ``dims[axis] - 1`` to avoid extrapolation.
 
     Parameters
     ----------
@@ -635,17 +635,21 @@ class InterpCubicSpline(LinearOperator):
         A cubic spline requires ``dims[axis] > 2``.
     iava : :obj:`list` or :obj:`numpy.ndarray`
         Floating indices of the locations to which the spline should interpolate.
+    bc_type : :obj:`str`, optional
+        The type of boundary condition.
+        Currently, only ``"natural"`` is supported.
     axis : :obj:`int`, optional
         Axis along which interpolation is applied.
-    dtype : ``numpy.dtype``-like, default=``"float64"``
+        By default, the interpolation is carried out over the last axis.
+    dtype : ``numpy.dtype``-like, optional
         The data type of the input and output arrays.
         For complex input, both the real and the imaginary parts are interpolated
         separately.
         Only double precision versions of ``numpy.inexact`` are supported, i.e., either
-        ``"float64"`` or ``"complex128"``.
+        ``"float64"`` (default) or ``"complex128"``.
         Multiplication of the operator with data with less precise data types will
         result in a type promotion.
-    name : :obj:`str`, default=``"S"``
+    name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`).
 
     Returns
@@ -660,9 +664,13 @@ class InterpCubicSpline(LinearOperator):
     Raises
     ------
     ValueError
-        If ``dims[axis]``
+        If ``dims[axis] < 2``.
     ValueError
         If the ``iava`` contains duplicate values.
+    NotImplementError
+        If ``bc_type != "natural"``.
+    TypeError
+        If ``dtype`` is neither ``numpy.float64`` nor ``numpy.complex128``.
 
     See Also
     --------
@@ -674,6 +682,7 @@ class InterpCubicSpline(LinearOperator):
         self,
         dims: Tuple,
         iava: SamplingLike,
+        bc_type: Literal["natural"] = "natural",
         axis: int = -1,
         dtype: DTypeLike = "float64",
         name: str = "S",
@@ -693,6 +702,15 @@ class InterpCubicSpline(LinearOperator):
 
         iava = np.asarray(iava, dtype=np.float64)
         clip_iava_above_last_sample_index(iava=iava, sample_size=num_cols)
+
+        if isinstance(bc_type, str) and bc_type.lower() not in {"natural"}:
+            self.bc_type = bc_type.lower()
+
+        else:
+            raise NotImplementedError(
+                f"Cubic spline interpolation currently only supports 'natural' "
+                f"boundaries, but got {bc_type = }"
+            )
 
         dtype = np.dtype(dtype)
         if dtype.type not in {np.float64, np.complex128}:
