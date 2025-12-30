@@ -170,7 +170,7 @@ def Interp(
     Returns
     -------
     op : :obj:`pylops.LinearOperator`
-        Linear intepolation operator
+        Linear interpolation operator
     iava : :obj:`list` or :obj:`numpy.ndarray`
         Corrected indices of locations of available samples
         (samples at ``M-1`` or beyond are forced to be at ``M-1-eps``)
