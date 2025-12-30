@@ -703,7 +703,7 @@ class InterpCubicSpline(LinearOperator):
         iava = np.asarray(iava, dtype=np.float64)
         clip_iava_above_last_sample_index(iava=iava, sample_size=num_cols)
 
-        if isinstance(bc_type, str) and bc_type.lower() not in {"natural"}:
+        if isinstance(bc_type, str) and bc_type.lower() in {"natural"}:
             self.bc_type = bc_type.lower()
 
         else:
