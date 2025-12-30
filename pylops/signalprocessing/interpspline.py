@@ -614,11 +614,12 @@ def _make_cubic_spline_x_csr(
 
 
 class InterpCubicSpline(LinearOperator):
-    """
+    r"""
     Cubic spline interpolation operator.
 
-    Interpolate a regularly sampled input vector along ``axis`` a fractional positions
-    ``iava`` using a cubic spline.
+    Interpolate a regularly sampled input vector along ``axis`` at the fractional
+    positions ``iava`` using a cubic spline, i.e., a :math:`C^{2}`-continuous piecewise
+    third order polynomial.
 
     Currently, only cubic splines with natural boundary conditions are supported, i.e.,
     the second derivatives at the first and last sampling point are both zero.
@@ -675,6 +676,165 @@ class InterpCubicSpline(LinearOperator):
     See Also
     --------
     pylops.signalprocessing.Interp : General interpolation operator
+    :py:class:`scipy.interpolate.CubicSpline` : An equivalent implementation of the forward operator :math:`\mathbf{S}\mathbf{x}`
+
+    References
+    ----------
+
+    .. [1] Wikipedia (German), Spline Interpolation
+       https://de.wikipedia.org/wiki/Spline-Interpolation#Kubisch_(Polynome_3._Grades)
+
+    Notes
+    -----
+    Cubic spline interpolation of an :math:`\left(N\times 1\right)`-vector :math:`\mathbf{x}`
+    at the :math:`L` fractional positions ``iava`` can be represented as
+    :math:`\mathbf{y}=\mathbf{S}\mathbf{x}` where :math:`\mathbf{S}` is the cubic spline
+    operator.
+
+    The :math:`\left(N\times 1\right)`-grid-point vector at which :math:`\mathbf{x}` was
+    equidistantly sampled is denoted by the *"knot"* vector :math:`\mathbf{k}`, i.e.,
+    :math:`\mathbf{x}_{i} = f\left(\mathbf{k}_{i}\right)`. Furthermore, the vector
+    ``iava`` is denoted by :math:`t` in the following mathematical expressions.
+
+    :math:`\mathbf{S}` has the shape :math:`\left(L\times N\right)` and can be broken
+    down into :math:`\mathbf{P}\mathbf{F}`.
+
+    :math:`\mathbf{P}` is a :math:`\left(L\times 2N\right)` operator that maps ``iava``
+    to its corresponding intervals between the knots and evaluates the base polynomials
+    of the spline in those particular intervals. When ``iava[j]`` (:math:`t_{j}`) is
+    mapped to the knot-to-knot interval
+    :math:`\mathbf{k}_{i}\le t_{j} < \mathbf{k}_{i + 1}`, the base polynomials are:
+
+    - :math:`p_{j,0}\left(t\right) = \mathbf{k}_{i + 1} - t`
+    - :math:`p_{j,1}\left(t\right) = t - \mathbf{k}_{i}`
+    - :math:`p_{j,2}\left(t\right) = \frac{1}{6}\cdot\left(\left(\mathbf{k}_{i + 1} - t\right)^{3} - \left(\mathbf{k}_{i + 1} - t\right)\right)`
+    - :math:`p_{j,3}\left(t\right) = \frac{1}{6}\cdot\left(\left(t - \mathbf{k}_{i}\right)^{3} - \left(t - \mathbf{k}_{i}\right)\right)`
+
+    These base polynomials then need to be linearly combined using the coefficients
+    :math:`\mathbf{c} = \mathbf{F}\mathbf{y}`. Here, :math:`\mathbf{F}` is a
+    :math:`\left(2N\times N\right)` operator and can be represented as a vertical
+    concatenation
+
+    .. math::
+        \mathbf{F} = \begin{bmatrix}
+           \mathbf{I}_{N} \\
+           \mathbf{B}^{-1}\mathbf{D}_{2}
+        \end{bmatrix}
+
+    :math:`\mathbf{I}_{N}` is the :math:`\left(N\times N\right)`-identity matrix.
+    The (virtually) :math:`\left(N\times N\right)`-tridiagonal matrix
+    :math:`\mathbf{B}` and the :math:`\left(N\times N\right)`-second-order-finite-
+    difference matrix :math:`\mathbf{D}_{2}` originate from the linear system
+
+    .. math::
+        \mathbf{B}\mathbf{m}=\mathbf{D}_{2}\mathbf{y}
+
+    that needs to be solved for :math:`\mathbf{m}`, the second order derivatives of the
+    cubic spline at its knots, by
+
+    .. math::
+        \mathbf{m}=\mathbf{B}^{-1}\mathbf{D}_{2}\mathbf{y}
+
+    Assuming :math:`\mathbf{x}` was sampled at equidistant knots, :math:`\mathbf{B}`
+    simplifies to
+
+    .. math::
+        \mathbf{B} = \frac{1}{6}\cdot\begin{bmatrix}
+           \mu_{0} & \lambda_{0} & 0 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & \theta_{0} \\
+           1 & 4 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           0 & 1 & 4 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           0 & 0 & 1 & 4 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+           0 & 0 & 0 & 0 & 0 & \dots & 1 & 4 & 1 & 0 & 0 \\
+           0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & 4 & 1 & 0 \\
+           0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & 4 & 1 \\
+           \theta_{N} & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 0 & \lambda_{N-1} & \mu_{N-1}
+        \end{bmatrix}
+
+    The special values :math:`\mu_{i}`, :math:`\lambda_{i}`, :math:`\theta_{i}` for the
+    first (:math:`i = 0`) and last row  (:math:`i = N - 1`) are determined by the
+    boundary conditions, i.e., the behaviour prescribed at the first and last knot. See
+    below for different boundary conditions and their corresponding special values.
+
+    Similarly, the second order finite difference matrix :math:`\mathbf{D}_{2}` can be
+    reduced to
+
+    .. math::
+        \mathbf{D}_{2} = \begin{bmatrix}
+           \ & \ & \ & \ & \ & \mathbf{d}_{0} & \ & \ & \ & \ \\
+           1 & -2 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           0 & 1 & -2 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           0 & 0 & 1 & -2 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
+           \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+           0 & 0 & 0 & 0 & 0 & \dots & 1 & -2 & 1 & 0 & 0 \\
+           0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & -2 & 1 & 0 \\
+           0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & -2 & 1 \\
+           \ & \ & \ & \ & \ & \mathbf{d}_{N-1} & \ & \ & \ & \
+        \end{bmatrix}
+
+    Again, the special rows :math:`\mathbf{d}_{i}` depend on the boundary conditions.
+
+    For the "natural" boundary condition for which the second derivatives of the spline
+    are exactly zero at the boundaries, the special values and rows are
+
+    - :math:`\mu_{0} = \mu_{N - 1} = 6`
+    - :math:`\lambda_{0} = \lambda_{N - 1} = 0`
+    - :math:`\theta_{0} = \theta_{N - 1} = 0`
+    - :math:`\mathbf{d}_{0} = \mathbf{d}_{N - 1}` are all zeroes
+
+    and :math:`\mathbf{B}` is thus truly tridiagonal.
+
+    So, the operation
+
+    .. math::
+        \mathbf{c} = \mathbf{F}\mathbf{x} = \begin{bmatrix}
+           \mathbf{I}_{N}\mathbf{x} \\
+           \mathbf{B}^{-1}\mathbf{D}_{2}\mathbf{x}
+        \end{bmatrix} =
+        \begin{bmatrix}
+           \mathbf{x} \\
+           \mathbf{m}
+        \end{bmatrix}
+
+    is nothing but a vertical concatenation of the original values in :math:`\mathbf{x}`
+    with the second order derivatives of the spline :math:`\mathbf{m}` at its knots.
+
+    Afterwards, :math:`\mathbf{y}=\mathbf{P}\mathbf{c}` performs the mapping of ``iava``
+    to the respective :math:`\mathbf{x}`- and :math:`\mathbf{m}`-values that need to be
+    extracted from this vertical concatenation. They are then used to linearly combine
+    the corresponding base polynomials. For
+    :math:`\mathbf{k}_{i}\le t_{j} < \mathbf{k}_{i + 1}`, this means
+
+    .. math:
+        \left(\mathbf{S}\mathbf{x}\right)_{j} =
+        \mathbf{x}_{i}\cdot p_{j,0}\left(t_{j}\right) +
+        \mathbf{x}_{i + 1}\cdot p_{j,1}\left(t_{j}\right) +
+        \mathbf{m}_{i}\cdot p_{j,2}\left(t_{j}\right) +
+        \mathbf{m}_{i + 1}\cdot p_{j,3}\left(t_{j}\right)
+
+    The adjoint :math:`\mathbf{S}^{H}` can be derived directly using the matrix
+    representation above. Since all involved matrices are purely real, it follows that
+    :math:`\mathbf{S}^{H}=\mathbf{S}^{T}` which is given by
+
+    .. math::
+        \mathbf{S}^{T} = \mathbf{F}^{T}\mathbf{P}^{T} = \begin{bmatrix}
+           \mathbf{I}_{N} & {\mathbf{D}_{2}}^{T} \mathbf{B}^{-T}
+        \end{bmatrix} \mathbf{P}^{T}
+
+    where :math:`\mathbf{B}^{-T} = \left(\mathbf{B}^{-1}\right)^{T} = \left(\mathbf{B}^{T}\right)^{-1}`.
+
+    Computationally,
+
+    - :math:`\mathbf{D}_{2}` and :math:`{\mathbf{D}_{2}}^{T}` can be computed
+      efficiently via finite differences with appropriate boundary handling
+    - :math:`\mathbf{B}` and :math:`\mathbf{B}^{T}` are individually factorized via
+      partially pivoted tridiagonal :math:`LU`-decompositions that are kept in memory
+    - :math:`\mathbf{B}^{-1}\mathbf{z}` and :math:`\mathbf{B}^{-T}\mathbf{z}` then
+      rely on highly optimized backward- and forward-substitutions with those
+      factorizations to solve the linear systems
+    - :math:`\mathbf{P}` is represented as a :py:class:`scipy.sparse.csr_matrix` which
+      involves a tiny bit of overhead during operator initialization, but allows for
+      a simple transpose.
 
     """
 
