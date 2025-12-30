@@ -177,7 +177,7 @@ def test_Interp_1dsignal(par: InterpolationTestParameters):
     assert dottest(Iop, Nsub, par.x_num, complexflag=0 if par.imag == 0 else 3)
 
     # repeated indeces
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="repeated"):
         iava_rep = iava.copy()
         iava_rep[-2] = 0
         iava_rep[-1] = 0
@@ -241,7 +241,7 @@ def test_Interp_2dsignal(par: InterpolationTestParameters):
     )
 
     # repeated indeces
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="repeated"):
         iava_rep = iava.copy()
         iava_rep[-2] = 0
         iava_rep[-1] = 0
@@ -357,7 +357,7 @@ def test_Interp_3dsignal(par: InterpolationTestParameters):
     )
 
     # repeated indeces
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="repeated"):
         iava_rep = iava.copy()
         iava_rep[-2] = 0
         iava_rep[-1] = 0
@@ -488,10 +488,9 @@ def test_Bilinear_2dsignal(par: InterpolationTestParameters):
     )
 
     # repeated indeces
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="repeated"):
         iava_rep = iava.copy()
-        iava_rep[-2] = [0, 0]
-        iava_rep[-1] = [0, 0]
+        iava_rep[::, -1] = iava_rep[::, 0]
         _, _ = Bilinear(iava_rep, dims=(par.x_num, par.t_num), dtype=par.dtype)
 
     y = Iop * x.ravel()
@@ -557,10 +556,9 @@ def test_Bilinear_3dsignal(par: InterpolationTestParameters):
     )
 
     # repeated indeces
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="repeated"):
         iava_rep = iava.copy()
-        iava_rep[-2] = [0, 0]
-        iava_rep[-1] = [0, 0]
+        iava_rep[::, -1] = iava_rep[::, 0]
         _, _ = Bilinear(
             iava_rep, dims=(par.y_num, par.x_num, par.t_num), dtype=par.dtype
         )
