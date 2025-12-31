@@ -53,6 +53,8 @@ d1 *= hamming(nt)
 steps = np.zeros(nt)
 steps[20:70] = -3e-4
 shift = np.cumsum(steps)
+
+# apply time-shift
 tshift = t - shift
 iava = tshift / dt
 SOp, iava = pylops.signalprocessing.Interp(nt, iava, kind="sinc")
@@ -341,10 +343,10 @@ shift_estls = least_squares(
 ).x
 
 # revert time-shift (with estimated shift)
-tshift_est = t + shift_estls
-iava_est = tshift_est / dt
-SOpest, iava_est = pylops.signalprocessing.Interp(nt, iava_est, kind="sinc")
-d1back_estls = SOpest * d2
+tshift_estls = t + shift_estls
+iava_estls = tshift_estls / dt
+SOpestls, iava_estls = pylops.signalprocessing.Interp(nt, iava_estls, kind="sinc")
+d1back_estls = SOpestls * d2
 
 fig, axs = plt.subplots(1, 3, figsize=(12, 3))
 axs[0].plot(t, shift, "k", lw=2, label="True")
@@ -360,4 +362,209 @@ axs[1].set_title("Corrected signal")
 
 axs[2].plot(Jhist_ls, "k")
 axs[2].set_title("Residual Norm")
+fig.tight_layout()
+
+###############################################################################
+# Finally, we repeat the same exercise with a 2-dimensional dataset. Here,
+# each trace is time shifted independently, however a :class:`pylops.Laplacian`
+# operator is used to ensure smoothness in the solution across traces.
+#
+# Let's start by loading a
+# `2D dataset <http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/>`_
+
+inputfile = "../testdata/sigmoid.npz"
+
+d1 = 1e3 * np.load(inputfile)["sigmoid"]
+nx, nz = d1.shape
+x = np.linspace(-500.0, 500.0, nx)
+z = np.linspace(0.0, 400.0, nz)
+X, Z = np.meshgrid(x, z, indexing="ij")
+
+###############################################################################
+# Next, we define a shift composed of two gaussians with opposite polarity
+# on either side of the x-axis
+
+dt = 0.004
+t = np.arange(nz) * dt
+shift = np.exp(-np.sqrt((X + 250) ** 2 + (Z - 200) ** 2) / 200) - np.exp(
+    -np.sqrt((X - 250) ** 2 + (Z - 200) ** 2) / 200
+)
+shift = 4e-4 * shift / shift.max()
+
+# apply time-shift
+tshift = t[np.newaxis, :] - shift
+iavas = tshift / dt
+SOp = pylops.BlockDiag(
+    [pylops.signalprocessing.Interp(nz, iava, kind="sinc")[0] for iava in iavas]
+)
+d2 = SOp * d1
+
+# revert time-shift
+tshift_rev = t[np.newaxis, :] + shift
+iavas_rev = tshift_rev / dt
+SOprev = pylops.BlockDiag(
+    [pylops.signalprocessing.Interp(nz, iava, kind="sinc")[0] for iava in iavas_rev]
+)
+d2shifted = SOprev * d2
+
+v = np.max(np.abs(shift))
+fig, axs = plt.subplots(1, 4, figsize=(15, 4), sharey=True)
+axs[0].imshow(d1.T, aspect="auto", cmap="gray")
+axs[0].set_title(r"$d_1(x, t)$")
+axs[1].imshow(shift.T, aspect="auto", cmap="Spectral", vmin=-v, vmax=v)
+axs[1].contour(shift.T, levels=np.linspace(-4e-4, 4e-4, 11), colors="k", linewidths=0.5)
+axs[1].set_title("True shift")
+axs[2].imshow(d2.T, aspect="auto", cmap="gray")
+axs[2].set_title(r"$d_2(x, t)$")
+axs[3].imshow(d1.T - d2.T, aspect="auto", cmap="gray")
+axs[3].set_title(r"$d_1(x, t) - d_2(x, t)$")
+fig.tight_layout()
+
+###############################################################################
+# Like in the 1D, we start with a single linearization
+
+# data term
+ddiff = d2 - d1
+
+# Jabobian
+DOp = pylops.FirstDerivative((nx, nz), axis=-1, sampling=dt, edge=True)
+J = -pylops.Diagonal(DOp @ d1)
+
+# laplacian regularization
+D2Op = pylops.Laplacian(dims=(nx, nz))
+
+shift_est = pylops.optimization.leastsquares.regularized_inversion(
+    J,
+    ddiff.ravel(),
+    [
+        D2Op,
+    ],
+    epsRs=[
+        1e4,
+    ],
+    **dict(iter_lim=1000)
+)[0]
+shift_est = shift_est.reshape(nx, nz)
+
+# shift back
+tshift_est = t[np.newaxis, :] + shift_est
+iavas_est = tshift_est / dt
+SOpest = pylops.BlockDiag(
+    [pylops.signalprocessing.Interp(nz, iava, kind="sinc")[0] for iava in iavas_est]
+)
+d1back_est = SOpest * d2
+
+fig, axs = plt.subplots(1, 4, figsize=(15, 4), sharey=True)
+axs[0].imshow(d1.T, aspect="auto", cmap="gray", vmin=-5.0, vmax=5.0)
+axs[0].set_title(r"$d_1(x, t)$")
+axs[1].imshow(shift_est.T, aspect="auto", cmap="Spectral", vmin=-v, vmax=v)
+axs[1].contour(
+    shift_est.T, levels=np.linspace(-4e-4, 4e-4, 11), colors="k", linewidths=0.5
+)
+axs[1].set_title("Estimated shift")
+axs[2].imshow(d1back_est.T, aspect="auto", cmap="gray", vmin=-5.0, vmax=5.0)
+axs[2].set_title(r"$d_{1,back}(x, t)=d_2(x, t + \delta \tilde{t})$")
+axs[3].imshow(d1.T - d1back_est.T, aspect="auto", cmap="gray", vmin=-0.1, vmax=0.1)
+axs[3].set_title(r"$d_1(x, t) - d_{1,back}(x, t)$")
+fig.tight_layout()
+
+###############################################################################
+# And finally by a series of linearizations using
+# `scipy.optimize.least_squares <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html>`_
+
+
+def fun(x, d1, d2, t, dt, eps):
+    nt = len(t)
+    nx = x.size // nt
+    iavas = (t[np.newaxis, :] - x.reshape(nx, nt)) / dt
+    SOpest = pylops.BlockDiag(
+        [pylops.signalprocessing.Interp(nt, iava, kind="sinc")[0] for iava in iavas]
+    )
+    D2Op = pylops.Laplacian((nx, nt))
+
+    d1shift = SOpest * d1.ravel()
+    res = d2.ravel() - d1shift
+    resr = D2Op * x
+    return np.hstack((res, eps * resr))
+
+
+def jacobian(x, d1, d2, t, dt, eps):
+    nt = len(t)
+    nx = x.size // nt
+    iavas = (t[np.newaxis, :] - x.reshape(nx, nt)) / dt
+    SOpest = pylops.BlockDiag(
+        [pylops.signalprocessing.Interp(nt, iava, kind="sinc")[0] for iava in iavas]
+    )
+    S1Opest = pylops.BlockDiag(
+        [pylops.signalprocessing.Interp(nt, iava + 1, kind="sinc")[0] for iava in iavas]
+    )
+    J = (S1Opest * d1.ravel() - SOpest * d1.ravel()) / dt
+    D2Op = pylops.Laplacian((nx, nt))
+    J = pylops.VStack([pylops.Diagonal(J), eps * D2Op])
+    J = aslinearoperator(J)
+    return J
+
+
+def callback(x, t, dt, d1, d2):
+    nt = len(t)
+    nx = x.size // nt
+    iavas = (t[np.newaxis, :] - x.reshape(nx, nt)) / dt
+    SOpgn = pylops.BlockDiag(
+        [pylops.signalprocessing.Interp(nt, iava, kind="sinc")[0] for iava in iavas]
+    )
+    d1shift = SOpgn @ d1.ravel()
+    shift_estls_hist.append(x)
+    Jhist_ls.append(np.linalg.norm(d2.ravel() - d1shift))
+
+
+eps = 5e2
+shift_estls_hist = []
+Jhist_ls = []
+shift_estls = least_squares(
+    fun,
+    np.zeros(nx * nz),
+    jac=jacobian,
+    method="trf",
+    verbose=1,
+    args=(d1, d2, t, dt, eps),
+    callback=partial(callback, t=t, dt=dt, d1=d1, d2=d2),
+).x
+
+shift_estls = shift_estls.reshape(nx, nz)
+
+# revert time-shift
+tshift_estls = t[np.newaxis, :] + shift_estls
+iavas_estls = tshift_estls / dt
+SOpestls = pylops.BlockDiag(
+    [pylops.signalprocessing.Interp(nz, iava, kind="sinc")[0] for iava in iavas_estls]
+)
+d1back_estls = SOpestls * d2
+
+fig, axs = plt.subplots(1, 4, figsize=(15, 4), sharey=True)
+axs[0].imshow(d1.T, aspect="auto", cmap="gray", vmin=-5.0, vmax=5.0)
+axs[0].set_title(r"$d_1(x, t)$")
+axs[1].imshow(shift_est.T, aspect="auto", cmap="Spectral", vmin=-v, vmax=v)
+axs[1].contour(
+    shift_estls.T, levels=np.linspace(-4e-4, 4e-4, 11), colors="k", linewidths=0.5
+)
+axs[1].set_title("Estimated shift")
+axs[2].imshow(d1back_estls.T, aspect="auto", cmap="gray", vmin=-5.0, vmax=5.0)
+axs[2].set_title(r"$d_{1,back}(x, t)=d_2(x, t + \delta \tilde{t})$")
+axs[3].imshow(d1.T - d1back_estls.T, aspect="auto", cmap="gray", vmin=-0.1, vmax=0.1)
+axs[3].set_title(r"$d_1(x, t) - d_{1,back}(x, t)$")
+fig.tight_layout()
+
+fig, axs = plt.subplots(1, 2, figsize=(15, 4))
+
+axs[0].plot(t, shift[nx // 4], "k", label="True")
+axs[0].plot(t, shift_est[nx // 4], "r", label="Linearized")
+axs[0].plot(t, shift_estls[nx // 4], "b", label="LS")
+axs[0].plot(t, shift[-nx // 4], "k")
+axs[0].plot(t, shift_est[-nx // 4], "r")
+axs[0].plot(t, shift_estls[-nx // 4], "b")
+axs[0].set_title("Shifts")
+axs[0].legend()
+
+axs[1].plot(Jhist_ls, "k")
+axs[1].set_title("Residual Norm")
 fig.tight_layout()
