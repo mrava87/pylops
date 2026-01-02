@@ -416,8 +416,12 @@ Signal processing:
      - |:red_circle:|
    * - :class:`pylops.signalprocessing.Interp`
      - |:white_check_mark:|
+     - |:warning:|
+     - |:warning:|
+   * - :class:`pylops.signalprocessing.InterpCubicSpline`
      - |:white_check_mark:|
-     - |:white_check_mark:|
+     - |:red_circle:|
+     - |:red_circle:|
    * - :class:`pylops.signalprocessing.Bilinear`
      - |:white_check_mark:|
      - |:white_check_mark:|
@@ -614,3 +618,6 @@ Medical:
    operator currently works only with ``explicit=True`` due to the same issue as
    in point 1 for the :class:`pylops.signalprocessing.Convolve1D` operator employed
    when ``explicit=False``.
+
+   3. The CuPy and JAX backends of the :class:`pylops.signalprocessing.Interp`
+   operator currently do not work with ``kind="cubic_spline``.
