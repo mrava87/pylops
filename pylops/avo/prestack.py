@@ -4,7 +4,7 @@ __all__ = [
     "PrestackInversion",
 ]
 
-from typing import Optional, Tuple, Union
+from typing import Callable, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 from scipy.sparse.linalg import lsqr
@@ -36,6 +36,7 @@ from pylops.utils.signalprocessing import convmtx
 from pylops.utils.typing import NDArray, ShapeLike
 
 _linearizations = {"akirich": 3, "fatti": 3, "ps": 3}
+LinearizationsType = Literal["akirich", "fatti", "PS"]
 
 
 def PrestackLinearModelling(
@@ -44,9 +45,9 @@ def PrestackLinearModelling(
     vsvp: Union[float, NDArray] = 0.5,
     nt0: int = 1,
     spatdims: Optional[Union[int, ShapeLike]] = None,
-    linearization: str = "akirich",
+    linearization: LinearizationsType = "akirich",
     explicit: bool = False,
-    kind: str = "centered",
+    kind: Literal["centered", "forward"] = "centered",
     name: Optional[str] = None,
 ) -> LinearOperator:
     r"""Pre-stack linearized seismic modelling operator.
@@ -90,7 +91,7 @@ def PrestackLinearModelling(
         or a ``MatrixMult`` linear operator with dense matrix
         (``True``, preferred for small data)
     kind : :obj:`str`, optional
-        Derivative kind (``forward`` or ``centered``).
+        Derivative kind (``centered`` or ``forward``).
     name : :obj:`str`, optional
         .. versionadded:: 2.0.0
 
@@ -228,7 +229,7 @@ def PrestackWaveletModelling(
     nwav: int,
     wavc: Optional[int] = None,
     vsvp: Union[float, NDArray] = 0.5,
-    linearization: str = "akirich",
+    linearization: Union[LinearizationsType, Callable] = "akirich",
     name: Optional[str] = None,
 ) -> LinearOperator:
     r"""Pre-stack linearized seismic modelling operator for wavelet.
@@ -357,7 +358,7 @@ def PrestackInversion(
     theta: NDArray,
     wav: NDArray,
     m0: Optional[NDArray] = None,
-    linearization: str = "akirich",
+    linearization: Union[LinearizationsType, List[LinearizationsType]] = "akirich",
     explicit: bool = False,
     simultaneous: bool = False,
     epsI: Optional[float] = None,
@@ -365,7 +366,7 @@ def PrestackInversion(
     dottest: bool = False,
     returnres: bool = False,
     epsRL1: Optional[float] = None,
-    kind: str = "centered",
+    kind: Literal["centered", "forward"] = "centered",
     vsvp: Union[float, NDArray] = 0.5,
     **kwargs_solver
 ) -> Union[NDArray, Tuple[NDArray, NDArray]]:
@@ -421,7 +422,7 @@ def PrestackInversion(
     epsRL1 : :obj:`float`, optional
         Damping factor for additional blockiness regularization term
     kind : :obj:`str`, optional
-        Derivative kind (``forward`` or ``centered``).
+        Derivative kind (``centered`` or ``forward``).
     vsvp : :obj:`float` or :obj:`numpy.ndarray`
         :math:`V_S/V_P` ratio (constant or time/depth variant)
     **kwargs_solver

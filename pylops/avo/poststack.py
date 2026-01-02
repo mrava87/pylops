@@ -3,7 +3,7 @@ __all__ = [
     "PoststackInversion",
 ]
 
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -141,7 +141,7 @@ def PoststackLinearModelling(
     spatdims: Optional[Union[int, ShapeLike]] = None,
     explicit: bool = False,
     sparse: bool = False,
-    kind: str = "centered",
+    kind: Literal["centered", "forward"] = "centered",
     name: Optional[str] = None,
 ) -> LinearOperator:
     r"""Post-stack linearized seismic modelling operator.
@@ -173,7 +173,7 @@ def PoststackLinearModelling(
         Create a sparse matrix (``True``) or dense  (``False``) when
         ``explicit=True``
     kind : :obj:`str`, optional
-        Derivative kind (``forward`` or ``centered``).
+        Derivative kind (``centered`` or ``forward``).
     name : :obj:`str`, optional
         .. versionadded:: 2.0.0
 

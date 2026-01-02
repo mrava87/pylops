@@ -9,7 +9,7 @@ __all__ = [
     "AVOLinearModelling",
 ]
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -650,7 +650,7 @@ class AVOLinearModelling(LinearOperator):
         vsvp: Union[float, NDArray] = 0.5,
         nt0: int = 1,
         spatdims: Optional[Union[int, Tuple[int]]] = None,
-        linearization: str = "akirich",
+        linearization: Literal["akirich", "fatti", "PS"] = "akirich",
         dtype: DTypeLike = "float64",
         name: str = "A",
     ) -> None:
