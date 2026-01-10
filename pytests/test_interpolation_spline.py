@@ -99,5 +99,3 @@ def test_natural_cubic_spline_against_scipy(
     )(x=x_eval_for_scipy)
 
     assert np.allclose(y_eval_pylops, y_eval_scipy)
-
-    return
