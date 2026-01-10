@@ -4,7 +4,7 @@ __all__ = [
 
 from dataclasses import dataclass
 from functools import cached_property, partial
-from typing import Callable, Final, Literal, Tuple, Union, overload
+from typing import Callable, Final, Literal, Tuple, Union
 
 import numpy as np
 from scipy.linalg import get_lapack_funcs
@@ -17,9 +17,10 @@ from pylops.utils.backend import get_normalize_axis_index
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import (
     DTypeLike,
-    Float64Vector,
+    FloatingNDArray,
+    InexactNDArray,
     InputDimsLike,
-    Int64Vector,
+    IntNDArray,
     SamplingLike,
 )
 
@@ -27,29 +28,10 @@ ONE_SIXTH: Final[float] = 1.0 / 6.0
 TWO_THIRDS: Final[float] = 2.0 / 3.0
 
 
-_InexactVector = np.ndarray[tuple[int], np.dtype[np.inexact]]
-_InexactMatrix = np.ndarray[tuple[int, int], np.dtype[np.inexact]]
-_InexactArray = Union[_InexactVector, _InexactMatrix]
-
-
-@overload
 def _second_order_finite_differences_zero_padded(
-    x: _InexactVector,
+    x: InexactNDArray,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactVector: ...
-
-
-@overload
-def _second_order_finite_differences_zero_padded(
-    x: _InexactMatrix,
-    pad_width: tuple[tuple[int, int], ...],
-) -> _InexactMatrix: ...
-
-
-def _second_order_finite_differences_zero_padded(
-    x: _InexactArray,
-    pad_width: tuple[tuple[int, int], ...],
-) -> _InexactArray:
+) -> InexactNDArray:
     """
     Computes the second order finite differences of ``x`` along axis 0 and pads the
     result with ``pad_width[0][0]`` leading and `pad_width[0][1]`` trailing zeros
@@ -84,27 +66,11 @@ def _second_order_finite_differences_zero_padded(
     )
 
 
-@overload
 def _second_order_finite_differences_zero_padded_transposed(
-    x: _InexactVector,
+    x: InexactNDArray,
     x_slice: slice,
     pad_width: tuple[tuple[int, int], ...],
-) -> _InexactVector: ...
-
-
-@overload
-def _second_order_finite_differences_zero_padded_transposed(
-    x: _InexactMatrix,
-    x_slice: slice,
-    pad_width: tuple[tuple[int, int], ...],
-) -> _InexactMatrix: ...
-
-
-def _second_order_finite_differences_zero_padded_transposed(
-    x: _InexactArray,
-    x_slice: slice,
-    pad_width: tuple[tuple[int, int], ...],
-) -> _InexactArray:
+) -> InexactNDArray:
     """
     Computes the transposed operation of the second order finite differences operator
     with subsequent zero padding along axis 0, i.e.,
@@ -158,9 +124,9 @@ class _TridiagonalMatrix:
 
     """
 
-    main_diagonal: _InexactVector
-    super_diagonal: _InexactVector
-    sub_diagonal: _InexactVector
+    main_diagonal: InexactNDArray
+    super_diagonal: InexactNDArray
+    sub_diagonal: InexactNDArray
 
     def __post_init__(self) -> None:
         """
@@ -249,8 +215,8 @@ class _BandedLUDecomposition:
 
     """
 
-    lu_banded: _InexactMatrix
-    pivot_indices: Int64Vector
+    lu_banded: InexactNDArray
+    pivot_indices: IntNDArray
     num_sub: int
     num_super: int
 
@@ -307,25 +273,11 @@ class _BandedLUDecomposition:
             f"Could not LU-factorize tridiagonal matrix! Got {info = }."
         )
 
-    @overload
     def solve(
         self,
-        rhs: _InexactVector,
+        rhs: InexactNDArray,
         lapack_solver: Callable,
-    ) -> _InexactVector: ...
-
-    @overload
-    def solve(
-        self,
-        rhs: _InexactMatrix,
-        lapack_solver: Callable,
-    ) -> _InexactMatrix: ...
-
-    def solve(
-        self,
-        rhs: _InexactArray,
-        lapack_solver: Callable,
-    ) -> _InexactArray:
+    ) -> InexactNDArray:
         """
         Solves the linear system of equations ``A @ x = rhs`` where ``A`` is the
         tridiagonal matrix represented by the LU decomposition. For this, the LAPACK
@@ -376,11 +328,11 @@ class _TridiagonalLUDecomposition:
 
     """
 
-    sub_diagonal_lu: _InexactVector
-    main_diagonal_lu: _InexactVector
-    super_diagonal_lu: _InexactVector
-    super_two_diagonal_lu: _InexactVector
-    pivot_indices: Int64Vector
+    sub_diagonal_lu: InexactNDArray
+    main_diagonal_lu: InexactNDArray
+    super_diagonal_lu: InexactNDArray
+    super_two_diagonal_lu: InexactNDArray
+    pivot_indices: IntNDArray
 
     def __iter__(self):
         """
@@ -443,25 +395,11 @@ class _TridiagonalLUDecomposition:
             f"Could not LU-factorize tridiagonal matrix! Got {info = }."
         )
 
-    @overload
     def solve(
         self,
-        rhs: _InexactVector,
+        rhs: InexactNDArray,
         lapack_solver: Callable,
-    ) -> _InexactVector: ...
-
-    @overload
-    def solve(
-        self,
-        rhs: _InexactMatrix,
-        lapack_solver: Callable,
-    ) -> _InexactMatrix: ...
-
-    def solve(
-        self,
-        rhs: _InexactArray,
-        lapack_solver: Callable,
-    ) -> _InexactArray:
+    ) -> InexactNDArray:
         """
         Solves the linear system of equations ``A @ x = rhs`` where ``A`` is the
         tridiagonal matrix represented by the LU decomposition. For this, the LAPACK
@@ -544,9 +482,9 @@ def _make_cubic_spline_left_hand_side(
 
 def _make_cubic_spline_x_csr(
     dims: int,
-    iava: Float64Vector,
-    base_indices: Int64Vector,
-    iava_remainders: Float64Vector,
+    iava: FloatingNDArray,
+    base_indices: IntNDArray,
+    iava_remainders: FloatingNDArray,
 ) -> csr_matrix:
     """
     Constructs the specifications ``data``, ``indices``, and ``indptr`` for a
@@ -909,7 +847,7 @@ class InterpCubicSpline(LinearOperator):
 
         self.dims: Tuple = dims
         self.dimsd: Tuple = dimsd
-        self.iava: Float64Vector = iava
+        self.iava: FloatingNDArray = iava
         self.axis: int = axis
 
         super().__init__(
@@ -988,7 +926,7 @@ class InterpCubicSpline(LinearOperator):
         return self.dims[self.axis]
 
     @reshaped(swapaxis=True, axis=0)
-    def _matvec(self, x: _InexactArray) -> _InexactArray:
+    def _matvec(self, x: InexactNDArray) -> InexactNDArray:
         x_reshaped = x.reshape(x.shape[0], -1)
 
         m_coeffs = self._lhs_B_matrix_lu.solve(
@@ -1007,7 +945,7 @@ class InterpCubicSpline(LinearOperator):
         ).reshape(-1, *x.shape[1:])
 
     @reshaped(swapaxis=True, axis=0)
-    def _rmatvec(self, x: _InexactArray) -> _InexactArray:
+    def _rmatvec(self, x: InexactNDArray) -> InexactNDArray:
 
         x_mod = self._P_matrix_transposed @ x.reshape(x.shape[0], -1)
 
