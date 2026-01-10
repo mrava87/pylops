@@ -8,7 +8,7 @@ from pylops import LinearOperator
 from pylops.signalprocessing._interp_utils import _ensure_iava_is_unique
 from pylops.utils.backend import get_add_at, get_array_module, to_numpy
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, SamplingLike
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ class Bilinear(LinearOperator):
 
     def __init__(
         self,
-        iava: IntNDArray,
+        iava: SamplingLike,
         dims: InputDimsLike,
         forceflat: bool = None,
         dtype: DTypeLike = "float64",

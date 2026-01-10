@@ -13,24 +13,32 @@ from pylops.signalprocessing._interp_utils import (
 from pylops.signalprocessing.interpspline import InterpCubicSpline
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module
-from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray, SamplingLike
 
 
 def _nearestinterp(
     dims: Union[int, InputDimsLike],
-    iava: IntNDArray,
+    iava: SamplingLike,
     axis: int = -1,
     dtype: DTypeLike = "float64",
 ):
     """Nearest neighbour interpolation."""
     iava = np.round(iava).astype(int)
     _ensure_iava_is_unique(iava=iava)
-    return (Restriction(dims, iava, axis=axis, dtype=dtype), iava)
+    return (
+        Restriction(
+            dims,
+            iava,  # type: ignore
+            axis=axis,
+            dtype=dtype,
+        ),
+        iava,
+    )
 
 
 def _linearinterp(
     dims: InputDimsLike,
-    iava: IntNDArray,
+    iava: SamplingLike,
     axis: int = -1,
     dtype: DTypeLike = "float64",
 ):
@@ -65,14 +73,13 @@ def _linearinterp(
 
 def _sincinterp(
     dims: InputDimsLike,
-    iava: IntNDArray,
+    iava: SamplingLike,
     axis: int = 0,
     dtype: DTypeLike = "float64",
 ):
     """Sinc interpolation."""
     ncp = get_array_module(iava)
 
-    # TODO: is ``iava`` bound to an integer dtype
     _ensure_iava_is_unique(iava=iava)
 
     # create sinc interpolation matrix
@@ -101,7 +108,7 @@ def _sincinterp(
 
 def Interp(
     dims: Union[int, InputDimsLike],
-    iava: IntNDArray,
+    iava: SamplingLike,
     axis: int = -1,
     kind: Literal["linear", "nearest", "sinc", "cubic_spline"] = "linear",
     dtype: DTypeLike = "float64",
