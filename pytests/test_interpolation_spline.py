@@ -53,7 +53,7 @@ def test_natural_cubic_spline_against_scipy(
 
     """
 
-    # --- Setup ---
+    # Setup
 
     np.random.seed(0)
 
@@ -81,7 +81,7 @@ def test_natural_cubic_spline_against_scipy(
 
     dtype = "complex128" if with_complex else "float64"
 
-    # --- Test ---
+    # Test
 
     splinop = InterpCubicSpline(
         dims=TEST_ARRAY_SHAPE,

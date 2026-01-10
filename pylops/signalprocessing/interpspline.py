@@ -870,7 +870,7 @@ class InterpCubicSpline(LinearOperator):
         name: str = "S",
     ) -> None:
 
-        # --- Input Validation and Standardization ---
+        # Input Validation and Standardization
 
         dims = _value_or_sized_to_tuple(dims)
         axis = get_normalize_axis_index()(axis, len(dims))
@@ -901,7 +901,7 @@ class InterpCubicSpline(LinearOperator):
                 f"complex128 to achieve the required accuracy, but got {dtype}."
             )
 
-        # --- Operator Initialization ---
+        # Operator Initialization
 
         dimsd = list(dims)
         dimsd[axis] = len(iava)
@@ -919,7 +919,7 @@ class InterpCubicSpline(LinearOperator):
             name=name,
         )
 
-        # --- Pre-computations of the Tridiagonal Systems ---
+        # Pre-computations of the Tridiagonal Systems
 
         # NOTE: the LU-factorization will always be performed on ``float64`` while
         #       the LU-solve type depends on the actual dtype, which might also be
@@ -955,7 +955,7 @@ class InterpCubicSpline(LinearOperator):
             lapack_factorizer=self._tridiag_factorize,
         )
 
-        # --- Pre-computation of the Interpolator Matrices ---
+        # Pre-computation of the Interpolator Matrices
 
         base_indices = np.clip(
             self.iava.astype(np.int64),  # already rounds down
