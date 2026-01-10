@@ -2,11 +2,11 @@ import warnings
 
 import numpy as np
 
-from pylops.utils.typing import NumericNDArray
+from pylops.utils.typing import NDArray
 
 
 def _ensure_iava_is_unique(
-    iava: NumericNDArray,
+    iava: NDArray,
     axis: int | None = None,
 ) -> None:
     """
@@ -26,7 +26,7 @@ def _ensure_iava_is_unique(
 
 
 def _clip_iava_above_last_sample_index(
-    iava: NumericNDArray,
+    iava: NDArray,
     sample_size: int,
 ) -> None:
     """

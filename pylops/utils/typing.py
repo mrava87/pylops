@@ -20,12 +20,11 @@ if torch_enabled:
     import torch
 
 
-NDArray = npt.NDArray
+NDArray = npt.NDArray[np.number]
 ArrayLike = npt.ArrayLike
 IntNDArray = npt.NDArray[np.integer]
 FloatingNDArray = npt.NDArray[np.floating]
 InexactNDArray = npt.NDArray[np.inexact]  # float or complex
-NumericNDArray = npt.NDArray[np.number]
 
 InputDimsLike = Union[Sequence[int], IntNDArray]
 SamplingLike = Union[Sequence[float], FloatingNDArray]
