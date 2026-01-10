@@ -15,7 +15,13 @@ from pylops.signalprocessing._interp_utils import clip_iava_above_last_sample_in
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_normalize_axis_index
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, Float64Vector, Int64Vector, SamplingLike
+from pylops.utils.typing import (
+    DTypeLike,
+    Float64Vector,
+    InputDimsLike,
+    Int64Vector,
+    SamplingLike,
+)
 
 ONE_SIXTH: Final[float] = 1.0 / 6.0
 TWO_THIRDS: Final[float] = 2.0 / 3.0
@@ -631,8 +637,8 @@ class InterpCubicSpline(LinearOperator):
 
     Parameters
     ----------
-    dims : :obj:`int`
-        The number of points the spline should interpolate.
+    dims : :obj:`list` or :obj:`int`
+        Number of samples for each dimension.
         A cubic spline requires ``dims[axis] > 2``.
     iava : :obj:`list` or :obj:`numpy.ndarray`
         Floating indices of the locations to which the spline should interpolate.
@@ -653,14 +659,16 @@ class InterpCubicSpline(LinearOperator):
     name : :obj:`str`, optional
         Name of operator (to be used by :func:`pylops.utils.describe.describe`).
 
-    Returns
-    -------
-    op : :obj:`pylops.LinearOperator`
-        Linear interpolation operator
-    iava : :obj:`numpy.ndarray` of dtype ``numpy.float64``
-        Corrected indices of locations of available samples
-        (samples at ``dims[axis] - 1`` or beyond are clipped to the closest float value
-        right below ``dims[axis] - 1`` to avoid extrapolation.
+    Attributes
+    ----------
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
+    shape : :obj:`tuple`
+        Operator shape.
 
     Raises
     ------
@@ -686,43 +694,80 @@ class InterpCubicSpline(LinearOperator):
 
     Notes
     -----
-    Cubic spline interpolation of an :math:`\left(N\times 1\right)`-vector :math:`\mathbf{x}`
-    at the :math:`L` fractional positions ``iava`` can be represented as
-    :math:`\mathbf{y}=\mathbf{S}\mathbf{x}` where :math:`\mathbf{S}` is the cubic spline
-    operator.
+    Cubic spline interpolation of an :math:`\left(N\times 1\right)`-vector
+    :math:`\mathbf{x}` at the :math:`L` fractional positions ``iava`` can be represented
+    as :math:`\mathbf{y}=\mathbf{S}\mathbf{x}` where :math:`\mathbf{S}` is the cubic
+    spline operator.
 
     The :math:`\left(N\times 1\right)`-grid-point vector at which :math:`\mathbf{x}` was
     equidistantly sampled is denoted by the *"knot"* vector :math:`\mathbf{k}`, i.e.,
-    :math:`\mathbf{x}_{i} = f\left(\mathbf{k}_{i}\right)`. Furthermore, the vector
+    :math:`\mathbf{x}_{j} = f\left(\mathbf{k}_{j}\right)`. Furthermore, the vector
     ``iava`` is denoted by :math:`t` in the following mathematical expressions.
 
-    :math:`\mathbf{S}` has the shape :math:`\left(L\times N\right)` and can be broken
-    down into :math:`\mathbf{P}\mathbf{F}`.
+    When ``iava[i]`` (:math:`t_{i}`) is mapped to the :math:`j`-th knot-to-knot-interval
+    :math:`\mathbf{k}_{j}\le t_{i}\lt\mathbf{k}_{j + 1}`, the corresponding polynomial
+    :math:`s_{j}\left(t\right)` can be expressed as
 
-    :math:`\mathbf{P}` is a :math:`\left(L\times 2N\right)` operator that maps ``iava``
-    to its corresponding intervals between the knots and evaluates the base polynomials
-    of the spline in those particular intervals. When ``iava[j]`` (:math:`t_{j}`) is
-    mapped to the knot-to-knot interval
-    :math:`\mathbf{k}_{i}\le t_{j} < \mathbf{k}_{i + 1}`, the base polynomials are:
+    .. math::
+        s_{j}\left(t\right) = p_{j,0}\left(t\right)\cdot\mathbf{x}_{j}
+        + p_{j,1}\left(t\right)\cdot\mathbf{x}_{j + 1}
+        + p_{j,2}\left(t\right)\cdot\mathbf{m}_{j}
+        + p_{j,3}\left(t\right)\cdot\mathbf{m}_{j + 1}
 
-    - :math:`p_{j,0}\left(t\right) = \mathbf{k}_{i + 1} - t`
-    - :math:`p_{j,1}\left(t\right) = t - \mathbf{k}_{i}`
-    - :math:`p_{j,2}\left(t\right) = \frac{1}{6}\cdot\left(\left(\mathbf{k}_{i + 1} - t\right)^{3} - \left(\mathbf{k}_{i + 1} - t\right)\right)`
-    - :math:`p_{j,3}\left(t\right) = \frac{1}{6}\cdot\left(\left(t - \mathbf{k}_{i}\right)^{3} - \left(t - \mathbf{k}_{i}\right)\right)`
+    where the :math:`\left(N\times 1\right)`-vector :math:`\mathbf{m}` holds, the second
+    order derivatives of the cubic spline at its knots and the base polynomials are
+    given by
 
-    These base polynomials then need to be linearly combined using the coefficients
-    :math:`\mathbf{c} = \mathbf{F}\mathbf{y}`. Here, :math:`\mathbf{F}` is a
-    :math:`\left(2N\times N\right)` operator and can be represented as a vertical
-    concatenation
+    - :math:`p_{j,0}\left(t\right) = \mathbf{k}_{j + 1} - t`
+    - :math:`p_{j,1}\left(t\right) = t - \mathbf{k}_{j}`
+    - :math:`p_{j,2}\left(t\right) = \frac{1}{6}\cdot\left(\left(\mathbf{k}_{j + 1} - t\right)^{3} - \left(\mathbf{k}_{j + 1} - t\right)\right)`
+    - :math:`p_{j,3}\left(t\right) = \frac{1}{6}\cdot\left(\left(t - \mathbf{k}_{j}\right)^{3} - \left(t - \mathbf{k}_{j}\right)\right)`
+
+    Applying this 4-term linear combination to all points in ``iava`` leads to the
+    matrix representation
+
+    .. math::
+        \mathbf{S}\mathbf{x} = \mathbf{P}\begin{bmatrix}
+            \mathbf{x} \\
+            \mathbf{m}
+        \end{bmatrix}
+
+    where each row of the very sparse
+    :math:`\left(L\times 2N\right)`-base-polynomial-matrix :math:`\mathbf{P}` has only
+    4 non-zero entries:
+
+    .. math::
+        \mathbf{P}_{i} = \begin{bmatrix}
+            \dots & 0 & \dots & p_{j,0}\left(t_{i}\right) & p_{j,1}\left(t_{i}\right) &
+            \dots & 0 & \dots & p_{j,2}\left(t_{i}\right) & p_{j,3}\left(t_{i}\right) &
+            \dots & 0 & \dots
+        \end{bmatrix}
+
+    at the indices :math:`j`, :math:`j + 1`, :math:`j + N`, and :math:`j + N + 1`,
+    respectively.
+
+    :math:`\mathbf{P}` forms the first linear operator of :math:`\mathbf{S}` that
+    carries out the linear combination and requires the vectors :math:`\mathbf{x}` and
+    :math:`\mathbf{m}` as combination weights. Those need to be obtained from the second
+    linear operator :math:`\mathbf{F}`
+
+    .. math::
+        \mathbf{F}\mathbf{x} = \begin{bmatrix}
+            \mathbf{x} \\
+            \mathbf{m}
+        \end{bmatrix}
+
+    For cubic splines, :math:`\mathbf{F}` is given by
 
     .. math::
         \mathbf{F} = \begin{bmatrix}
-           \mathbf{I}_{N} \\
-           \mathbf{B}^{-1}\mathbf{D}_{2}
+            \mathbf{I}_{N} \\
+            \mathbf{B}^{-1}\mathbf{D}_{2}
         \end{bmatrix}
 
+
     :math:`\mathbf{I}_{N}` is the :math:`\left(N\times N\right)`-identity matrix.
-    The (virtually) :math:`\left(N\times N\right)`-tridiagonal matrix
+    The :math:`\left(N\times N\right)`-tridiagonal or -near-tridiagonal matrix
     :math:`\mathbf{B}` and the :math:`\left(N\times N\right)`-second-order-finite-
     difference matrix :math:`\mathbf{D}_{2}` originate from the linear system
 
@@ -740,15 +785,15 @@ class InterpCubicSpline(LinearOperator):
 
     .. math::
         \mathbf{B} = \frac{1}{6}\cdot\begin{bmatrix}
-           \mu_{0} & \lambda_{0} & 0 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & \theta_{0} \\
-           1 & 4 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           0 & 1 & 4 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           0 & 0 & 1 & 4 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
-           0 & 0 & 0 & 0 & 0 & \dots & 1 & 4 & 1 & 0 & 0 \\
-           0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & 4 & 1 & 0 \\
-           0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & 4 & 1 \\
-           \theta_{N} & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 0 & \lambda_{N-1} & \mu_{N-1}
+            \mu_{0} & \lambda_{0} & 0 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & \theta_{0} \\
+            1 & 4 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            0 & 1 & 4 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            0 & 0 & 1 & 4 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+            0 & 0 & 0 & 0 & 0 & \dots & 1 & 4 & 1 & 0 & 0 \\
+            0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & 4 & 1 & 0 \\
+            0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & 4 & 1 \\
+            \theta_{N-1} & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 0 & \lambda_{N-1} & \mu_{N-1}
         \end{bmatrix}
 
     The special values :math:`\mu_{i}`, :math:`\lambda_{i}`, :math:`\theta_{i}` for the
@@ -761,15 +806,15 @@ class InterpCubicSpline(LinearOperator):
 
     .. math::
         \mathbf{D}_{2} = \begin{bmatrix}
-           \ & \ & \ & \ & \ & \mathbf{d}_{0} & \ & \ & \ & \ \\
-           1 & -2 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           0 & 1 & -2 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           0 & 0 & 1 & -2 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
-           \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
-           0 & 0 & 0 & 0 & 0 & \dots & 1 & -2 & 1 & 0 & 0 \\
-           0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & -2 & 1 & 0 \\
-           0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & -2 & 1 \\
-           \ & \ & \ & \ & \ & \mathbf{d}_{N-1} & \ & \ & \ & \
+            \ & \ & \ & \ & \ & \mathbf{d}_{0} & \ & \ & \ & \ \\
+            1 & -2 & 1 & 0 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            0 & 1 & -2 & 1 & 0 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            0 & 0 & 1 & -2 & 1 & \dots & 0 & 0 & 0 & 0 & 0 \\
+            \vdots & \vdots & \vdots & \vdots & \vdots & \ddots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+            0 & 0 & 0 & 0 & 0 & \dots & 1 & -2 & 1 & 0 & 0 \\
+            0 & 0 & 0 & 0 & 0 & \dots & 0 & 1 & -2 & 1 & 0 \\
+            0 & 0 & 0 & 0 & 0 & \dots & 0 & 0 & 1 & -2 & 1 \\
+            \ & \ & \ & \ & \ & \mathbf{d}_{N-1} & \ & \ & \ & \
         \end{bmatrix}
 
     Again, the special rows :math:`\mathbf{d}_{i}` depend on the boundary conditions.
@@ -784,40 +829,18 @@ class InterpCubicSpline(LinearOperator):
 
     and :math:`\mathbf{B}` is thus truly tridiagonal.
 
-    So, the operation
+    In summary, the cubic spline interpolation can be decomposed as
 
     .. math::
-        \mathbf{c} = \mathbf{F}\mathbf{x} = \begin{bmatrix}
-           \mathbf{I}_{N}\mathbf{x} \\
-           \mathbf{B}^{-1}\mathbf{D}_{2}\mathbf{x}
-        \end{bmatrix} =
-        \begin{bmatrix}
-           \mathbf{x} \\
-           \mathbf{m}
-        \end{bmatrix}
-
-    is nothing but a vertical concatenation of the original values in :math:`\mathbf{x}`
-    with the second order derivatives of the spline :math:`\mathbf{m}` at its knots.
-
-    Afterwards, :math:`\mathbf{y}=\mathbf{P}\mathbf{c}` performs the mapping of ``iava``
-    to the respective :math:`\mathbf{x}`- and :math:`\mathbf{m}`-values that need to be
-    extracted from this vertical concatenation. They are then used to linearly combine
-    the corresponding base polynomials. For
-    :math:`\mathbf{k}_{i}\le t_{j} < \mathbf{k}_{i + 1}`, this means
-
-    .. math::
-        \left(\mathbf{S}\mathbf{x}\right)_{j} =
-        \mathbf{x}_{i}\cdot p_{j,0}\left(t_{j}\right) +
-        \mathbf{x}_{i + 1}\cdot p_{j,1}\left(t_{j}\right) +
-        \mathbf{m}_{i}\cdot p_{j,2}\left(t_{j}\right) +
-        \mathbf{m}_{i + 1}\cdot p_{j,3}\left(t_{j}\right)
+        \mathbf{y}=\mathbf{S}\mathbf{x}=\mathbf{P}\mathbf{F}\mathbf{x}
 
     The adjoint operator :math:`\mathbf{S}^{H}` can be derived by rearranging the
     involved operators. All of them are purely real and consequently, a transpose is
     sufficient. This yields
+
     .. math::
         \mathbf{S}^{H}=\mathbf{S}^{T} = \mathbf{F}^{T}\mathbf{P}^{T} = \begin{bmatrix}
-           \mathbf{I}_{N} & {\mathbf{D}_{2}}^{T} \mathbf{B}^{-T}
+            \mathbf{I}_{N} & {\mathbf{D}_{2}}^{T} \mathbf{B}^{-T}
         \end{bmatrix} \mathbf{P}^{T}
 
     where :math:`\mathbf{B}^{-T} = \left(\mathbf{B}^{-1}\right)^{T} = \left(\mathbf{B}^{T}\right)^{-1}`.
@@ -839,7 +862,7 @@ class InterpCubicSpline(LinearOperator):
 
     def __init__(
         self,
-        dims: Tuple,
+        dims: Union[int, InputDimsLike],
         iava: SamplingLike,
         bc_type: Literal["natural"] = "natural",
         axis: int = -1,
@@ -923,11 +946,11 @@ class InterpCubicSpline(LinearOperator):
             dims=num_cols
         )
 
-        self.lhs_matrix_lu = lu_format.from_tridiagonal_matrix(
+        self._lhs_B_matrix_lu = lu_format.from_tridiagonal_matrix(
             matrix=lhs_matrix,
             lapack_factorizer=self._tridiag_factorize,
         )
-        self.lhs_matrix_transposed_lu = lu_format.from_tridiagonal_matrix(
+        self._lhs_B_matrix_transposed_lu = lu_format.from_tridiagonal_matrix(
             matrix=lhs_matrix.T,
             lapack_factorizer=self._tridiag_factorize,
         )
@@ -940,23 +963,25 @@ class InterpCubicSpline(LinearOperator):
             a_max=num_cols - 2,
         )
 
-        self.X_matrix: csr_matrix = _make_cubic_spline_x_csr(
+        self._P_matrix: csr_matrix = _make_cubic_spline_x_csr(
             dims=num_cols,
             iava=self.iava,
             base_indices=base_indices,
             iava_remainders=self.iava - base_indices,
         )
-        self.X_matrix_transposed: csr_matrix = self.X_matrix.transpose().tocsr()  # type: ignore
+        self._P_matrix_transposed: csr_matrix = self._P_matrix.transpose().tocsr()  # type: ignore
 
-        self.matmat_difference_method = partial(
+        self._matmat_difference_method = partial(
             _second_order_finite_differences_zero_padded,
             pad_width=((1, 1), (0, 0)),
         )
-        self.rmatmat_difference_method = partial(
+        self._rmatmat_difference_method = partial(
             _second_order_finite_differences_zero_padded_transposed,
             x_slice=slice(1, num_cols - 1),
             pad_width=((2, 2), (0, 0)),
         )
+
+        return
 
     @cached_property
     def num_cols(self) -> int:
@@ -966,12 +991,12 @@ class InterpCubicSpline(LinearOperator):
     def _matvec(self, x: _InexactArray) -> _InexactArray:
         x_reshaped = x.reshape(x.shape[0], -1)
 
-        m_coeffs = self.lhs_matrix_lu.solve(
-            rhs=self.matmat_difference_method(x_reshaped),
+        m_coeffs = self._lhs_B_matrix_lu.solve(
+            rhs=self._matmat_difference_method(x_reshaped),
             lapack_solver=self._tridiag_lu_solve,
         )
         return (
-            self.X_matrix
+            self._P_matrix
             @ np.concatenate(
                 (
                     x_reshaped,
@@ -984,12 +1009,12 @@ class InterpCubicSpline(LinearOperator):
     @reshaped(swapaxis=True, axis=0)
     def _rmatvec(self, x: _InexactArray) -> _InexactArray:
 
-        x_mod = self.X_matrix_transposed @ x.reshape(x.shape[0], -1)
+        x_mod = self._P_matrix_transposed @ x.reshape(x.shape[0], -1)
 
         return (
             x_mod[0 : self.num_cols]
-            + self.rmatmat_difference_method(
-                self.lhs_matrix_transposed_lu.solve(
+            + self._rmatmat_difference_method(
+                self._lhs_B_matrix_transposed_lu.solve(
                     rhs=x_mod[self.num_cols : x_mod.size],
                     lapack_solver=self._tridiag_lu_solve,
                 )
