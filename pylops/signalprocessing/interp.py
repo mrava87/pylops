@@ -25,15 +25,7 @@ def _nearestinterp(
     """Nearest neighbour interpolation."""
     iava = np.round(iava).astype(int)
     _ensure_iava_is_unique(iava=iava)
-    return (
-        Restriction(
-            dims,
-            iava,  # type: ignore
-            axis=axis,
-            dtype=dtype,
-        ),
-        iava,
-    )
+    return Restriction(dims, iava, axis=axis, dtype=dtype), iava
 
 
 def _linearinterp(
