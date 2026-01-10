@@ -11,7 +11,7 @@ from scipy.linalg import get_lapack_funcs
 from scipy.sparse import csr_matrix
 
 from pylops import LinearOperator
-from pylops.signalprocessing._interp_utils import clip_iava_above_last_sample_index
+from pylops.signalprocessing._interp_utils import _clip_iava_above_last_sample_index
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_normalize_axis_index
 from pylops.utils.decorators import reshaped
@@ -883,7 +883,7 @@ class InterpCubicSpline(LinearOperator):
             )
 
         iava = np.asarray(iava, dtype=np.float64)
-        clip_iava_above_last_sample_index(iava=iava, sample_size=num_cols)
+        _clip_iava_above_last_sample_index(iava=iava, sample_size=num_cols)
 
         if isinstance(bc_type, str) and bc_type.lower() in {"natural"}:
             self.bc_type = bc_type.lower()

@@ -5,10 +5,14 @@ import numpy as np
 from pylops.utils.typing import NumericNDArray
 
 
-def ensure_iava_is_unique(
+def _ensure_iava_is_unique(
     iava: NumericNDArray,
     axis: int | None = None,
 ) -> None:
+    """
+    Ensures that all elements of ``iava`` are unique.
+    """
+
     _, count = np.unique(
         iava,
         axis=axis,
@@ -21,12 +25,16 @@ def ensure_iava_is_unique(
     return
 
 
-def clip_iava_above_last_sample_index(
+def _clip_iava_above_last_sample_index(
     iava: NumericNDArray,
     sample_size: int,
 ) -> None:
-    # ensure that samples are not beyond the last sample, in that case set to
-    # penultimate sample and raise a warning
+    """
+    Ensures that elements in ``iava`` do not exceed the last sample index.
+    Elements above the penultimate sample are clipped to the next closest float value
+    below the last sample index. When this happens, a warning is issued.
+    """
+
     last_sample_index = sample_size - 1
     outside = iava >= last_sample_index
     if np.any(outside):
@@ -41,6 +49,6 @@ def clip_iava_above_last_sample_index(
         #       value that is still below the last sample
         iava[np.where(outside)] = np.nextafter(last_sample_index, -np.inf)
 
-    ensure_iava_is_unique(iava=iava)
+    _ensure_iava_is_unique(iava=iava)
 
     return

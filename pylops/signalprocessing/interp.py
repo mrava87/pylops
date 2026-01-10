@@ -7,8 +7,8 @@ import numpy as np
 from pylops import LinearOperator, aslinearoperator
 from pylops.basicoperators import Diagonal, MatrixMult, Restriction, Transpose
 from pylops.signalprocessing._interp_utils import (
-    clip_iava_above_last_sample_index,
-    ensure_iava_is_unique,
+    _clip_iava_above_last_sample_index,
+    _ensure_iava_is_unique,
 )
 from pylops.signalprocessing.interpspline import InterpCubicSpline
 from pylops.utils._internal import _value_or_sized_to_tuple
@@ -24,7 +24,7 @@ def _nearestinterp(
 ):
     """Nearest neighbour interpolation."""
     iava = np.round(iava).astype(int)
-    ensure_iava_is_unique(iava=iava)
+    _ensure_iava_is_unique(iava=iava)
     return (Restriction(dims, iava, axis=axis, dtype=dtype), iava)
 
 
@@ -47,7 +47,7 @@ def _linearinterp(
 
     # ensure that samples are not beyond the last sample, in that case set to
     # penultimate sample and raise a warning
-    clip_iava_above_last_sample_index(iava=iava, sample_size=sample_size)
+    _clip_iava_above_last_sample_index(iava=iava, sample_size=sample_size)
 
     # find indices and weights
     iva_l = ncp.floor(iava).astype(int)
@@ -73,7 +73,7 @@ def _sincinterp(
     ncp = get_array_module(iava)
 
     # TODO: is ``iava`` bound to an integer dtype
-    ensure_iava_is_unique(iava=iava)
+    _ensure_iava_is_unique(iava=iava)
 
     # create sinc interpolation matrix
     nreg = dims[axis]

@@ -5,7 +5,7 @@ import logging
 import numpy as np
 
 from pylops import LinearOperator
-from pylops.signalprocessing._interp_utils import ensure_iava_is_unique
+from pylops.signalprocessing._interp_utils import _ensure_iava_is_unique
 from pylops.utils.backend import get_add_at, get_array_module, to_numpy
 from pylops.utils.decorators import reshaped
 from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray, NDArray
@@ -133,7 +133,7 @@ class Bilinear(LinearOperator):
 
         ncp = get_array_module(iava)
         # check non-unique pairs (works only with numpy arrays)
-        ensure_iava_is_unique(
+        _ensure_iava_is_unique(
             iava=to_numpy(iava),
             axis=1,
         )
