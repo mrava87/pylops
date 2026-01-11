@@ -33,10 +33,9 @@ from pylops.utils.backend import (
     inplace_set,
 )
 from pylops.utils.signalprocessing import convmtx
-from pylops.utils.typing import NDArray, ShapeLike
+from pylops.utils.typing import NDArray, ShapeLike, Tavolinearization
 
 _linearizations = {"akirich": 3, "fatti": 3, "ps": 3}
-LinearizationsType = Literal["akirich", "fatti", "PS"]
 
 
 def PrestackLinearModelling(
@@ -45,7 +44,7 @@ def PrestackLinearModelling(
     vsvp: Union[float, NDArray] = 0.5,
     nt0: int = 1,
     spatdims: Optional[Union[int, ShapeLike]] = None,
-    linearization: LinearizationsType = "akirich",
+    linearization: Tavolinearization = "akirich",
     explicit: bool = False,
     kind: Literal["centered", "forward"] = "centered",
     name: Optional[str] = None,
@@ -229,7 +228,7 @@ def PrestackWaveletModelling(
     nwav: int,
     wavc: Optional[int] = None,
     vsvp: Union[float, NDArray] = 0.5,
-    linearization: Union[LinearizationsType, Callable] = "akirich",
+    linearization: Union[Tavolinearization, Callable] = "akirich",
     name: Optional[str] = None,
 ) -> LinearOperator:
     r"""Pre-stack linearized seismic modelling operator for wavelet.
@@ -358,7 +357,7 @@ def PrestackInversion(
     theta: NDArray,
     wav: NDArray,
     m0: Optional[NDArray] = None,
-    linearization: Union[LinearizationsType, List[LinearizationsType]] = "akirich",
+    linearization: Union[Tavolinearization, List[Tavolinearization]] = "akirich",
     explicit: bool = False,
     simultaneous: bool = False,
     epsI: Optional[float] = None,

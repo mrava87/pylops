@@ -9,7 +9,7 @@ __all__ = [
     "AVOLinearModelling",
 ]
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -19,7 +19,7 @@ from pylops import LinearOperator
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, Tavolinearization
 
 
 def zoeppritz_scattering(
@@ -650,7 +650,7 @@ class AVOLinearModelling(LinearOperator):
         vsvp: Union[float, NDArray] = 0.5,
         nt0: int = 1,
         spatdims: Optional[Union[int, Tuple[int]]] = None,
-        linearization: Literal["akirich", "fatti", "PS"] = "akirich",
+        linearization: Tavolinearization = "akirich",
         dtype: DTypeLike = "float64",
         name: str = "A",
     ) -> None:

@@ -13,7 +13,7 @@ from pylops.utils.backend import (
     inplace_set,
 )
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tderivkind
 
 
 class FirstDerivative(LinearOperator):
@@ -94,7 +94,7 @@ class FirstDerivative(LinearOperator):
         dims: Union[int, InputDimsLike],
         axis: int = -1,
         sampling: float = 1.0,
-        kind: str = "centered",
+        kind: Tderivkind = "centered",
         edge: bool = False,
         order: int = 3,
         dtype: DTypeLike = "float64",

@@ -1,6 +1,6 @@
 __all__ = ["CausalIntegration"]
 
-from typing import Union
+from typing import Literal, Union
 
 import numpy as np
 
@@ -101,7 +101,7 @@ class CausalIntegration(LinearOperator):
         dims: Union[int, InputDimsLike],
         axis: int = -1,
         sampling: float = 1,
-        kind: str = "full",
+        kind: Literal["full", "half", "trapezoidal"] = "full",
         removefirst: bool = False,
         dtype: DTypeLike = "float64",
         name: str = "C",

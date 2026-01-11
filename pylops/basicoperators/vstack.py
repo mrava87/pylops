@@ -24,7 +24,7 @@ from typing import Callable, Optional, Sequence
 from pylops import LinearOperator
 from pylops.basicoperators import MatrixMult, Zero
 from pylops.utils.backend import get_array_module, get_module, inplace_add, inplace_set
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, Tinoutengine
 
 
 def _matvec_rmatvec_map(op: Callable, x: NDArray) -> NDArray:
@@ -152,7 +152,7 @@ class VStack(LinearOperator):
         ops: Sequence[LinearOperator],
         nproc: int = 1,
         forceflat: bool = None,
-        inoutengine: Optional[tuple] = None,
+        inoutengine: Optional[Tinoutengine] = None,
         parallel_kind: str = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ) -> None:

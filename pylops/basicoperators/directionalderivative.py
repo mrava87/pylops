@@ -5,7 +5,7 @@ __all__ = [
 
 from pylops import LinearOperator
 from pylops.basicoperators import Diagonal, Gradient, Sum
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tderivkind
 
 
 class FirstDirectionalDerivative(LinearOperator):
@@ -79,7 +79,7 @@ class FirstDirectionalDerivative(LinearOperator):
         v: NDArray,
         sampling: int = 1,
         edge: bool = False,
-        kind: str = "centered",
+        kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
         name: str = "F",
     ):
@@ -88,7 +88,12 @@ class FirstDirectionalDerivative(LinearOperator):
         self.kind = kind
         self.v = v
         Op = self._calc_first_ddop(
-            dims=dims, sampling=sampling, edge=edge, kind=kind, dtype=dtype, v=v
+            dims=dims,
+            v=v,
+            sampling=sampling,
+            edge=edge,
+            kind=kind,
+            dtype=dtype,
         )
         super().__init__(Op=Op, name=name)
 
@@ -104,7 +109,7 @@ class FirstDirectionalDerivative(LinearOperator):
         v: NDArray,
         sampling: int,
         edge: bool,
-        kind: str,
+        kind: Tderivkind,
         dtype: DTypeLike,
     ):
         Gop = Gradient(dims, sampling=sampling, edge=edge, kind=kind, dtype=dtype)
@@ -138,6 +143,10 @@ class SecondDirectionalDerivative(LinearOperator):
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``).
+    kind : :obj:`str`, optional
+        .. versionadded:: 2.7.0
+
+        Derivative kind (``forward``, ``centered``, or ``backward``).
     dtype : :obj:`str`, optional
         Type of elements in input array.
 
@@ -177,15 +186,16 @@ class SecondDirectionalDerivative(LinearOperator):
         v: NDArray,
         sampling: int = 1,
         edge: bool = False,
+        kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
         name: str = "S",
     ):
-        self.dims = dims
-        self.v = v
         self.sampling = sampling
         self.edge = edge
+        self.kind = kind
+        self.v = v
         Op = self._calc_second_ddop(
-            dims=dims, v=v, sampling=sampling, edge=edge, dtype=dtype
+            dims=dims, v=v, sampling=sampling, edge=edge, kind=kind, dtype=dtype
         )
         super().__init__(Op=Op, name=name)
 
@@ -197,10 +207,15 @@ class SecondDirectionalDerivative(LinearOperator):
 
     @staticmethod
     def _calc_second_ddop(
-        dims: InputDimsLike, v: NDArray, sampling: int, edge: bool, dtype: DTypeLike
+        dims: InputDimsLike,
+        v: NDArray,
+        sampling: int,
+        edge: bool,
+        kind: Tderivkind,
+        dtype: DTypeLike,
     ):
         Dop = FirstDirectionalDerivative(
-            dims=dims, v=v, sampling=sampling, edge=edge, dtype=dtype
+            dims=dims, v=v, sampling=sampling, edge=edge, kind=kind, dtype=dtype
         )
         ddop = -Dop.H * Dop
         return ddop

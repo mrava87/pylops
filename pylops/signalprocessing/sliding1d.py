@@ -143,7 +143,7 @@ class Sliding1D(LinearOperator):
 
     Attributes
     ----------
-    taps: :obj:`numpy.ndarray`
+    taps : :obj:`numpy.ndarray`
         Set of tapers applied to each window (only if ``tapertype`` is not ``None``)
     simOp : :obj:`bool`
         Operator ``Op`` is applied to all windows simultaneously (``True``)

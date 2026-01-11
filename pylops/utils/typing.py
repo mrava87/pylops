@@ -9,7 +9,7 @@ __all__ = [
     "TensorTypeLike",
 ]
 
-from typing import Sequence, Tuple, Union
+from typing import Literal, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -32,3 +32,9 @@ if torch_enabled:
     TensorTypeLike = torch.Tensor
 else:
     TensorTypeLike = None
+
+Tavolinearization = Literal["akirich", "fatti", "PS"]
+Tderivkind = Literal["forward", "centered", "backward"]
+Tengine = Literal["numpy", "cupy", "jax"]
+Tinoutengine = Tuple[Tengine, Tengine]
+Tparallel_kind = Literal["multiproc", "multithread"]

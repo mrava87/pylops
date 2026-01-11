@@ -4,7 +4,7 @@ from typing import Iterable, Optional
 
 from pylops import LinearOperator
 from pylops.basicoperators import HStack, VStack
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, Tparallel_kind
 
 
 class _Block(LinearOperator):
@@ -154,7 +154,7 @@ class Block(_Block):
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
         forceflat: bool = None,
-        parallel_kind: str = "multiproc",
+        parallel_kind: Tparallel_kind = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ):
         super().__init__(
