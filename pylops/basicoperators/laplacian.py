@@ -6,7 +6,7 @@ from typing import Tuple
 from pylops import LinearOperator
 from pylops.basicoperators import SecondDerivative
 from pylops.utils.backend import get_normalize_axis_index
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tderivkind
 
 
 class Laplacian(LinearOperator):
@@ -80,7 +80,7 @@ class Laplacian(LinearOperator):
         weights: Tuple[float, ...] = (1, 1),
         sampling: Tuple[float, ...] = (1, 1),
         edge: bool = False,
-        kind: str = "centered",
+        kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
         name: str = "L",
     ):
