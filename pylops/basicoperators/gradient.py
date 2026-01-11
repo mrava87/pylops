@@ -5,7 +5,7 @@ from typing import Union
 from pylops import LinearOperator
 from pylops.basicoperators import FirstDerivative, VStack
 from pylops.utils._internal import _value_or_sized_to_tuple
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tderivkind
 
 
 class Gradient(LinearOperator):
@@ -81,7 +81,7 @@ class Gradient(LinearOperator):
         dims: Union[int, InputDimsLike],
         sampling: int = 1,
         edge: bool = False,
-        kind: str = "centered",
+        kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
         name: str = "G",
     ):
