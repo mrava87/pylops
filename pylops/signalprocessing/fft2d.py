@@ -11,7 +11,7 @@ from pylops.signalprocessing._baseffts import _BaseFFTND, _FFTNorms
 from pylops.utils import deps
 from pylops.utils.backend import get_array_module
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
 
