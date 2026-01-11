@@ -231,7 +231,7 @@ class _FFT_scipy(_BaseFFT):
             y = scipy.fft.fftshift(y, axes=self.axis)
         return y
 
-    def __truediv__(self, y):
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)
@@ -484,7 +484,7 @@ class _FFT_mklfft(_BaseFFT):
             y = scipy.fft.fftshift(y, axes=self.axis)
         return y
 
-    def __truediv__(self, y):
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)
