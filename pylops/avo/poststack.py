@@ -6,7 +6,6 @@ __all__ = [
 from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 from scipy.sparse.linalg import lsqr
 
 from pylops import (

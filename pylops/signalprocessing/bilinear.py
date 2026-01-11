@@ -3,7 +3,6 @@ __all__ = ["Bilinear"]
 import logging
 
 import numpy as np
-import numpy.typing as npt
 
 from pylops import LinearOperator
 from pylops.utils.backend import get_add_at, get_array_module, to_numpy

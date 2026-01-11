@@ -12,7 +12,6 @@ __all__ = [
 from typing import List, Optional, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 from numpy import cos, sin, tan
 
 from pylops import LinearOperator

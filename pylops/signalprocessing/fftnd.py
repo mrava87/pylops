@@ -4,7 +4,6 @@ import warnings
 from typing import Optional, Sequence, Union
 
 import numpy as np
-import numpy.typing as npt
 import scipy.fft
 
 from pylops import LinearOperator
