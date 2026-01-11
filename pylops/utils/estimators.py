@@ -9,20 +9,20 @@ from types import ModuleType
 from typing import Optional, Tuple
 
 import numpy
-import numpy.typing as npt
 
 from pylops.utils.backend import get_module
+from pylops.utils.typing import NDArray
 
 
 def _sampler_gaussian(
     m: float, batch_size: int, backend_module: ModuleType = numpy
-) -> Tuple[float, npt.ArrayLike]:
+) -> Tuple[float, NDArray]:
     return backend_module.random.randn(m, batch_size)
 
 
 def _sampler_rayleigh(
     m: float, batch_size: int, backend_module: ModuleType = numpy
-) -> npt.ArrayLike:
+) -> NDArray:
     z = backend_module.random.randn(m, batch_size)
     for i in range(batch_size):
         z[:, i] *= m / backend_module.dot(z[:, i].T, z[:, i])
@@ -31,7 +31,7 @@ def _sampler_rayleigh(
 
 def _sampler_rademacher(
     m: float, batch_size: int, backend_module: ModuleType = numpy
-) -> npt.ArrayLike:
+) -> NDArray:
     return 2 * backend_module.random.binomial(1, 0.5, size=(m, batch_size)) - 1
 
 

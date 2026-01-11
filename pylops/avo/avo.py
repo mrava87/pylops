@@ -29,7 +29,7 @@ def zoeppritz_scattering(
     vp0: float,
     vs0: float,
     rho0: float,
-    theta1: Union[float, npt.ArrayLike],
+    theta1: Union[float, NDArray],
 ) -> NDArray:
     r"""Zoeppritz solution.
 
@@ -250,12 +250,12 @@ def zoeppritz_pp(
 
 
 def approx_zoeppritz_pp(
-    vp1: Union[List, Tuple, npt.ArrayLike],
-    vs1: Union[List, Tuple, npt.ArrayLike],
-    rho1: Union[List, Tuple, npt.ArrayLike],
-    vp0: Union[List, Tuple, npt.ArrayLike],
-    vs0: Union[List, Tuple, npt.ArrayLike],
-    rho0: Union[List, Tuple, npt.ArrayLike],
+    vp1: Union[List, Tuple, NDArray],
+    vs1: Union[List, Tuple, NDArray],
+    rho1: Union[List, Tuple, NDArray],
+    vp0: Union[List, Tuple, NDArray],
+    vs0: Union[List, Tuple, NDArray],
+    rho0: Union[List, Tuple, NDArray],
     theta1: Union[float, NDArray],
 ) -> NDArray:
     """PP reflection coefficient from the approximate Zoeppritz equation.
@@ -335,7 +335,7 @@ def approx_zoeppritz_pp(
 
 
 def akirichards(
-    theta: npt.ArrayLike,
+    theta: NDArray,
     vsvp: Union[float, NDArray],
     n: int = 1,
 ) -> Tuple[NDArray, NDArray, NDArray]:
@@ -409,7 +409,7 @@ def akirichards(
 
 
 def fatti(
-    theta: npt.ArrayLike,
+    theta: NDArray,
     vsvp: Union[float, NDArray],
     n: int = 1,
 ) -> Tuple[NDArray, NDArray, NDArray]:
@@ -485,7 +485,7 @@ def fatti(
 
 
 def ps(
-    theta: npt.ArrayLike,
+    theta: NDArray,
     vsvp: Union[float, NDArray],
     n: int = 1,
 ) -> Tuple[NDArray, NDArray, NDArray]:

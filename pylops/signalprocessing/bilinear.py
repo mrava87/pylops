@@ -13,7 +13,7 @@ from pylops.utils.typing import DTypeLike, InputDimsLike, IntNDArray, NDArray
 logger = logging.getLogger(__name__)
 
 
-def _checkunique(iava: npt.ArrayLike) -> None:
+def _checkunique(iava: NDArray) -> None:
     """Check that vector as only unique values"""
     _, count = np.unique(iava, axis=1, return_counts=True)
     if np.any(count > 1):

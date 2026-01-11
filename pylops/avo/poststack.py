@@ -136,7 +136,7 @@ def _PoststackLinearModelling(
 
 
 def PoststackLinearModelling(
-    wav: npt.ArrayLike,
+    wav: NDArray,
     nt0: int,
     spatdims: Optional[Union[int, ShapeLike]] = None,
     explicit: bool = False,
@@ -224,7 +224,7 @@ def PoststackLinearModelling(
 
 def PoststackInversion(
     data: NDArray,
-    wav: npt.ArrayLike,
+    wav: NDArray,
     m0: Optional[NDArray] = None,
     explicit: bool = False,
     simultaneous: bool = False,

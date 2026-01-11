@@ -5,7 +5,6 @@ import warnings
 from typing import Optional, Union
 
 import numpy as np
-import numpy.typing as npt
 import scipy.fft
 
 from pylops import LinearOperator
@@ -134,7 +133,7 @@ class _FFT_numpy(_BaseFFT):
         y = y.astype(self.rdtype)
         return y
 
-    def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)
@@ -393,7 +392,7 @@ class _FFT_fftw(_BaseFFT):
             y = np.real(y)
         return y
 
-    def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is _FFTNorms.ORTHO:
             return self._rmatvec(y)
         return self._rmatvec(y) / self._scale

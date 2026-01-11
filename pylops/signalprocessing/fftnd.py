@@ -120,7 +120,7 @@ class _FFTND_numpy(_BaseFFTND):
             y = ncp.fft.fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
-    def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)
@@ -218,7 +218,7 @@ class _FFTND_scipy(_BaseFFTND):
             y = sp_fft.fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
-    def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)
@@ -318,7 +318,7 @@ class _FFTND_mklfft(_BaseFFTND):
             y = scipy.fft.fftshift(y, axes=self.axes[self.ifftshift_before])
         return y
 
-    def __truediv__(self, y: npt.ArrayLike) -> npt.ArrayLike:
+    def __truediv__(self, y: NDArray) -> NDArray:
         if self.norm is not _FFTNorms.ORTHO:
             return self._rmatvec(y) / self._scale
         return self._rmatvec(y)

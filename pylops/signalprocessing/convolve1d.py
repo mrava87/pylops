@@ -4,7 +4,6 @@ from functools import partial
 from typing import Callable, Tuple, Union
 
 import numpy as np
-import numpy.typing as npt
 
 from pylops import LinearOperator
 from pylops.utils._internal import _value_or_sized_to_tuple
@@ -20,7 +19,7 @@ from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 
 def _choose_convfunc(
-    x: npt.ArrayLike,
+    x: NDArray,
     method: Union[None, str],
     dims: Union[int, InputDimsLike],
     axis: int = -1,
