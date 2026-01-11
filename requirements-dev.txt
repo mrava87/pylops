@@ -6,8 +6,8 @@ PyWavelets
 spgl1
 scikit-fmm
 sympy
-devito
-# dtcwt (until numpy>=2.0.0 is supported)
+# devito (until numpy>=2.0.0 is supported)
+# dtcwt (until numpy>=2.3.3 is supported)
 astra-toolbox>=2.2.0
 matplotlib
 ipython
