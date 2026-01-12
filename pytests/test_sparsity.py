@@ -95,8 +95,10 @@ par5j = {
 
 def test_IRLS_unknown_kind():
     """Check error is raised if unknown kind is passed"""
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError) as exception_info:
         _ = irls(Identity(5), np.ones(5), 10, kind="foo")
+    error_message = str(exception_info.value)
+    assert "kind must be model" in error_message
 
 
 @pytest.mark.parametrize("par", [(par3), (par4), (par3j), (par4j)])
@@ -331,18 +333,28 @@ def test_OMP_stopping(par):
 
 def test_ISTA_FISTA_unknown_threshkind():
     """Check error is raised if unknown threshkind is passed"""
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError) as exception_info:
         _ = ista(Identity(5), np.ones(5), 10, threshkind="foo")
-    with pytest.raises(NotImplementedError):
+    error_message = str(exception_info.value)
+    assert "threshkind must be" in error_message
+
+    with pytest.raises(NotImplementedError) as exception_info:
         _ = fista(Identity(5), np.ones(5), 10, threshkind="foo")
+    error_message = str(exception_info.value)
+    assert "threshkind must be" in error_message
 
 
 def test_ISTA_FISTA_missing_perc():
     """Check error is raised if perc=None and threshkind is percentile based"""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exception_info:
         _ = ista(Identity(5), np.ones(5), 10, perc=None, threshkind="soft-percentile")
-    with pytest.raises(ValueError):
+    error_message = str(exception_info.value)
+    assert "Provide a percentile" in error_message
+
+    with pytest.raises(ValueError) as exception_info:
         _ = fista(Identity(5), np.ones(5), 10, perc=None, threshkind="soft-percentile")
+    error_message = str(exception_info.value)
+    assert "Provide a percentile" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1), (par3), (par5), (par1j), (par3j), (par5j)])
@@ -361,7 +373,7 @@ def test_ISTA_FISTA_alpha_too_high(par):
 
     for solver in [ista, fista]:
         # check that exception is raised
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as exception_info:
             _, _, _ = solver(
                 Aop,
                 y,
@@ -371,6 +383,8 @@ def test_ISTA_FISTA_alpha_too_high(par):
                 monitorres=True,
                 tol=0,
             )
+        error_message = str(exception_info.value)
+        assert "due to residual increasing" in error_message
 
         # check that CostNanInfCallback catches cost=np.inf
         _, _, cost = solver(

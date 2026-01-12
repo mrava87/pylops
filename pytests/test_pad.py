@@ -24,15 +24,19 @@ np.random.seed(10)
 @pytest.mark.parametrize("par", [(par1)])
 def test_Pad_1d_negative(par):
     """Check error is raised when pad has negative number"""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exception_info:
         _ = Pad(dims=par["ny"], pad=(-10, 0))
+    error_message = str(exception_info.value)
+    assert "Padding must be positive" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1)])
 def test_Pad_2d_negative(par):
     """Check error is raised when pad has negative number for 2d"""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exception_info:
         _ = Pad(dims=(par["ny"], par["nx"]), pad=((-10, 0), (3, -5)))
+    error_message = str(exception_info.value)
+    assert "Padding must be positive" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1)])

@@ -119,10 +119,15 @@ par8 = {
 )
 def test_unknown_engine():
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError) as exception_info:
         _ = Radon2D(None, None, None, engine="foo")
-    with pytest.raises(KeyError):
+    error_message = str(exception_info.value)
+    assert "engine must be numpy" in error_message
+
+    with pytest.raises(KeyError) as exception_info:
         _ = Radon3D(None, None, None, None, None, engine="foo")
+    error_message = str(exception_info.value)
+    assert "engine must be numpy" in error_message
 
 
 @pytest.mark.skipif(

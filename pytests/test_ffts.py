@@ -289,14 +289,38 @@ np.random.seed(5)
 @pytest.mark.parametrize("par", [par1])
 def test_unknown_engine(par):
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError) as exception_info:
         _ = FFT(
-            dims=[par["nt"]],
+            dims=(par["nt"],),
             nfft=par["nfft"],
             sampling=0.005,
             real=par["real"],
             engine="foo",
         )
+    error_message = str(exception_info.value)
+    assert "engine must be" in error_message
+
+    with pytest.raises(NotImplementedError) as exception_info:
+        _ = FFT2D(
+            dims=(par["nx"], par["nt"]),
+            nfft=(par["nfft"], par["nfft"]),
+            sampling=0.005,
+            real=par["real"],
+            engine="foo",
+        )
+    error_message = str(exception_info.value)
+    assert "engine must be" in error_message
+
+    with pytest.raises(NotImplementedError) as exception_info:
+        _ = FFTND(
+            dims=(par["ny"], par["nx"], par["nt"]),
+            nfft=(par["nfft"], par["nfft"], par["nfft"]),
+            sampling=0.005,
+            real=par["real"],
+            engine="foo",
+        )
+    error_message = str(exception_info.value)
+    assert "engine must be" in error_message
 
 
 dtype_precision = [
