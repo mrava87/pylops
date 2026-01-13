@@ -555,6 +555,6 @@ def FFTND(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, scipy or mkl_fft")
+        raise ValueError("engine must be numpy, scipy or mkl_fft")
     f.name = name
     return f

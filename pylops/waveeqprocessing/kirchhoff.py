@@ -1075,7 +1075,7 @@ class Kirchhoff(LinearOperator):
 
     def _register_multiplications(self, engine: str) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
-            raise KeyError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if engine == "numba" and jit_message is None:
             numba_opts = dict(
                 nopython=True, nogil=True, parallel=parallel
