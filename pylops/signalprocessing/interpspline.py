@@ -710,13 +710,13 @@ class InterpCubicSpline(LinearOperator):
     difference matrix :math:`\mathbf{D}_{2}` originate from the linear system
 
     .. math::
-        \mathbf{B}\mathbf{m}=\mathbf{D}_{2}\mathbf{y}
+        \mathbf{B}\mathbf{m}=\mathbf{D}_{2}\mathbf{x}
 
     that needs to be solved for :math:`\mathbf{m}`, the second order derivatives of the
     cubic spline at its knots, by
 
     .. math::
-        \mathbf{m}=\mathbf{B}^{-1}\mathbf{D}_{2}\mathbf{y}
+        \mathbf{m}=\mathbf{B}^{-1}\mathbf{D}_{2}\mathbf{x}
 
     Assuming :math:`\mathbf{x}` was sampled at equidistant knots, :math:`\mathbf{B}`
     simplifies to
