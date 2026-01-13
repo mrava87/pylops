@@ -159,7 +159,7 @@ class NonStationaryConvolve2D(LinearOperator):
         name: str = "C",
     ) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
-            raise NotImplementedError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if hs.shape[2] % 2 == 0 or hs.shape[3] % 2 == 0:
             raise ValueError("filters hs must have odd length")
         if len(np.unique(np.diff(ihx))) > 1 or len(np.unique(np.diff(ihz))) > 1:
@@ -398,7 +398,7 @@ class NonStationaryFilters2D(LinearOperator):
         name: str = "C",
     ) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
-            raise NotImplementedError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if hshape[0] % 2 == 0 or hshape[1] % 2 == 0:
             raise ValueError("filters hs must have odd length")
         if len(np.unique(np.diff(ihx))) > 1 or len(np.unique(np.diff(ihz))) > 1:

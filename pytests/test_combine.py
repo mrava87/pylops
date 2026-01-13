@@ -39,25 +39,29 @@ def test_VStack_incosistent_columns(par):
     """
     G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
     G2 = np.random.normal(0, 10, (par["ny"], par["nx"] + 1)).astype(par["dtype"])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exception_info:
         VStack(
             [MatrixMult(G1, dtype=par["dtype"]), MatrixMult(G2, dtype=par["dtype"])],
             dtype=par["dtype"],
         )
+    error_message = str(exception_info.value)
+    assert "different number of columns" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1)])
-def test_HStack_incosistent_columns(par):
+def test_HStack_incosistent_rows(par):
     """Check error is raised if operators with different number of rows
-    are passed to VStack
+    are passed to HStack
     """
     G1 = np.random.normal(0, 10, (par["ny"], par["nx"])).astype(par["dtype"])
     G2 = np.random.normal(0, 10, (par["ny"] + 1, par["nx"])).astype(par["dtype"])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exception_info:
         HStack(
             [MatrixMult(G1, dtype=par["dtype"]), MatrixMult(G2, dtype=par["dtype"])],
             dtype=par["dtype"],
         )
+    error_message = str(exception_info.value)
+    assert "different number of rows" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1), (par2), (par1j), (par2j)])

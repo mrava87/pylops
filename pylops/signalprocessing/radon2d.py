@@ -201,7 +201,7 @@ def Radon2D(
 
     Raises
     ------
-    KeyError
+    ValueError
         If ``engine`` is neither ``numpy`` nor ``numba``
     NotImplementedError
         If ``kind`` is not ``linear``, ``parabolic``, or ``hyperbolic``
@@ -243,7 +243,7 @@ def Radon2D(
     """
     # engine
     if engine not in ["numpy", "numba"]:
-        raise KeyError("engine must be numpy or numba")
+        raise ValueError("engine must be numpy or numba")
     if engine == "numba" and jit_message is not None:
         engine = "numpy"
     # axes

@@ -203,10 +203,9 @@ class Kirchhoff(LinearOperator):
     Raises
     ------
     NotImplementedError
-        If ``mode`` is neither ``analytic``, ``eikonal``, or ``byot``.
-
-    NotImplementedError
         If ``engine="cuda"`` and ``trav`` is provided as a single table
+    ValueError
+        If ``mode`` is neither ``analytic``, ``eikonal``, or ``byot``.
 
     Notes
     -----
@@ -432,7 +431,7 @@ class Kirchhoff(LinearOperator):
                             axis=np.arange(self.ndims),
                         )
         else:
-            raise NotImplementedError("method must be analytic, eikonal or byot")
+            raise ValueError("method must be analytic, eikonal or byot")
 
         # compute angles with vertical
         if self.dynamic:
@@ -710,7 +709,7 @@ class Kirchhoff(LinearOperator):
             else:
                 raise NotImplementedError(skfmm_message)
         else:
-            raise NotImplementedError("method must be analytic or eikonal")
+            raise ValueError("method must be analytic or eikonal")
 
         # compute traveltime gradients at image points
         trav_srcs_grad = np.gradient(
@@ -1075,7 +1074,7 @@ class Kirchhoff(LinearOperator):
 
     def _register_multiplications(self, engine: str) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
-            raise KeyError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if engine == "numba" and jit_message is None:
             numba_opts = dict(
                 nopython=True, nogil=True, parallel=parallel

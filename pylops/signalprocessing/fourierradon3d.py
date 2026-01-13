@@ -113,7 +113,7 @@ class FourierRadon3D(LinearOperator):
 
     Raises
     ------
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``numba``, nor ``cuda``.
     ValueError
         If ``kind`` is not a tuple of two elements.
@@ -174,7 +174,7 @@ class FourierRadon3D(LinearOperator):
     ) -> None:
         # engine
         if engine not in ["numpy", "numba", "cuda"]:
-            raise NotImplementedError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if engine == "numba" and jit_message is not None:
             engine = "numpy"
 

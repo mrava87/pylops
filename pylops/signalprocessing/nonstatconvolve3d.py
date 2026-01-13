@@ -137,7 +137,7 @@ class NonStationaryConvolve3D(LinearOperator):
         name: str = "C",
     ) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
-            raise NotImplementedError("engine must be numpy or numba or cuda")
+            raise ValueError("engine must be numpy or numba or cuda")
         if hs.shape[3] % 2 == 0 or hs.shape[4] % 2 == 0 or hs.shape[5] % 2 == 0:
             raise ValueError("filters hs must have odd length")
         if (

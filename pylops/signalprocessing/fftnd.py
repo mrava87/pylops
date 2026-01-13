@@ -479,7 +479,7 @@ def FFTND(
         - If ``nffts`` or ``sampling`` are not either a single value or tuple with
           the same dimension ``axes``.
         - If ``norm`` is not one of "ortho", "none", or "1/n".
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``scipy`` nor ``mkl_fft``.
 
     Notes
@@ -555,6 +555,6 @@ def FFTND(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, scipy or mkl_fft")
+        raise ValueError("engine must be numpy, scipy or mkl_fft")
     f.name = name
     return f

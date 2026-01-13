@@ -354,10 +354,14 @@ def test_non_flattened_arrays(par):
     assert_array_equal(Y_S, (S @ D @ X_1d).reshape((*S.dimsd, -1)))
 
     with pylops.disabled_ndarray_multiplication():
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as exception_info:
             D @ x_nd
-        with pytest.raises(ValueError):
+        error_message = str(exception_info.value)
+        assert "only be applied to 1D" in error_message
+        with pytest.raises(ValueError) as exception_info:
             D @ X_nd
+        error_message = str(exception_info.value)
+        assert "only be applied to 1D" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1), (par2j)])

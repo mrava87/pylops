@@ -626,7 +626,7 @@ def FFT(
     ValueError
         - If ``dims`` is provided and ``axis`` is bigger than ``len(dims)``.
         - If ``norm`` is not one of "ortho", "none", or "1/n".
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``fftw``, ``scipy`` nor ``mkl_fft``.
 
     See Also
@@ -720,6 +720,6 @@ def FFT(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, scipy, fftw, or mkl_fft")
+        raise ValueError("engine must be numpy, scipy, fftw, or mkl_fft")
     f.name = name
     return f

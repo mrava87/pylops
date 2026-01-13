@@ -1689,8 +1689,8 @@ class ISTA(Solver):
             "soft-percentile",
             "half-percentile",
         ]:
-            raise NotImplementedError(
-                "threshkind should be hard, soft, half,"
+            raise ValueError(
+                "threshkind must be hard, soft, half,"
                 "hard-percentile, soft-percentile, "
                 "or half-percentile"
             )
