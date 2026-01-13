@@ -156,7 +156,7 @@ def Interp(
         Currently, ``"nearest"``, ``"linear"``, ``"sinc"``, and ``"cubic_spline"`` are
         available.
 
-        .. versionadded:: 2.0.0
+        .. versionadded:: 2.7.0
 
         The ``"cubic_spline"``-interpolation was added.
     dtype : :obj:`str`, optional
