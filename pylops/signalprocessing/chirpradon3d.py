@@ -76,6 +76,10 @@ class ChirpRadon3D(LinearOperator):
     shape : :obj:`tuple`
         Operator shape.
 
+    Raises
+    ------
+    ValueError
+        If ``engine`` is neither ``numpy`` nor ``fftw``
 
     Notes
     -----

@@ -258,7 +258,7 @@ class Convolve1D(LinearOperator):
     ------
     ValueError
         If ``offset`` is bigger than ``len(h) - 1``
-    NotImplementedError
+    ValueError
         If ``method`` provided is not allowed
 
     Notes

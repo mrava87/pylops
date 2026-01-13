@@ -224,10 +224,10 @@ def Radon3D(
 
     Raises
     ------
-    KeyError
-        If ``engine`` is neither ``numpy`` nor ``numba``
     NotImplementedError
         If ``kind`` is not ``linear``, ``parabolic``, or ``hyperbolic``
+    ValueError
+        If ``engine`` is neither ``numpy`` nor ``numba``
 
     See Also
     --------

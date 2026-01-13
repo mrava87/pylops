@@ -127,10 +127,10 @@ class Spread(LinearOperator):
 
     Raises
     ------
-    KeyError
-        If ``engine`` is neither ``numpy`` nor ``numba``
     NotImplementedError
         If both ``table`` and ``fh`` are not provided
+    ValueError
+        If ``engine`` is neither ``numpy`` nor ``numba``
     ValueError
         If ``table`` has shape different from
         :math:`[n_{x_0} \times n_{t_0} \times n_x]`

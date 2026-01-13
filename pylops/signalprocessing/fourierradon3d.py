@@ -113,7 +113,7 @@ class FourierRadon3D(LinearOperator):
 
     Raises
     ------
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``numba``, nor ``cuda``.
     ValueError
         If ``kind`` is not a tuple of two elements.

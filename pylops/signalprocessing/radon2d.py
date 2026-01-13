@@ -201,7 +201,7 @@ def Radon2D(
 
     Raises
     ------
-    KeyError
+    ValueError
         If ``engine`` is neither ``numpy`` nor ``numba``
     NotImplementedError
         If ``kind`` is not ``linear``, ``parabolic``, or ``hyperbolic``

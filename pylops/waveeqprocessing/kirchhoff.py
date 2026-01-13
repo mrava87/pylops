@@ -203,10 +203,9 @@ class Kirchhoff(LinearOperator):
     Raises
     ------
     NotImplementedError
-        If ``mode`` is neither ``analytic``, ``eikonal``, or ``byot``.
-
-    NotImplementedError
         If ``engine="cuda"`` and ``trav`` is provided as a single table
+    ValueError
+        If ``mode`` is neither ``analytic``, ``eikonal``, or ``byot``.
 
     Notes
     -----

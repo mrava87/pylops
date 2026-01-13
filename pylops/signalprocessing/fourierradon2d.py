@@ -97,7 +97,7 @@ class FourierRadon2D(LinearOperator):
 
     Raises
     ------
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``numba``, nor ``cuda``.
 
     Notes
