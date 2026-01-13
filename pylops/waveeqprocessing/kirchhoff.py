@@ -432,7 +432,7 @@ class Kirchhoff(LinearOperator):
                             axis=np.arange(self.ndims),
                         )
         else:
-            raise NotImplementedError("method must be analytic, eikonal or byot")
+            raise ValueError("method must be analytic, eikonal or byot")
 
         # compute angles with vertical
         if self.dynamic:
@@ -710,7 +710,7 @@ class Kirchhoff(LinearOperator):
             else:
                 raise NotImplementedError(skfmm_message)
         else:
-            raise NotImplementedError("method must be analytic or eikonal")
+            raise ValueError("method must be analytic or eikonal")
 
         # compute traveltime gradients at image points
         trav_srcs_grad = np.gradient(

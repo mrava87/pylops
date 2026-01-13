@@ -333,12 +333,12 @@ def test_OMP_stopping(par):
 
 def test_ISTA_FISTA_unknown_threshkind():
     """Check error is raised if unknown threshkind is passed"""
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = ista(Identity(5), np.ones(5), 10, threshkind="foo")
     error_message = str(exception_info.value)
     assert "threshkind must be" in error_message
 
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = fista(Identity(5), np.ones(5), 10, threshkind="foo")
     error_message = str(exception_info.value)
     assert "threshkind must be" in error_message

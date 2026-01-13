@@ -67,7 +67,7 @@ par4 = {
 
 def test_unknown_engine2D():
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = FourierRadon2D(None, None, None, None, engine="foo")
     error_message = str(exception_info.value)
     assert "engine must be" in error_message
@@ -75,7 +75,7 @@ def test_unknown_engine2D():
 
 def test_unknown_engine3D():
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = FourierRadon3D(None, None, None, None, None, None, engine="foo")
     error_message = str(exception_info.value)
     assert "engine must be" in error_message

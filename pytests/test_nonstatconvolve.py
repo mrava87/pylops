@@ -167,7 +167,7 @@ def test_ih_irregular(par):
 @pytest.mark.parametrize("par", [(par_2d)])
 def test_unknown_engine_2d(par):
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = NonStationaryConvolve2D(
             dims=(par["nx"], par["nz"]),
             hs=h2ns,
@@ -178,7 +178,7 @@ def test_unknown_engine_2d(par):
     error_message = str(exception_info.value)
     assert "engine must be numpy" in error_message
 
-    with pytest.raises(NotImplementedError) as exception_info:
+    with pytest.raises(ValueError) as exception_info:
         _ = NonStationaryFilters2D(
             inp=np.ones((par["nx"], par["nz"])),
             hshape=(nfilts[0] - 1, nfilts[1] - 1),
