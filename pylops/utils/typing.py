@@ -19,12 +19,15 @@ from pylops.utils.deps import torch_enabled
 if torch_enabled:
     import torch
 
-IntNDArray = npt.NDArray[np.int_]
-NDArray = npt.NDArray
+
+NDArray = npt.NDArray[np.number]
 ArrayLike = npt.ArrayLike
+IntNDArray = npt.NDArray[np.integer]
+FloatingNDArray = npt.NDArray[np.floating]
+InexactNDArray = npt.NDArray[np.inexact]  # float or complex
 
 InputDimsLike = Union[Sequence[int], IntNDArray]
-SamplingLike = Union[Sequence[float], NDArray]
+SamplingLike = Union[Sequence[float], FloatingNDArray]
 ShapeLike = Tuple[int, ...]
 DTypeLike = npt.DTypeLike
 
