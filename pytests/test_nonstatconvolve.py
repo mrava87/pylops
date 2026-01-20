@@ -102,72 +102,60 @@ par_2d = {
 @pytest.mark.parametrize("par", [(par_2d)])
 def test_even_filter(par):
     """Check error is raised if filter has even size"""
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="filters hs must have odd length"):
         _ = NonStationaryConvolve1D(
             dims=par["nx"],
             hs=h1ns[..., :-1],
             ih=(int(par["nx"] // 4), int(2 * par["nx"] // 4), int(3 * par["nx"] // 4)),
         )
-    error_message = str(exception_info.value)
-    assert "filters hs must have odd length" in error_message
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="filters hs must have odd length"):
         _ = NonStationaryConvolve2D(
             dims=(par["nx"], par["nz"]),
             hs=h2ns[..., :-1],
             ihx=(int(par["nx"] // 4), int(2 * par["nx"] // 4), int(3 * par["nx"] // 4)),
             ihz=(int(par["nz"] // 4), int(3 * par["nz"] // 4)),
         )
-    error_message = str(exception_info.value)
-    assert "filters hs must have odd length" in error_message
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="filters hs must have odd length"):
         _ = NonStationaryFilters1D(
             inp=np.arange(par["nx"]),
             hsize=nfilts[0] - 1,
             ih=(int(par["nx"] // 4), int(2 * par["nx"] // 4), int(3 * par["nx"] // 4)),
         )
-    error_message = str(exception_info.value)
-    assert "filters hs must have odd length" in error_message
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="filters hs must have odd length"):
         _ = NonStationaryFilters2D(
             inp=np.ones((par["nx"], par["nz"])),
             hshape=(nfilts[0] - 1, nfilts[1] - 1),
             ihx=(int(par["nx"] // 4), int(2 * par["nx"] // 4), int(3 * par["nx"] // 4)),
             ihz=(int(par["nz"] // 4), int(3 * par["nz"] // 4)),
         )
-    error_message = str(exception_info.value)
-    assert "filters hs must have odd length" in error_message
 
 
 @pytest.mark.parametrize("par", [(par_2d)])
 def test_ih_irregular(par):
     """Check error is raised if ih (or ihx/ihz) are irregularly sampled"""
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="must be regularly sampled"):
         _ = NonStationaryConvolve1D(
             dims=par["nx"],
             hs=h1ns,
             ih=(10, 11, 15),
         )
-    error_message = str(exception_info.value)
-    assert "must be regularly sampled" in error_message
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="must be regularly sampled"):
         _ = NonStationaryConvolve2D(
             dims=(par["nx"], par["nz"]),
             hs=h2ns,
             ihx=(10, 11, 15),
             ihz=(int(par["nz"] // 4), int(3 * par["nz"] // 4)),
         )
-    error_message = str(exception_info.value)
-    assert "must be regularly sampled" in error_message
 
 
 @pytest.mark.parametrize("par", [(par_2d)])
 def test_unknown_engine_2d(par):
     """Check error is raised if unknown engine is passed"""
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="engine must be numpy"):
         _ = NonStationaryConvolve2D(
             dims=(par["nx"], par["nz"]),
             hs=h2ns,
@@ -175,10 +163,8 @@ def test_unknown_engine_2d(par):
             ihz=(int(par["nz"] // 3), int(2 * par["nz"] // 3)),
             engine="foo",
         )
-    error_message = str(exception_info.value)
-    assert "engine must be numpy" in error_message
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="engine must be numpy"):
         _ = NonStationaryFilters2D(
             inp=np.ones((par["nx"], par["nz"])),
             hshape=(nfilts[0] - 1, nfilts[1] - 1),
@@ -186,8 +172,6 @@ def test_unknown_engine_2d(par):
             ihz=(int(par["nz"] // 3), int(2 * par["nz"] // 3)),
             engine="foo",
         )
-    error_message = str(exception_info.value)
-    assert "engine must be numpy" in error_message
 
 
 @pytest.mark.parametrize("par", [(par1_1d), (par2_1d)])
