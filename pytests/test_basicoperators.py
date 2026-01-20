@@ -592,10 +592,8 @@ def test_Sum2D_forceflat(par):
     assert y.shape == (par["ny"],)
     assert xadj.shape == (par["ny"], par["nx"])
 
-    with pytest.raises(ValueError) as exception_info:
+    with pytest.raises(ValueError, match="Operators have conflicting forceflat"):
         Sop_True * Sop_False.H
-    error_message = str(exception_info.value)
-    assert "Operators have conflicting forceflat" in error_message
 
     Sop = Sop_True * Sop_None.H
     assert Sop.forceflat is True
