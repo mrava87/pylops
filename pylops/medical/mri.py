@@ -43,10 +43,9 @@ class MRI2D(LinearOperator):
     perc_center: :obj:`float`
         Percentage of total lines to retain in the center.
     engine : :obj:`str`, optional
-        Engine used for computation (``numpy`` or ``cupy`` or ``jax``).
+        Engine used for computation (``numpy`` or ``jax``).
     fft_engine : :obj:`str`, optional
         Engine used for fft computation (``numpy`` or ``scipy`` or ``mkl_fft``).
-        If ``engine='cupy'``, fft_engine is forced to ``'numpy'``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
     name : :obj:`str`, optional
@@ -65,6 +64,15 @@ class MRI2D(LinearOperator):
     explicit : :obj:`bool`
         Operator contains a matrix that can be solved
         explicitly (``True``) or not (``False``)
+
+    Raises
+    ------
+    ValueError
+        If ``mask`` is not one of the accepted strings or a numpy array.
+    ValueError
+        If ``fft_engine`` is neither ``numpy``, ``fftw``, nor ``scipy``.
+    ValueError
+        If ``perc_center`` is greater than 0 when using ``vertical-reg`` mask.
 
     Notes
     -----
@@ -87,8 +95,8 @@ class MRI2D(LinearOperator):
         ],
         nlines: Optional[int] = None,
         perc_center: float = 0.1,
-        engine: str = "numpy",
-        fft_engine: str = "numpy",
+        engine: Literal["numpy", "jax"] = "numpy",
+        fft_engine: Literal["numpy", "scipy", "mkl_fft"] = "numpy",
         dtype: DTypeLike = "complex128",
         name: str = "M",
         **kwargs_fft,
@@ -99,8 +107,8 @@ class MRI2D(LinearOperator):
         self.fft_engine = fft_engine
 
         # Validate inputs
-        if engine != "numpy" and fft_engine != "numpy":
-            warnings.warn(f"When engine='{engine}', fft_engine is forced to 'numpy'")
+        if engine == "jax" and fft_engine != "numpy":
+            warnings.warn(f"When engine='jax', fft_engine is forced to 'numpy'")
             self.fft_engine = "numpy"
         if isinstance(mask, str) and mask not in (
             "vertical-reg",
@@ -111,11 +119,10 @@ class MRI2D(LinearOperator):
             raise ValueError(
                 "mask must be a numpy array, 'vertical-reg', 'vertical-uni', 'radial-reg', or 'radial-uni'"
             )
-        if isinstance(mask, str) and mask == "vertical-reg" and perc_center > 0.0:
-            raise ValueError("perc_center must be 0.0 when using 'vertical-reg' mask")
-
         if self.fft_engine not in ["numpy", "scipy", "mkl_fft"]:
             raise ValueError("fft_engine must be 'numpy', 'scipy', or 'mkl_fft'")
+        if isinstance(mask, str) and mask == "vertical-reg" and perc_center > 0.0:
+            raise ValueError("perc_center must be 0.0 when using 'vertical-reg' mask")
 
         if self._mask_type == "mask":
             self.mask = mask
