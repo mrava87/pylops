@@ -108,7 +108,7 @@ class MRI2D(LinearOperator):
 
         # Validate inputs
         if engine == "jax" and fft_engine != "numpy":
-            warnings.warn(f"When engine='jax', fft_engine is forced to 'numpy'")
+            warnings.warn("When engine='jax', fft_engine is forced to 'numpy'")
             self.fft_engine = "numpy"
         if isinstance(mask, str) and mask not in (
             "vertical-reg",
