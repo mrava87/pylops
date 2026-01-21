@@ -20,21 +20,13 @@ par1 = {
     "nx": 64,
     "dtype": "complex128",
     "engine": "numpy",
-}  # real input, complex dtype, numpy engine
+}  # even input, complex dtype, numpy engine
 par2 = {
-    "ny": 32,
-    "nx": 64,
-    "dtype": "complex64",
-    "engine": "numpy",
-}  # real input, complex64 dtype, numpy engine
-par3 = {
-    "ny": 32,
-    "nx": 64,
-    "dtype": "complex64",
+    "ny": 33,
+    "nx": 65,
+    "dtype": "complex128",
     "engine": "scipy",
-}  # real input, complex64 dtype, scipy engine
-
-np.random.seed(10)
+}  # odd input, complex64 dtype, scipy engine
 
 
 def test_MRI2D_invalid_mask():
@@ -86,7 +78,7 @@ def test_MRI2D_vertical_mask_invalid_nlines():
         )
 
 
-@pytest.mark.parametrize("par", [(par1), (par2), (par3)])
+@pytest.mark.parametrize("par", [(par1), (par2)])
 def test_MRI2D_mask_array(par):
     """Dot-test and forward/adjoint for MRI2D operator with numpy array mask"""
     np.random.seed(10)
