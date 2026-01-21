@@ -19,13 +19,37 @@ par1 = {
     "ny": 32,
     "nx": 64,
     "dtype": "complex128",
-    "engine": "numpy",
+    "fft_engine": "numpy",
 }  # even input, complex dtype, numpy engine
 par2 = {
+    "ny": 32,
+    "nx": 64,
+    "dtype": "complex128",
+    "fft_engine": "scipy",
+}  # even input, complex64 dtype, scipy engine
+par3 = {
+    "ny": 32,
+    "nx": 64,
+    "dtype": "complex128",
+    "fft_engine": "mkl_fft",
+}  # even input, complex dtype, mkl_fft engine
+par4 = {
     "ny": 33,
     "nx": 65,
     "dtype": "complex128",
-    "engine": "scipy",
+    "fft_engine": "numpy",
+}  # odd input, complex64 dtype, numpy engine
+par5 = {
+    "ny": 33,
+    "nx": 65,
+    "dtype": "complex128",
+    "fft_engine": "scipy",
+}  # even input, complex dtype, scipy engine
+par6 = {
+    "ny": 33,
+    "nx": 65,
+    "dtype": "complex128",
+    "fft_engine": "mkl_fft",
 }  # odd input, complex64 dtype, scipy engine
 
 
@@ -49,7 +73,8 @@ def test_MRI2D_invalid_engine():
         MRI2D(
             dims=(32, 64),
             mask=mask,
-            engine="invalid-engine",
+            engine=backend,
+            fft_engine="invalid-engine",
             dtype="complex128",
         )
 
@@ -78,9 +103,11 @@ def test_MRI2D_vertical_mask_invalid_nlines():
         )
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_mask_array(par):
     """Dot-test and forward/adjoint for MRI2D operator with numpy array mask"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     # Create a random mask
@@ -93,7 +120,8 @@ def test_MRI2D_mask_array(par):
     Mop = MRI2D(
         dims=(par["ny"], par["nx"]),
         mask=mask,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -114,9 +142,11 @@ def test_MRI2D_mask_array(par):
     assert xadj.shape[0] == par["ny"] * par["nx"]
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_vertical_reg(par):
     """Dot-test and forward/adjoint for MRI2D operator with vertical-reg mask"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 16
@@ -125,7 +155,8 @@ def test_MRI2D_vertical_reg(par):
         mask="vertical-reg",
         nlines=nlines,
         perc_center=0.0,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -146,9 +177,11 @@ def test_MRI2D_vertical_reg(par):
     assert len(Mop.mask) == nlines
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_vertical_mask_regularity(par):
     """Test that vertical-reg mask produces regularly spaced lines"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 8
@@ -157,7 +190,8 @@ def test_MRI2D_vertical_mask_regularity(par):
         mask="vertical-reg",
         nlines=nlines,
         perc_center=0.0,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -169,9 +203,11 @@ def test_MRI2D_vertical_mask_regularity(par):
         assert np.allclose(steps, steps[0], atol=1)
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_vertical_uni(par):
     """Dot-test and forward/adjoint for MRI2D operator with vertical-uni mask"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 16
@@ -181,7 +217,8 @@ def test_MRI2D_vertical_uni(par):
         mask="vertical-uni",
         nlines=nlines,
         perc_center=perc_center,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -203,9 +240,11 @@ def test_MRI2D_vertical_uni(par):
     assert len(Mop.mask) == nlines_total
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_vertical_uni_no_center(par):
     """Test MRI2D operator with vertical mask and no center lines"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 16
@@ -214,7 +253,8 @@ def test_MRI2D_vertical_uni_no_center(par):
         mask="vertical-uni",
         nlines=nlines,
         perc_center=0.0,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -228,9 +268,11 @@ def test_MRI2D_vertical_uni_no_center(par):
     )
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_radial_reg(par):
     """Dot-test and forward/adjoint for MRI2D operator with radial-reg mask"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 8
@@ -238,7 +280,8 @@ def test_MRI2D_radial_reg(par):
         dims=(par["ny"], par["nx"]),
         mask="radial-reg",
         nlines=nlines,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -262,9 +305,11 @@ def test_MRI2D_radial_reg(par):
     assert Mop.mask.shape[0] == 2  # x and y coordinates
 
 
-@pytest.mark.parametrize("par", [(par1), (par2)])
+@pytest.mark.parametrize("par", [(par1), (par2), (par3), (par4), (par5), (par6)])
 def test_MRI2D_radial_uni(par):
     """Dot-test and forward/adjoint for MRI2D operator with radial-uni mask"""
+    if par["fft_engine"] == "mkl_fft" and not mkl_fft_enabled:
+        pytest.skip("mkl_fft is not installed")
     np.random.seed(10)
 
     nlines = 8
@@ -272,7 +317,8 @@ def test_MRI2D_radial_uni(par):
         dims=(par["ny"], par["nx"]),
         mask="radial-uni",
         nlines=nlines,
-        engine=par["engine"],
+        engine=backend,
+        fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
 
@@ -294,37 +340,3 @@ def test_MRI2D_radial_uni(par):
     assert y.size == npoints
     assert xadj.shape == (par["ny"], par["nx"])
     assert Mop.mask.shape[0] == 2  # x and y coordinates
-
-
-@pytest.mark.skipif(not mkl_fft_enabled, reason="MKL FFT not available")
-@pytest.mark.parametrize("par", [(par1), (par2)])
-def test_MRI2D_mkl_engine(par):
-    """Test MRI2D operator with MKL FFT engine"""
-    np.random.seed(10)
-
-    mask = np.zeros((par["ny"], par["nx"]), dtype=bool)
-    mask[::2, ::2] = True
-    mask = mask.astype(par["dtype"])
-
-    Mop = MRI2D(
-        dims=(par["ny"], par["nx"]),
-        mask=mask,
-        engine="mkl_fft",
-        dtype=par["dtype"],
-    )
-
-    # For Diagonal mask, output size is same as input size
-    assert dottest(
-        Mop,
-        par["ny"] * par["nx"],
-        par["ny"] * par["nx"],
-        complexflag=2,
-        backend=backend,
-    )
-
-    x = np.random.normal(0, 1, (par["ny"], par["nx"]))
-    y = Mop * x.ravel()
-    xadj = Mop.H * y
-
-    assert y.shape[0] == par["ny"] * par["nx"]
-    assert xadj.shape[0] == par["ny"] * par["nx"]

@@ -2,6 +2,7 @@ __all__ = [
     "MRI2D",
 ]
 
+import warnings
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -9,6 +10,7 @@ import numpy as np
 from pylops import LinearOperator
 from pylops.basicoperators import Diagonal, Restriction
 from pylops.signalprocessing import FFT2D, Bilinear
+from pylops.utils.backend import get_module
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 
@@ -41,7 +43,10 @@ class MRI2D(LinearOperator):
     perc_center: :obj:`float`
         Percentage of total lines to retain in the center.
     engine : :obj:`str`, optional
-        Engine used for fft computation (``numpy`` or ``fftw``)
+        Engine used for computation (``numpy`` or ``cupy`` or ``jax``).
+    fft_engine : :obj:`str`, optional
+        Engine used for fft computation (``numpy`` or ``scipy`` or ``mkl_fft``).
+        If ``engine='cupy'``, fft_engine is forced to ``'numpy'``.
     dtype : :obj:`str`, optional
         Type of elements in input array.
     name : :obj:`str`, optional
@@ -83,6 +88,7 @@ class MRI2D(LinearOperator):
         nlines: Optional[int] = None,
         perc_center: float = 0.1,
         engine: str = "numpy",
+        fft_engine: str = "numpy",
         dtype: DTypeLike = "complex128",
         name: str = "M",
         **kwargs_fft,
@@ -90,8 +96,12 @@ class MRI2D(LinearOperator):
         self.dims = dims
         self._mask_type = mask if isinstance(mask, str) else "mask"
         self.engine = engine
+        self.fft_engine = fft_engine
 
         # Validate inputs
+        if engine != "numpy" and fft_engine != "numpy":
+            warnings.warn(f"When engine='{engine}', fft_engine is forced to 'numpy'")
+            self.fft_engine = "numpy"
         if isinstance(mask, str) and mask not in (
             "vertical-reg",
             "vertical-uni",
@@ -104,8 +114,8 @@ class MRI2D(LinearOperator):
         if isinstance(mask, str) and mask == "vertical-reg" and perc_center > 0.0:
             raise ValueError("perc_center must be 0.0 when using 'vertical-reg' mask")
 
-        if self.engine not in ["numpy", "scipy", "mkl_fft"]:
-            raise ValueError("engine must be 'numpy', 'scipy', or 'mkl_fft'")
+        if self.fft_engine not in ["numpy", "scipy", "mkl_fft"]:
+            raise ValueError("fft_engine must be 'numpy', 'scipy', or 'mkl_fft'")
 
         if self._mask_type == "mask":
             self.mask = mask
@@ -120,11 +130,17 @@ class MRI2D(LinearOperator):
             self.mask = self._radial_mask(
                 dims, nlines, uniform=True if "reg" in self._mask_type else False
             )
+
+        # Convert mask to appropriate backend
+        ncp = get_module(self.engine)
+        self.mask = ncp.asarray(self.mask)
+
+        # Create operator
         self.ROp, Op = self._calc_op(
             dims=dims,
             mask_type=mask if isinstance(mask, str) else "mask",
             mask=self.mask,
-            fft_engine=engine,
+            fft_engine=self.fft_engine,
             dtype=dtype,
             **kwargs_fft,
         )
