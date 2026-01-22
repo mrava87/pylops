@@ -251,11 +251,7 @@ class _BandedLUDecomposition:
         banded_representation[2, ::] = matrix.main_diagonal
         banded_representation[3, 0:-1] = matrix.sub_diagonal
 
-        (
-            lu_banded,
-            pivot_indices,
-            info,
-        ) = lapack_factorizer(
+        (lu_banded, pivot_indices, info,) = lapack_factorizer(
             ab=banded_representation,
             kl=1,
             ku=1,
@@ -270,7 +266,7 @@ class _BandedLUDecomposition:
             )
 
         raise np.linalg.LinAlgError(
-            f"Could not LU-factorize tridiagonal matrix! Got {info = }."
+            f"Could not LU-factorize tridiagonal matrix! Got {info=}."
         )
 
     def solve(
@@ -316,7 +312,7 @@ class _BandedLUDecomposition:
             return x
 
         raise np.linalg.LinAlgError(
-            f"Could not solve LU-factorization of tridiagonal matrix! Got {info = }."
+            f"Could not solve LU-factorization of tridiagonal matrix! Got {info=}."
         )
 
 
@@ -392,7 +388,8 @@ class _TridiagonalLUDecomposition:
             )
 
         raise np.linalg.LinAlgError(
-            f"Could not LU-factorize tridiagonal matrix! Got {info = }."
+            f"Could not LU-factorize tridiagonal matrix! Got {info=}."
+            f"Could not LU-factorize tridiagonal matrix! Got {info=}."
         )
 
     def solve(
@@ -432,7 +429,7 @@ class _TridiagonalLUDecomposition:
             return x
 
         raise np.linalg.LinAlgError(
-            f"Could not solve LU-factorization of tridiagonal matrix! Got {info = }."
+            f"Could not solve LU-factorization of tridiagonal matrix! Got {info=}."
         )
 
 
@@ -817,7 +814,7 @@ class InterpCubicSpline(LinearOperator):
         if num_cols < 2:
             raise ValueError(
                 f"A cubic spline requires at least 2 data points to interpolate, but "
-                f"got {dims[axis] = }."
+                f"got {dims[axis]=}."
             )
 
         iava = np.asarray(iava, dtype=np.float64)
@@ -829,7 +826,7 @@ class InterpCubicSpline(LinearOperator):
         else:
             raise NotImplementedError(
                 f"Cubic spline interpolation currently only supports 'natural' "
-                f"boundaries, but got {bc_type = }"
+                f"boundaries, but got {bc_type=}"
             )
 
         dtype = np.dtype(dtype)
