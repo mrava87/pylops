@@ -38,9 +38,9 @@ class MRI2D(LinearOperator):
           :math:`-\pi/\pi` angles);
         - ``radial-uni``: mask with radial lines (irregularly sampled around the
           :math:`-\pi/\pi` angles, with angles drawn from a uniform distribution);
-    nlines: :obj:`str`
+    nlines : :obj:`str`
         Number of lines in the k-space.
-    perc_center: :obj:`float`
+    perc_center : :obj:`float`
         Percentage of total lines to retain in the center.
     engine : :obj:`str`, optional
         Engine used for computation (``numpy`` or ``jax``).
