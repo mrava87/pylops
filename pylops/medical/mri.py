@@ -38,10 +38,11 @@ class MRI2D(LinearOperator):
           :math:`-\pi/\pi` angles);
         - ``radial-uni``: mask with radial lines (irregularly sampled around the
           :math:`-\pi/\pi` angles, with angles drawn from a uniform distribution);
-    nlines : :obj:`str`
-        Number of lines in the k-space.
-    perc_center : :obj:`float`
-        Percentage of total lines to retain in the center.
+    nlines : :obj:`int`, optional
+        Number of lines in the k-space. Not required if ``mask`` is passed as array.
+    perc_center : :obj:`float`, optional
+        Percentage of total lines to retain in the center. Not required if ``mask``
+        is passed as array.
     engine : :obj:`str`, optional
         Engine used for computation (``numpy`` or ``jax``).
     fft_engine : :obj:`str`, optional
@@ -59,6 +60,14 @@ class MRI2D(LinearOperator):
         Mask applied in the Fourier domain.
     ROp : :obj:`pylops.Restriction` or :obj:`pylops.Diagonal` or :obj:`pylops.signalprocessing.Bilinear`
         Operator that applies the mask in the Fourier domain.
+    dims : :obj:`tuple`
+        Shape of the array after the adjoint, but before flattening.
+
+        For example, ``x_reshaped = (Op.H * y.ravel()).reshape(Op.dims)``.
+    dimsd : :obj:`tuple`
+        Shape of the array after the forward, but before flattening.
+
+        For example, ``y_reshaped = (Op * x.ravel()).reshape(Op.dimsd)``.
     shape : :obj:`tuple`
         Operator shape
     explicit : :obj:`bool`
@@ -71,6 +80,9 @@ class MRI2D(LinearOperator):
         If ``mask`` is not one of the accepted strings or a numpy array.
     ValueError
         If ``fft_engine`` is neither ``numpy``, ``fftw``, nor ``scipy``.
+    ValueError
+        If ``nlines`` or ``perc_center`` are not specified when providing ``mask``
+        as string.
     ValueError
         If ``perc_center`` is greater than 0 when using ``vertical-reg`` mask.
 
@@ -94,14 +106,13 @@ class MRI2D(LinearOperator):
             Literal["vertical-reg", "vertical-uni", "radial-reg", "radial-uni"], NDArray
         ],
         nlines: Optional[int] = None,
-        perc_center: float = 0.1,
+        perc_center: Optional[float] = 0.1,
         engine: Literal["numpy", "jax"] = "numpy",
         fft_engine: Literal["numpy", "scipy", "mkl_fft"] = "numpy",
         dtype: DTypeLike = "complex128",
         name: str = "M",
         **kwargs_fft,
     ) -> None:
-        self.dims = dims
         self._mask_type = mask if isinstance(mask, str) else "mask"
         self.engine = engine
         self.fft_engine = fft_engine
@@ -121,9 +132,15 @@ class MRI2D(LinearOperator):
             )
         if self.fft_engine not in ["numpy", "scipy", "mkl_fft"]:
             raise ValueError("fft_engine must be 'numpy', 'scipy', or 'mkl_fft'")
+        if isinstance(mask, str) and (nlines is None or perc_center is None):
+            raise ValueError(
+                "nlines and perc_center must be specified providing mask as string"
+            )
         if isinstance(mask, str) and mask == "vertical-reg" and perc_center > 0.0:
             raise ValueError("perc_center must be 0.0 when using 'vertical-reg' mask")
 
+        # Create mask
+        self.mask: NDArray
         if self._mask_type == "mask":
             self.mask = mask
         elif "vertical" in self._mask_type:
@@ -241,6 +258,8 @@ class MRI2D(LinearOperator):
             xline, yline = xline + dims[0] // 2, yline + dims[1] // 2
             lines.append(np.vstack((xline, yline)))
         mask = np.concatenate(lines, axis=1)
+        # Remove points beyond domain allowed by Bilinear operator
+        # and duplicate points
         mask = mask[:, mask[0] < dims[0] - 1]
         mask = mask[:, mask[1] < dims[1] - 1]
         mask = np.unique(mask, axis=1)
@@ -257,7 +276,7 @@ class MRI2D(LinearOperator):
         dims: InputDimsLike,
         mask_type: "str",
         mask: NDArray,
-        fft_engine: float,
+        fft_engine: Literal["numpy", "scipy", "mkl_fft"],
         dtype: DTypeLike,
         **kwargs_fft,
     ):
