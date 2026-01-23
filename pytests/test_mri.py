@@ -11,37 +11,37 @@ par1 = {
     "nx": 64,
     "dtype": "complex128",
     "fft_engine": "numpy",
-}  # even input, complex dtype, numpy engine
+}  # even input, numpy engine
 par2 = {
     "ny": 32,
     "nx": 64,
     "dtype": "complex128",
     "fft_engine": "scipy",
-}  # even input, complex64 dtype, scipy engine
+}  # even input, scipy engine
 par3 = {
     "ny": 32,
     "nx": 64,
     "dtype": "complex128",
     "fft_engine": "mkl_fft",
-}  # even input, complex dtype, mkl_fft engine
+}  # even input, mkl_fft engine
 par4 = {
     "ny": 33,
     "nx": 65,
     "dtype": "complex128",
     "fft_engine": "numpy",
-}  # odd input, complex64 dtype, numpy engine
+}  # odd input, numpy engine
 par5 = {
     "ny": 33,
     "nx": 65,
     "dtype": "complex128",
     "fft_engine": "scipy",
-}  # even input, complex dtype, scipy engine
+}  # even input, scipy engine
 par6 = {
     "ny": 33,
     "nx": 65,
     "dtype": "complex128",
     "fft_engine": "mkl_fft",
-}  # odd input, complex64 dtype, scipy engine
+}  # odd input, mkl_fft engine
 
 
 @pytest.mark.skipif(
@@ -63,13 +63,10 @@ def test_MRI2D_invalid_mask():
 )
 def test_MRI2D_invalid_engine():
     """Test MRI2D operator with invalid engine"""
-    mask = np.zeros((32, 64), dtype="complex128")
-    mask[::2, ::2] = 1.0
-
     with pytest.raises(ValueError, match="engine must be"):
         MRI2D(
             dims=(32, 64),
-            mask=mask,
+            mask="vertical-reg",
             fft_engine="invalid-engine",
             dtype="complex128",
         )
@@ -128,8 +125,6 @@ def test_MRI2D_mask_array(par):
         fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
-
-    # For Diagonal mask, output size is same as input size
     assert dottest(
         Mop,
         par["ny"] * par["nx"],
@@ -164,7 +159,7 @@ def test_MRI2D_vertical_reg(par):
         fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
-
+    assert len(Mop.mask) == nlines
     assert dottest(
         Mop,
         par["ny"] * nlines,
@@ -178,7 +173,6 @@ def test_MRI2D_vertical_reg(par):
 
     assert y.shape[0] == par["ny"] * nlines
     assert xadj.shape[0] == par["ny"] * par["nx"]
-    assert len(Mop.mask) == nlines
 
 
 @pytest.mark.skipif(
@@ -200,8 +194,8 @@ def test_MRI2D_vertical_mask_regularity(par):
         fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
-
     mask_indices = Mop.mask
+
     # Check that indices are regularly spaced
     if len(mask_indices) > 1:
         steps = np.diff(np.sort(mask_indices))
@@ -229,7 +223,8 @@ def test_MRI2D_vertical_uni(par):
         fft_engine=par["fft_engine"],
         dtype=par["dtype"],
     )
-
+    nlines_total = nlines + int(perc_center * par["nx"])
+    assert len(Mop.mask) == nlines_total
     assert dottest(
         Mop,
         par["ny"] * (nlines + int(perc_center * par["nx"])),
@@ -241,10 +236,8 @@ def test_MRI2D_vertical_uni(par):
     y = Mop * x.ravel()
     xadj = Mop.H * y
 
-    nlines_total = nlines + int(perc_center * par["nx"])
     assert y.shape[0] == par["ny"] * nlines_total
     assert xadj.shape[0] == par["ny"] * par["nx"]
-    assert len(Mop.mask) == nlines_total
 
 
 @pytest.mark.skipif(
@@ -267,13 +260,20 @@ def test_MRI2D_vertical_uni_no_center(par):
         dtype=par["dtype"],
     )
 
-    assert len(Mop.mask) == nlines
     assert dottest(
         Mop,
         par["ny"] * nlines,
         par["ny"] * par["nx"],
         complexflag=2,
     )
+    assert len(Mop.mask) == nlines
+
+    x = np.random.normal(0, 1, (par["ny"], par["nx"]))
+    y = Mop * x.ravel()
+    xadj = Mop.H * y
+
+    assert y.shape[0] == par["ny"] * nlines
+    assert xadj.shape[0] == par["ny"] * par["nx"]
 
 
 @pytest.mark.skipif(
@@ -297,13 +297,13 @@ def test_MRI2D_radial_reg(par):
 
     # For radial masks, output size depends on the number of points in the mask
     npoints = Mop.mask.shape[1]
-
     assert dottest(
         Mop,
         npoints,
         par["ny"] * par["nx"],
         complexflag=2,
     )
+    assert Mop.mask.shape[0] == 2  # x and y coordinates
 
     x = np.random.normal(0, 1, (par["ny"], par["nx"]))
     y = Mop * x
@@ -311,7 +311,6 @@ def test_MRI2D_radial_reg(par):
 
     assert y.size == npoints
     assert xadj.shape == (par["ny"], par["nx"])
-    assert Mop.mask.shape[0] == 2  # x and y coordinates
 
 
 @pytest.mark.skipif(
@@ -335,13 +334,13 @@ def test_MRI2D_radial_uni(par):
 
     # For radial masks, output size depends on the number of points in the mask
     npoints = Mop.mask.shape[1]
-
     assert dottest(
         Mop,
         npoints,
         par["ny"] * par["nx"],
         complexflag=2,
     )
+    assert Mop.mask.shape[0] == 2  # x and y coordinates
 
     x = np.random.normal(0, 1, (par["ny"], par["nx"]))
     y = Mop * x
@@ -349,4 +348,3 @@ def test_MRI2D_radial_uni(par):
 
     assert y.size == npoints
     assert xadj.shape == (par["ny"], par["nx"])
-    assert Mop.mask.shape[0] == 2  # x and y coordinates
