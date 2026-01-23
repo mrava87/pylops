@@ -3,6 +3,8 @@ __all__ = [
     "SecondDirectionalDerivative",
 ]
 
+from typing import Union
+
 from pylops import LinearOperator
 from pylops.basicoperators import Diagonal, Gradient, Sum
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tderivkind
@@ -25,8 +27,9 @@ class FirstDirectionalDerivative(LinearOperator):
     v : :obj:`numpy.ndarray`, optional
         Single direction (array of size :math:`n_\text{dims}`) or group of directions
         (array of size :math:`[n_\text{dims} \times n_{d_0} \times ... \times n_{d_{n_\text{dims}}}]`)
-    sampling : :obj:`tuple`, optional
-        Sampling steps for each direction.
+    sampling : :obj:`tuple` or :obj:`float`, optional
+        Sampling steps for each direction. If a single float
+        is provided, it is used for all directions.
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``).
@@ -77,7 +80,7 @@ class FirstDirectionalDerivative(LinearOperator):
         self,
         dims: InputDimsLike,
         v: NDArray,
-        sampling: int = 1,
+        sampling: Union[float, InputDimsLike] = 1.0,
         edge: bool = False,
         kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
@@ -107,7 +110,7 @@ class FirstDirectionalDerivative(LinearOperator):
     def _calc_first_ddop(
         dims: InputDimsLike,
         v: NDArray,
-        sampling: int,
+        sampling: Union[float, InputDimsLike],
         edge: bool,
         kind: Tderivkind,
         dtype: DTypeLike,
@@ -138,8 +141,9 @@ class SecondDirectionalDerivative(LinearOperator):
     v : :obj:`numpy.ndarray`, optional
         Single direction (array of size :math:`n_\text{dims}`) or group of directions
         (array of size :math:`[n_\text{dims} \times n_{d_0} \times ... \times n_{d_{n_\text{dims}}}]`)
-    sampling : :obj:`tuple`, optional
-        Sampling steps for each direction.
+    sampling : :obj:`tuple` or :obj:`float`, optional
+        Sampling steps for each direction. If a single float
+        is provided, it is used for all directions.
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``).
@@ -184,7 +188,7 @@ class SecondDirectionalDerivative(LinearOperator):
         self,
         dims: InputDimsLike,
         v: NDArray,
-        sampling: int = 1,
+        sampling: Union[float, InputDimsLike] = 1.0,
         edge: bool = False,
         kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",

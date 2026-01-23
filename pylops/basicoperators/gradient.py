@@ -20,8 +20,9 @@ class Gradient(LinearOperator):
     ----------
     dims : :obj:`tuple`
         Number of samples for each dimension.
-    sampling : :obj:`tuple`, optional
-        Sampling steps for each direction.
+    sampling : :obj:`tuple` or :obj:`float`, optional
+        Sampling steps for each direction. If a single float
+        is provided, it is used for all directions.
     edge : :obj:`bool`, optional
         Use reduced order derivative at edges (``True``) or
         ignore them (``False``).
@@ -79,7 +80,7 @@ class Gradient(LinearOperator):
     def __init__(
         self,
         dims: Union[int, InputDimsLike],
-        sampling: int = 1,
+        sampling: Union[float, InputDimsLike] = 1.0,
         edge: bool = False,
         kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",

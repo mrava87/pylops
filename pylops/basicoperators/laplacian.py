@@ -77,8 +77,8 @@ class Laplacian(LinearOperator):
         self,
         dims: InputDimsLike,
         axes: InputDimsLike = (-2, -1),
-        weights: Tuple[float, ...] = (1, 1),
-        sampling: Tuple[float, ...] = (1, 1),
+        weights: Tuple[float, ...] = (1.0, 1.0),
+        sampling: Tuple[float, ...] = (1.0, 1.0),
         edge: bool = False,
         kind: Tderivkind = "centered",
         dtype: DTypeLike = "float64",
@@ -116,7 +116,7 @@ class Laplacian(LinearOperator):
         weights: Tuple[float, ...],
         sampling: Tuple[float, ...],
         edge: bool,
-        kind: str,
+        kind: Tderivkind,
         dtype: DTypeLike,
     ):
         l2op = SecondDerivative(

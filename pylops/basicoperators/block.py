@@ -17,7 +17,7 @@ class _Block(LinearOperator):
     def __init__(
         self,
         ops: Iterable[Iterable[LinearOperator]],
-        forceflat: bool = None,
+        forceflat: Optional[bool] = None,
         dtype: Optional[DTypeLike] = None,
         _HStack=HStack,
         _VStack=VStack,
@@ -153,7 +153,7 @@ class Block(_Block):
         self,
         ops: Iterable[Iterable[LinearOperator]],
         nproc: int = 1,
-        forceflat: bool = None,
+        forceflat: Optional[bool] = None,
         parallel_kind: Tparallel_kind = "multiproc",
         dtype: Optional[DTypeLike] = None,
     ):

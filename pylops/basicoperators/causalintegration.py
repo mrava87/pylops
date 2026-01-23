@@ -100,7 +100,7 @@ class CausalIntegration(LinearOperator):
         self,
         dims: Union[int, InputDimsLike],
         axis: int = -1,
-        sampling: float = 1,
+        sampling: float = 1.0,
         kind: Literal["full", "half", "trapezoidal"] = "full",
         removefirst: bool = False,
         dtype: DTypeLike = "float64",

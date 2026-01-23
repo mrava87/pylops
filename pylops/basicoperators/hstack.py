@@ -152,7 +152,7 @@ class HStack(LinearOperator):
         self,
         ops: Sequence[LinearOperator],
         nproc: int = 1,
-        forceflat: bool = None,
+        forceflat: Optional[bool] = None,
         inoutengine: Optional[Tinoutengine] = None,
         parallel_kind: Tparallel_kind = "multiproc",
         dtype: Optional[str] = None,

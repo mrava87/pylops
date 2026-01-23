@@ -1,7 +1,7 @@
 __all__ = ["Spread"]
 
 import logging
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 import numpy as np
 
@@ -172,7 +172,7 @@ class Spread(LinearOperator):
         dtable: Optional[NDArray] = None,
         fh: Optional[Callable] = None,
         interp: Optional[bool] = None,
-        engine: str = "numpy",
+        engine: Literal["numpy", "numba"] = "numpy",
         dtype: DTypeLike = "float64",
         name: str = "S",
     ) -> None:
