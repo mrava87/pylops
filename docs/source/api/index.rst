@@ -171,6 +171,7 @@ Medical imaging
    :toctree: generated/
 
     CT2D
+    MRI2D
 
 
 Solvers
