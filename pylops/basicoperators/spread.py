@@ -127,10 +127,10 @@ class Spread(LinearOperator):
 
     Raises
     ------
-    KeyError
-        If ``engine`` is neither ``numpy`` nor ``numba``
     NotImplementedError
         If both ``table`` and ``fh`` are not provided
+    ValueError
+        If ``engine`` is neither ``numpy`` nor ``numba``
     ValueError
         If ``table`` has shape different from
         :math:`[n_{x_0} \times n_{t_0} \times n_x]`
@@ -179,7 +179,7 @@ class Spread(LinearOperator):
         super().__init__(dtype=np.dtype(dtype), dims=dims, dimsd=dimsd, name=name)
 
         if engine not in ["numpy", "numba"]:
-            raise KeyError("engine must be numpy or numba")
+            raise ValueError("engine must be numpy or numba")
         if engine == "numba" and jit_message is None:
             self.engine = "numba"
         else:

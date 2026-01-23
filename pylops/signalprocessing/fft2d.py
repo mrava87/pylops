@@ -502,7 +502,7 @@ def FFT2D(
         - If ``nffts`` or ``sampling`` are not either a single value or a tuple with
           two elements.
         - If ``norm`` is not one of "ortho", "none", or "1/n".
-    NotImplementedError
+    ValueError
         If ``engine`` is neither ``numpy``, ``scipy`` nor ``mkl_fft``.
 
     See Also
@@ -575,6 +575,6 @@ def FFT2D(
             **kwargs_fft,
         )
     else:
-        raise NotImplementedError("engine must be numpy, scipy or mkl_fft")
+        raise ValueError("engine must be numpy, scipy or mkl_fft")
     f.name = name
     return f

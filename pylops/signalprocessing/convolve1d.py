@@ -32,7 +32,7 @@ def _choose_convfunc(
         if method is None:
             method = "direct"
         if method not in ("direct", "fft"):
-            raise NotImplementedError("method must be direct or fft")
+            raise ValueError("method must be direct or fft")
         convfunc = get_convolve(x)
     else:
         if method is None:
@@ -42,7 +42,7 @@ def _choose_convfunc(
         elif method == "overlapadd":
             convfunc = partial(get_oaconvolve(x), axes=axis)(x)
         else:
-            raise NotImplementedError("method must be fft or overlapadd")
+            raise ValueError("method must be fft or overlapadd")
     return convfunc, method
 
 
@@ -257,7 +257,7 @@ class Convolve1D(LinearOperator):
     ------
     ValueError
         If ``offset`` is bigger than ``len(h) - 1``
-    NotImplementedError
+    ValueError
         If ``method`` provided is not allowed
 
     Notes
