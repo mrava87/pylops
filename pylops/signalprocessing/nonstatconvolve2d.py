@@ -13,7 +13,7 @@ from pylops.utils import deps
 from pylops.utils._internal import _value_or_sized_to_tuple
 from pylops.utils.backend import get_array_module
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tengine1
 
 jit_message = deps.numba_import("the nonstatconvolve2d module")
 
@@ -153,7 +153,7 @@ class NonStationaryConvolve2D(LinearOperator):
         hs: NDArray,
         ihx: InputDimsLike,
         ihz: InputDimsLike,
-        engine: str = "numpy",
+        engine: Tengine1 = "numpy",
         num_threads_per_blocks: Tuple[int, int] = (32, 32),
         dtype: DTypeLike = "float64",
         name: str = "C",

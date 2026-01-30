@@ -1,7 +1,7 @@
 __all__ = ["FFTND"]
 
 import warnings
-from typing import Optional, Sequence, Union
+from typing import Literal, Optional, Sequence, Union
 
 import numpy as np
 import scipy.fft
@@ -29,7 +29,7 @@ class _FFTND_numpy(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -134,7 +134,7 @@ class _FFTND_scipy(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -232,7 +232,7 @@ class _FFTND_mklfft(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -328,11 +328,11 @@ def FFTND(
     axes: Union[int, InputDimsLike] = (-3, -2, -1),
     nffts: Optional[Union[int, InputDimsLike]] = None,
     sampling: Union[float, Sequence[float]] = 1.0,
-    norm: str = "ortho",
+    norm: Literal["ortho", "none", "1/n"] = "ortho",
     real: bool = False,
     ifftshift_before: bool = False,
     fftshift_after: bool = False,
-    engine: str = "scipy",
+    engine: Literal["numpy", "scipy", "mkl_fft"] = "scipy",
     dtype: DTypeLike = "complex128",
     name: str = "F",
     **kwargs_fft,

@@ -1,7 +1,7 @@
 __all__ = ["FFT2D"]
 
 import warnings
-from typing import Dict, Optional, Sequence, Union
+from typing import Dict, Literal, Optional, Sequence, Union
 
 import numpy as np
 import scipy.fft
@@ -29,7 +29,7 @@ class _FFT2D_numpy(_BaseFFTND):
         axes: InputDimsLike = (-2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -146,7 +146,7 @@ class _FFT2D_scipy(_BaseFFTND):
         axes: InputDimsLike = (-2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -251,7 +251,7 @@ class _FFT2D_mklfft(_BaseFFTND):
         axes: InputDimsLike = (-2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -359,11 +359,11 @@ def FFT2D(
     axes: InputDimsLike = (-2, -1),
     nffts: Optional[Union[int, InputDimsLike]] = None,
     sampling: Union[float, Sequence[float]] = 1.0,
-    norm: str = "ortho",
+    norm: Literal["ortho", "none", "1/n"] = "ortho",
     real: bool = False,
     ifftshift_before: bool = False,
     fftshift_after: bool = False,
-    engine: str = "numpy",
+    engine: Literal["numpy", "scipy", "mkl_fft"] = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "F",
     **kwargs_fft,

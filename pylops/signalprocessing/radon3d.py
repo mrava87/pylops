@@ -1,12 +1,12 @@
 __all__ = ["Radon3D"]
 
-from typing import Callable, Optional, Tuple
+from typing import Callable, Literal, Optional, Tuple
 
 import numpy as np
 
 from pylops.basicoperators import Spread
 from pylops.utils import deps
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, Tengine2
 
 jit_message = deps.numba_import("the radon3d module")
 
@@ -163,11 +163,11 @@ def Radon3D(
     hxaxis: NDArray,
     pyaxis: NDArray,
     pxaxis: NDArray,
-    kind: str = "linear",
+    kind: Literal["linear", "parabolic", "hyperbolic"] = "linear",
     centeredh: bool = True,
     interp: bool = True,
     onthefly: bool = False,
-    engine: str = "numpy",
+    engine: Tengine2 = "numpy",
     dtype: DTypeLike = "float64",
     name: str = "R",
 ):

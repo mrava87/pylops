@@ -1,6 +1,6 @@
 __all__ = ["Shift"]
 
-from typing import TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Literal, Tuple, Union
 
 import numpy as np
 
@@ -21,7 +21,7 @@ def Shift(
     nfft: int = None,
     sampling: float = 1.0,
     real: bool = False,
-    engine: str = "numpy",
+    engine: Literal["numpy", "fftw", "scipy", "mkl_fft"] = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "S",
     **kwargs_fft,

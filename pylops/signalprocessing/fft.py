@@ -2,7 +2,7 @@ __all__ = ["FFT"]
 
 import logging
 import warnings
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 import numpy as np
 import scipy.fft
@@ -36,7 +36,7 @@ class _FFT_numpy(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -148,7 +148,7 @@ class _FFT_scipy(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -246,7 +246,7 @@ class _FFT_fftw(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -407,7 +407,7 @@ class _FFT_mklfft(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: str = "ortho",
+        norm: Literal["ortho", "none", "1/n"] = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -495,11 +495,11 @@ def FFT(
     axis: int = -1,
     nfft: Optional[int] = None,
     sampling: float = 1.0,
-    norm: str = "ortho",
+    norm: Literal["ortho", "none", "1/n"] = "ortho",
     real: bool = False,
     ifftshift_before: bool = False,
     fftshift_after: bool = False,
-    engine: str = "numpy",
+    engine: Literal["numpy", "fftw", "scipy", "mkl_fft"] = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "F",
     **kwargs_fft,

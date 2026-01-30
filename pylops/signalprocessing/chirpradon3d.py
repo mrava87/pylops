@@ -1,5 +1,7 @@
 __all__ = ["ChirpRadon3D"]
 
+from typing import Literal
+
 import numpy as np
 
 from pylops import LinearOperator
@@ -96,7 +98,7 @@ class ChirpRadon3D(LinearOperator):
         hyaxis: NDArray,
         hxaxis: NDArray,
         pmax: NDArray,
-        engine: str = "numpy",
+        engine: Literal["numpy", "fftw"] = "numpy",
         dtype: DTypeLike = "float64",
         name: str = "C",
         **kwargs_fftw,
