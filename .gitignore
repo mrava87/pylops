@@ -27,6 +27,7 @@ pylops/version.py
 notebooks
 TODO
 .vscode/
+.venv/
 
 # Documentation #
 docs/build

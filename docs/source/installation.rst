@@ -30,35 +30,66 @@ For details more details, see :ref:`Optional`.
 Step-by-step installation for users
 ***********************************
 
-Conda (recommended)
-===================
-If using ``conda``, install our ``conda-forge`` distribution via:
+From Package Manager
+====================
+First install `pylops` with your package manager of choice.
 
-.. code-block:: bash
+.. tab-set::
 
-   >> conda install --channel conda-forge pylops
+   .. tab-item:: :iconify:`devicon:anaconda` conda
 
-Using the ``conda-forge`` distribution is recommended as all the dependencies (both required
-and optional) will be automatically installed for you.
+        .. code-block:: bash
 
-Pip
-===
-If you are using ``pip``, and simply type the following command in your terminal
-to install the PyPI distribution:
+            conda install --channel conda-forge pylops
 
-.. code-block:: bash
+        Most of the dependencies (all required and some of the optional) are
+        automatically installed for you.
+            
+   .. tab-item:: :iconify:`devicon:pypi` pip
 
-   >> pip install pylops
+        .. code-block:: bash
 
-Note that when installing via ``pip``, only *required* dependencies are installed.
+            pip install pylops
+        
+        Only the *required* dependencies are installed. To install
+        some of the optional dependencies, run:
+        
+        .. code-block:: bash
+
+            pip install "pylops[advanced]"
+
+   .. tab-item:: :iconify:`material-icon-theme:uv` uv
+
+        .. code-block:: bash
+
+            uv add pylops
+        
+        Only the *required* dependencies are installed. To install
+        some of the optional dependencies, run:
+        
+        .. code-block:: bash
+
+            uv add "pylops[advanced]"
+
 
 From Source
 ===========
-To access the latest source from github:
+To access the latest source from GitHub:
 
-.. code-block:: bash
+.. tab-set::
 
-   >> pip install https://github.com/PyLops/pylops.git@dev
+   .. tab-item:: :iconify:`devicon:pypi` pip
+
+        .. code-block:: bash
+
+            pip install https://github.com/PyLops/pylops.git@dev
+
+   .. tab-item:: :iconify:`material-icon-theme:uv` uv
+
+        .. code-block:: bash
+
+            uv add git+https://github.com/PyLops/pylops.git --branch dev
+
 
 Docker
 ======
@@ -82,6 +113,7 @@ A larger image with ``conda`` a distribution is also available:
 
    >> docker run -it -v /path/to/local/folder:/home/jupyter/notebook -p 8888:8888 mrava87/pylops:conda_notebook
 
+
 .. _DevInstall:
 
 Step-by-step installation for developers
@@ -101,28 +133,34 @@ Install dependencies
 We recommend installing dependencies into a separate environment.
 For that end, we provide a `Makefile` with useful commands for setting up the environment.
 
-Conda (recommended)
--------------------
-For a ``conda`` environment, run
+.. tab-set::
 
-.. code-block:: bash
+   .. tab-item:: :iconify:`devicon:anaconda` conda
 
-   >> make dev-install_conda # for x86 (Intel or AMD CPUs)
-   >> make dev-install_conda_arm # for arm (M-series Mac)
+        .. code-block:: bash
 
-This will create and activate an environment called ``pylops``, with all required and optional dependencies.
+            make dev-install_conda # for x86 (Intel or AMD CPUs)
+            make dev-install_conda_arm # for arm (M-series Mac)
+        
+        This creates and activate an environment called ``pylops``, with
+        all required and optional dependencies.
+            
+   .. tab-item:: :iconify:`devicon:pypi` pip
 
-Pip
----
-If you prefer a ``pip`` installation, we provide the following command
+        .. code-block:: bash
 
-.. code-block:: bash
+            make dev-install
 
-   >> make dev-install
+        Thid does not create a virtual environment. Make sure you create and 
+        activate your environment before running this command.
 
-Note that, differently from the  ``conda`` command, the above **will not** create a virtual environment.
-Make sure you create and activate your environment previously.
+   .. tab-item:: :iconify:`material-icon-theme:uv` uv
 
+        .. code-block:: bash
+
+            uv sync
+         
+        
 Run tests
 =========
 To ensure that everything has been setup correctly, run tests:

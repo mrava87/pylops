@@ -29,8 +29,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
+requires-python = ">=3.10"
 dependencies = [
-    "numpy >= 1.21.0",
+    "numpy>=1.21.0",
     "scipy >= 1.11.0",
 ]
 dynamic = ["version"]
@@ -42,9 +43,10 @@ advanced = [
     "pyfftw",
     "PyWavelets",
     "scikit-fmm",
+    "sympy",
     "spgl1",
     "dtcwt",
-    "astra-toolbox",
+    "astra-toolbox; sys_platform != 'darwin'",
 ]
 
 [tool.setuptools.packages.find]
@@ -52,3 +54,15 @@ exclude = ["pytests"]
 
 [tool.setuptools_scm]
 version_file = "pylops/version.py"
+
+[dependency-groups]
+dev = [
+    "torch>=2.10.0",
+    "devito",
+    "jax>=0.6.2",
+    "pytensor>=2.34.0",
+    "pytest>=9.0.2",
+]
+doc = [
+    "matplotlib>=3.10.8",
+]

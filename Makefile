@@ -51,6 +51,9 @@ dev-install_conda_arm:
 dev-install_conda_gpu:
 	conda env create -f environment-dev-gpu.yml && source ${CONDA_PREFIX}/etc/profile.d/conda.sh && conda activate pylops_gpu && pip install -e .
 
+dev-install_uv:
+	uv sync
+
 tests:
 	# Run tests with CPU
 	make pythoncheck

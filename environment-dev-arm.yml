@@ -35,7 +35,9 @@ dependencies:
     - setuptools_scm
     - pydata-sphinx-theme
     - pooch
+    - sphinx-design
     - sphinx-gallery
+    - sphinx-iconify
     - nbsphinx
     - sphinxemoji
     - image

@@ -22,6 +22,8 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "numpydoc",
     "nbsphinx",
+    "sphinx_design",
+    "sphinx_iconify",
     "sphinx_gallery.gen_gallery",
     "sphinxemoji.sphinxemoji",
     # 'sphinx.ext.napoleon',
