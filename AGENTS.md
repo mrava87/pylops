@@ -43,3 +43,26 @@
 ## Notes for agents
 - Use Makefile targets rather than invoking tools directly where possible.
 - Keep changes focused; avoid editing build artifacts or generated docs.
+
+## Issue-to-PR workflow (feature contributions)
+Use `docs/source/contributing.rst` as the source of truth. When taking a GitHub issue through to PR, follow this sequence:
+1. Ensure dev environment is set up (per `DevInstall` in the docs).
+2. Branch from `dev` for your work:
+   - `git checkout -b <branch-name> dev`
+3. Implement the change and add/update tests in `pytests/`.
+4. Run CPU tests:
+   - `make tests`
+5. If a GPU is available, also run:
+   - `make tests_gpu`
+6. Run linting:
+   - `make lint`
+7. Update docs if functionality changes:
+   - `make docupdate`
+8. Commit and push:
+   - `git add .`
+   - `git commit -m "<message>"` (Conventional Commits recommended, not required)
+   - `git push -u origin <branch-name>`
+9. Open a PR and ensure it meets the PR guidelines:
+   - Include tests for new core routines.
+   - Update docs when adding functionality.
+   - Ensure all tests pass.
