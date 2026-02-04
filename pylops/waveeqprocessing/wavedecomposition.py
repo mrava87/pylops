@@ -5,7 +5,7 @@ __all__ = [
     "WavefieldDecomposition",
 ]
 
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
 from scipy.signal import filtfilt
@@ -15,7 +15,7 @@ from pylops import Block, BlockDiag, Diagonal, Identity, LinearOperator
 from pylops.signalprocessing import FFT2D, FFTND
 from pylops.utils import dottest as Dottest
 from pylops.utils.backend import get_array_module, get_module, get_module_name
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tengine, Tfftengine2
 
 
 def _filter_obliquity(
@@ -74,7 +74,7 @@ def _obliquity2D(
     critical: float = 100.0,
     ntaper: int = 10,
     composition: bool = True,
-    backend: str = "numpy",
+    backend: Tengine = "numpy",
     dtype: DTypeLike = "complex128",
 ) -> Tuple[LinearOperator, LinearOperator]:
     r"""2D Obliquity operator and FFT operator
@@ -153,8 +153,8 @@ def _obliquity3D(
     critical: float = 100.0,
     ntaper: int = 10,
     composition: bool = True,
-    fftengine: str = "scipy",
-    backend: str = "numpy",
+    fftengine: Tfftengine2 = "scipy",
+    backend: Tengine = "numpy",
     dtype: DTypeLike = "complex128",
 ) -> Tuple[LinearOperator, LinearOperator]:
     r"""3D Obliquity operator and FFT operator
@@ -241,7 +241,7 @@ def PressureToVelocity(
     critical: float = 100.0,
     ntaper: int = 10,
     topressure: bool = False,
-    backend: str = "numpy",
+    backend: Tengine = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "P",
 ) -> LinearOperator:
@@ -380,7 +380,7 @@ def UpDownComposition2D(
     critical: float = 100.0,
     ntaper: int = 10,
     scaling: float = 1.0,
-    backend: str = "numpy",
+    backend: Tengine = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "U",
 ) -> LinearOperator:
@@ -552,8 +552,8 @@ def UpDownComposition3D(
     critical: float = 100.0,
     ntaper: int = 10,
     scaling: float = 1.0,
-    fftengine: str = "scipy",
-    backend: str = "numpy",
+    fftengine: Tfftengine2 = "scipy",
+    backend: Tengine = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "U",
 ) -> LinearOperator:
@@ -685,7 +685,7 @@ def WavefieldDecomposition(
     critical: float = 100.0,
     ntaper: int = 10,
     scaling: float = 1.0,
-    kind: str = "inverse",
+    kind: Literal["inverse", "analytical"] = "inverse",
     restriction: Optional[LinearOperator] = None,
     sptransf: Optional[LinearOperator] = None,
     solver: Callable = lsqr,
