@@ -12,7 +12,7 @@ from pylops.utils.backend import (
     inplace_add,
     inplace_set,
 )
-from pylops.utils.decorators import reshaped
+from pylops.utils.decorators import reshaped, reshaped_inplace
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 
@@ -126,48 +126,68 @@ class FirstDerivative(LinearOperator):
         order: int,
     ) -> None:
         # choose _matvec and _rmatvec kind
-        self._hmatvec: Callable
-        self._hrmatvec: Callable
+        # self._hmatvec: Callable
+        # self._hrmatvec: Callable
+        self._himatvec: Callable
+        self._hirmatvec: Callable
         if kind == "forward":
-            self._hmatvec = self._matvec_forward
-            self._hrmatvec = self._rmatvec_forward
+            # self._hmatvec = self._matvec_forward
+            # self._hrmatvec = self._rmatvec_forward
+            self._himatvec = self._imatvec_forward
+            self._hirmatvec = self._irmatvec_forward
         elif kind == "centered":
             if order == 3:
-                self._hmatvec = self._matvec_centered3
-                self._hrmatvec = self._rmatvec_centered3
+                # self._hmatvec = self._matvec_centered3
+                # self._hrmatvec = self._rmatvec_centered3
+                self._himatvec = self._imatvec_centered3
+                self._hirmatvec = self._irmatvec_centered3
             elif order == 5:
-                self._hmatvec = self._matvec_centered5
-                self._hrmatvec = self._rmatvec_centered5
+                # self._hmatvec = self._matvec_centered5
+                # self._hrmatvec = self._rmatvec_centered5
+                self._himatvec = self._imatvec_centered5
+                self._hirmatvec = self._irmatvec_centered5
             else:
                 raise NotImplementedError("'order' must be '3, or '5'")
         elif kind == "backward":
-            self._hmatvec = self._matvec_backward
-            self._hrmatvec = self._rmatvec_backward
+            # self._hmatvec = self._matvec_backward
+            # self._hrmatvec = self._rmatvec_backward
+            self._himatvec = self._imatvec_backward
+            self._hirmatvec = self._irmatvec_backward
         else:
             raise NotImplementedError(
                 "'kind' must be 'forward', 'centered', or 'backward'"
             )
 
     def _matvec(self, x: NDArray) -> NDArray:
-        return self._hmatvec(x)
+        ncp = get_array_module(x)
+        out_shape = (self.shape[0], 1) if x.ndim == 2 else (self.shape[0],)
+        y = ncp.zeros(out_shape, self.dtype)
+        print("Running matvec")
+        return self._imatvec(x, y)
 
     def _rmatvec(self, x: NDArray) -> NDArray:
-        return self._hrmatvec(x)
-
-    @reshaped(swapaxis=True)
-    def _matvec_forward(self, x: NDArray) -> NDArray:
         ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+        out_shape = (self.shape[1], 1) if x.ndim == 2 else (self.shape[1],)
+        y = ncp.zeros(out_shape, self.dtype)
+        return self._irmatvec(x, y)
+
+    def _imatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        print("Running imatvec")
+        return self._himatvec(x, y)
+
+    def _irmatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        return self._hirmatvec(x, y)
+
+    @reshaped_inplace(swapaxis=True)
+    def _imatvec_forward(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., :-1] = (x[..., 1:] - x[..., :-1]) / self.sampling
         y = inplace_set(
             (x[..., 1:] - x[..., :-1]) / self.sampling, y, self._slice[None][-1]
         )
         return y
 
-    @reshaped(swapaxis=True)
-    def _rmatvec_forward(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _irmatvec_forward(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., :-1] -= x[..., :-1]
         y = inplace_add(-x[..., :-1], y, self._slice[None][-1])
         # y[..., 1:] += x[..., :-1]
@@ -175,10 +195,8 @@ class FirstDerivative(LinearOperator):
         y /= self.sampling
         return y
 
-    @reshaped(swapaxis=True)
-    def _matvec_centered3(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _imatvec_centered3(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., 1:-1] = 0.5 * (x[..., 2:] - x[..., :-2])
         y = inplace_set(0.5 * (x[..., 2:] - x[..., :-2]), y, self._slice[1][-1])
         if self.edge:
@@ -189,10 +207,8 @@ class FirstDerivative(LinearOperator):
         y /= self.sampling
         return y
 
-    @reshaped(swapaxis=True)
-    def _rmatvec_centered3(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _irmatvec_centered3(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., :-2] -= 0.5 * x[..., 1:-1]
         y = inplace_add(-0.5 * x[..., 1:-1], y, self._slice[None][-2])
         # y[..., 2:] += 0.5 * x[..., 1:-1]
@@ -209,10 +225,8 @@ class FirstDerivative(LinearOperator):
         y /= self.sampling
         return y
 
-    @reshaped(swapaxis=True)
-    def _matvec_centered5(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _imatvec_centered5(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., 2:-2] = (
         #     x[..., :-4] / 12.0
         #     - 2 * x[..., 1:-3] / 3.0
@@ -241,10 +255,8 @@ class FirstDerivative(LinearOperator):
         y /= self.sampling
         return y
 
-    @reshaped(swapaxis=True)
-    def _rmatvec_centered5(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _irmatvec_centered5(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., :-4] += x[..., 2:-2] / 12.0
         y = inplace_add(x[..., 2:-2] / 12.0, y, self._slice[None][-4])
         # y[..., 1:-3] -= 2.0 * x[..., 2:-2] / 3.0
@@ -269,20 +281,16 @@ class FirstDerivative(LinearOperator):
         y /= self.sampling
         return y
 
-    @reshaped(swapaxis=True)
-    def _matvec_backward(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _imatvec_backward(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., 1:] = (x[..., 1:] - x[..., :-1]) / self.sampling
         y = inplace_set(
             (x[..., 1:] - x[..., :-1]) / self.sampling, y, self._slice[1][None]
         )
         return y
 
-    @reshaped(swapaxis=True)
-    def _rmatvec_backward(self, x: NDArray) -> NDArray:
-        ncp = get_array_module(x)
-        y = ncp.zeros(x.shape, self.dtype)
+    @reshaped_inplace(swapaxis=True)
+    def _irmatvec_backward(self, x: NDArray, y: NDArray) -> NDArray:
         # y[..., :-1] -= x[..., 1:]
         y = inplace_add(-x[..., 1:], y, self._slice[None][-1])
         # y[..., 1:] += x[..., 1:]

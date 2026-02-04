@@ -121,7 +121,6 @@ def test_FirstDerivative_centered(par):
         assert_array_almost_equal(
             y[order // 2 : -order // 2], yana[order // 2 : -order // 2], decimal=1
         )
-
         # 2d - derivative on 1st direction
         D1op = FirstDerivative(
             (par["ny"], par["nx"]),
@@ -246,6 +245,34 @@ def test_FirstDerivative_centered(par):
         assert_array_almost_equal(
             y[order // 2 : -order // 2], yana[order // 2 : -order // 2], decimal=1
         )
+
+
+def test_FirstDerivative_inplace():
+    """In-place matvec/rmatvec for FirstDerivative operator."""
+    np.random.seed(10)
+    n = 20
+    D1op = FirstDerivative(n, sampling=1.0, edge=True, order=3, dtype="float64")
+
+    x = np.random.randn(n).astype("float64")
+    y = np.zeros(n, dtype="float64")
+    y_out = D1op.imatvec(x, y)
+    assert_array_almost_equal(y_out, D1op.matvec(x))
+    assert_array_almost_equal(y, y_out)
+
+    xcol = x.reshape(-1, 1)
+    ycol = np.zeros((n, 1), dtype="float64")
+    ycol_out = D1op.imatvec(xcol, ycol)
+    assert_array_almost_equal(ycol_out, D1op.matvec(xcol))
+    assert_array_almost_equal(ycol, ycol_out)
+
+    xr = np.random.randn(n).astype("float64")
+    yr = np.zeros(n, dtype="float64")
+    yr_out = D1op.irmatvec(xr, yr)
+    assert_array_almost_equal(yr_out, D1op.rmatvec(xr))
+    assert_array_almost_equal(yr, yr_out)
+
+    with pytest.raises(ValueError):
+        D1op.imatvec(x, np.zeros((n, 1), dtype="float64"))
 
 
 @pytest.mark.parametrize(

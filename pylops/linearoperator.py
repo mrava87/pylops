@@ -31,7 +31,12 @@ from typing import Callable, List, Optional, Sequence, Union
 
 from pylops import get_ndarray_multiplication
 from pylops.optimization.basic import cgls
-from pylops.utils.backend import get_array_module, get_module, get_sparse_eye
+from pylops.utils.backend import (
+    get_array_module,
+    get_module,
+    get_sparse_eye,
+    inplace_set,
+)
 from pylops.utils.decorators import count
 from pylops.utils.estimators import trace_hutchinson, trace_hutchpp, trace_nahutchpp
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, ShapeLike
@@ -440,13 +445,70 @@ class LinearOperator(_LinearOperator):
 
     def _matvec(self, x: NDArray) -> NDArray:
         """Matrix-vector multiplication handler."""
-        if self.Op is not None:
-            return self.Op._matvec(x)
+        if type(self)._imatvec is not LinearOperator._imatvec:
+            ncp = get_array_module(x)
+            M, _ = self.shape
+            out_shape = (M, 1) if x.ndim == 2 else (M,)
+            dtype = self.dtype if getattr(self, "dtype", None) is not None else x.dtype
+            y = ncp.zeros(out_shape, dtype=dtype)
+            y = self._imatvec(x, y)
+            return y
+        Op = getattr(self, "Op", None)
+        if Op is not None:
+            return Op._matvec(x)
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement _matvec"
+        )
 
     def _rmatvec(self, x: NDArray) -> NDArray:
         """Matrix-vector adjoint multiplication handler."""
-        if self.Op is not None:
-            return self.Op._rmatvec(x)
+        if type(self)._irmatvec is not LinearOperator._irmatvec:
+            ncp = get_array_module(x)
+            _, N = self.shape
+            out_shape = (N, 1) if x.ndim == 2 else (N,)
+            dtype = self.dtype if getattr(self, "dtype", None) is not None else x.dtype
+            y = ncp.zeros(out_shape, dtype=dtype)
+            y = self._irmatvec(x, y)
+            return y
+        Op = getattr(self, "Op", None)
+        if Op is not None:
+            return Op._rmatvec(x)
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement _rmatvec"
+        )
+
+    def _imatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        """In-place matrix-vector multiplication handler."""
+        Op = getattr(self, "Op", None)
+        print("Op", Op)
+        if Op is not None:
+            op_imatvec = getattr(type(Op), "_imatvec", None)
+            if op_imatvec is not None and op_imatvec is not LinearOperator._imatvec:
+                return Op._imatvec(x, y)
+            res = Op._matvec(x).reshape(y.shape)
+            return inplace_set(res, y, slice(None))
+        if type(self)._matvec is not LinearOperator._matvec:
+            res = self._matvec(x).reshape(y.shape)
+            return inplace_set(res, y, slice(None))
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement _imatvec"
+        )
+
+    def _irmatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        """In-place matrix-vector adjoint multiplication handler."""
+        Op = getattr(self, "Op", None)
+        if Op is not None:
+            op_irmatvec = getattr(type(Op), "_irmatvec", None)
+            if op_irmatvec is not None and op_irmatvec is not LinearOperator._irmatvec:
+                return Op._irmatvec(x, y)
+            res = Op._rmatvec(x).reshape(y.shape)
+            return inplace_set(res, y, slice(None))
+        if type(self)._rmatvec is not LinearOperator._rmatvec:
+            res = self._rmatvec(x).reshape(y.shape)
+            return inplace_set(res, y, slice(None))
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not implement _irmatvec"
+        )
 
     def _matmat(self, X: NDArray) -> NDArray:
         """Matrix-matrix multiplication handler.
@@ -536,6 +598,49 @@ class LinearOperator(_LinearOperator):
             raise ValueError("Invalid shape returned by user-defined matvec()")
         return y
 
+    @count(forward=True)
+    def imatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        """In-place matrix-vector multiplication.
+
+        Parameters
+        ----------
+        x : :obj:`numpy.ndarray`
+            Input array of shape (N,) or (N,1)
+        y : :obj:`numpy.ndarray`
+            Output array of shape (M,) or (M,1)
+
+        Returns
+        -------
+        y : :obj:`numpy.ndarray`
+            Output array of shape (M,) or (M,1)
+
+        """
+        # Note: some operators may only write to a subset of ``y`` or may use
+        # in-place additions. Callers should provide a pre-initialized output
+        # (e.g., zeros) unless the operator documents otherwise.
+        M, N = self.shape
+
+        if x.shape != (N,) and x.shape != (N, 1):
+            raise ValueError(
+                f"Dimension mismatch. Got {x.shape}, but expected ({N},) or ({N}, 1)."
+            )
+
+        expected_shape = (M, 1) if x.ndim == 2 else (M,)
+        if y.shape != expected_shape:
+            raise ValueError(
+                "Dimension mismatch. " f"Got {y.shape}, but expected {expected_shape}."
+            )
+
+        y = self._imatvec(x, y)
+
+        if x.ndim == 1:
+            y = y.reshape(M)
+        elif x.ndim == 2:
+            y = y.reshape(M, 1)
+        else:
+            raise ValueError("Invalid shape returned by user-defined imatvec()")
+        return y
+
     @count(forward=False)
     def rmatvec(self, x: NDArray) -> NDArray:
         """Adjoint matrix-vector multiplication.
@@ -570,6 +675,49 @@ class LinearOperator(_LinearOperator):
             y = y.reshape(N, 1)
         else:
             raise ValueError("Invalid shape returned by user-defined rmatvec()")
+        return y
+
+    @count(forward=False)
+    def irmatvec(self, x: NDArray, y: NDArray) -> NDArray:
+        """In-place adjoint matrix-vector multiplication.
+
+        Parameters
+        ----------
+        x : :obj:`numpy.ndarray`
+            Input array of shape (M,) or (M,1)
+        y : :obj:`numpy.ndarray`
+            Output array of shape (N,) or (N,1)
+
+        Returns
+        -------
+        x : :obj:`numpy.ndarray`
+            Output array of shape (N,) or (N,1)
+
+        """
+        # Note: some operators may only write to a subset of ``y`` or may use
+        # in-place additions. Callers should provide a pre-initialized output
+        # (e.g., zeros) unless the operator documents otherwise.
+        M, N = self.shape
+
+        if x.shape != (M,) and x.shape != (M, 1):
+            raise ValueError(
+                f"Dimension mismatch. Got {x.shape}, but expected ({M},) or ({M}, 1)."
+            )
+
+        expected_shape = (N, 1) if x.ndim == 2 else (N,)
+        if y.shape != expected_shape:
+            raise ValueError(
+                "Dimension mismatch. " f"Got {y.shape}, but expected {expected_shape}."
+            )
+
+        y = self._irmatvec(x, y)
+
+        if x.ndim == 1:
+            y = y.reshape(N)
+        elif x.ndim == 2:
+            y = y.reshape(N, 1)
+        else:
+            raise ValueError("Invalid shape returned by user-defined irmatvec()")
         return y
 
     @count(forward=True, matmat=True)
@@ -1425,16 +1573,16 @@ class _ProductLinearOperator(LinearOperator):
         self.args = (A, B)
 
     def _matvec(self, x: NDArray) -> NDArray:
-        return self.args[0].matvec(self.args[1].matvec(x))
+        return self.args[0]._matvec(self.args[1]._matvec(x))
 
     def _rmatvec(self, x: NDArray) -> NDArray:
-        return self.args[1].rmatvec(self.args[0].rmatvec(x))
+        return self.args[1]._rmatvec(self.args[0]._rmatvec(x))
 
     def _rmatmat(self, X: NDArray) -> NDArray:
-        return self.args[1].rmatmat(self.args[0].rmatmat(X))
+        return self.args[1]._rmatmat(self.args[0]._rmatmat(X))
 
     def _matmat(self, X: NDArray) -> NDArray:
-        return self.args[0].matmat(self.args[1].matmat(X))
+        return self.args[0]._matmat(self.args[1]._matmat(X))
 
     def _adjoint(self):
         A, B = self.args

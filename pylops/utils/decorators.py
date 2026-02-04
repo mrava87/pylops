@@ -2,6 +2,7 @@ __all__ = [
     "disable_ndarray_multiplication",
     "add_ndarray_support_to_solver",
     "reshaped",
+    "reshaped_inplace",
     "count",
 ]
 
@@ -156,6 +157,69 @@ def reshaped(
     return decorator
 
 
+def reshaped_inplace(
+    func: Optional[Callable] = None,
+    forward: Optional[bool] = None,
+    swapaxis: bool = False,
+    axis: int = -1,
+) -> Callable:
+    """Decorator for the reshape/flatten pattern used in in-place operators.
+
+    Parameters
+    ----------
+    func : :obj:`callable`, optional
+        Function to be decorated when no arguments are provided
+    forward : :obj:`bool`, optional
+        Reshape to ``dims`` if True, otherwise to ``dimsd``. If not provided, the
+        decorated function's name will be inspected to infer the mode. Any operator
+        having a name with 'rmat' as substring or whose name is 'div' or
+        '__truediv__' will reshape to ``dimsd``.
+    swapaxis : :obj:`bool`, optional
+        If True, swaps the ``axis`` of the input and output arrays of the decorated
+        function with ``self.axis``. Only use if the decorated LinearOperator has
+        ``axis`` attribute.
+    axis : :obj:`int`, optional
+        Axis to be swapped when ``swapaxis`` is True.
+
+    Notes
+    -----
+    This decorator mirrors :func:`reshaped` but for in-place operators with
+    signature ``func(self, x, y)``.
+
+    """
+
+    def decorator(f):
+        if forward is None:
+            fwd = (
+                "rmat" not in f.__name__
+                and f.__name__ != "div"
+                and f.__name__ != "__truediv__"
+            )
+        else:
+            fwd = forward
+        inp_dims = "dims" if fwd else "dimsd"
+        out_dims = "dimsd" if fwd else "dims"
+
+        @wraps(f)
+        def wrapper(self, x, y):
+            x = x.reshape(getattr(self, inp_dims))
+            y = y.reshape(getattr(self, out_dims))
+            if swapaxis:
+                x = x.swapaxes(self.axis, axis)
+                y = y.swapaxes(self.axis, axis)
+            y = f(self, x, y)
+            if swapaxis:
+                y = y.swapaxes(self.axis, axis)
+            y = y.ravel()
+            return y
+
+        return wrapper
+
+    if func is not None:
+        return decorator(func)
+    return decorator
+
+
 def count(
     func: Optional[Callable] = None,
     forward: Optional[bool] = None,
@@ -189,9 +253,10 @@ def count(
             mat = matmat
 
         @wraps(f)
-        def wrapper(self, x):
+        def wrapper(self, *args, **kwargs):
             # perform operation
-            y = f(self, x)
+            y = f(self, *args, **kwargs)
+            x = args[0] if args else kwargs.get("x")
             # increase count of the associated operation
             if fwd:
                 if mat:
