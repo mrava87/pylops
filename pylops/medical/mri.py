@@ -3,7 +3,7 @@ __all__ = [
 ]
 
 import warnings
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -11,7 +11,14 @@ from pylops import LinearOperator
 from pylops.basicoperators import Diagonal, Restriction
 from pylops.signalprocessing import FFT2D, Bilinear
 from pylops.utils.backend import get_module
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import (
+    DTypeLike,
+    InputDimsLike,
+    NDArray,
+    Tfftengine3,
+    Tmriengine,
+    Tmrimask,
+)
 
 
 class MRI2D(LinearOperator):
@@ -102,13 +109,11 @@ class MRI2D(LinearOperator):
     def __init__(
         self,
         dims: InputDimsLike,
-        mask: Union[
-            Literal["vertical-reg", "vertical-uni", "radial-reg", "radial-uni"], NDArray
-        ],
+        mask: Union[Tmrimask, NDArray],
         nlines: Optional[int] = None,
         perc_center: Optional[float] = 0.1,
-        engine: Literal["numpy", "jax"] = "numpy",
-        fft_engine: Literal["numpy", "scipy", "mkl_fft"] = "numpy",
+        engine: Tmriengine = "numpy",
+        fft_engine: Tfftengine3 = "numpy",
         dtype: DTypeLike = "complex128",
         name: str = "M",
         **kwargs_fft,
@@ -274,9 +279,9 @@ class MRI2D(LinearOperator):
     @staticmethod
     def _calc_op(
         dims: InputDimsLike,
-        mask_type: "str",
+        mask_type: str,
         mask: NDArray,
-        fft_engine: Literal["numpy", "scipy", "mkl_fft"],
+        fft_engine: Tfftengine3,
         dtype: DTypeLike,
         **kwargs_fft,
     ):
