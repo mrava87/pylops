@@ -1,14 +1,14 @@
 __all__ = ["Spread"]
 
 import logging
-from typing import Callable, Literal, Optional
+from typing import Callable, Optional
 
 import numpy as np
 
 from pylops import LinearOperator
 from pylops.utils import deps
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tengine_nn
 
 jit_message = deps.numba_import("the spread module")
 
@@ -172,7 +172,7 @@ class Spread(LinearOperator):
         dtable: Optional[NDArray] = None,
         fh: Optional[Callable] = None,
         interp: Optional[bool] = None,
-        engine: Literal["numpy", "numba"] = "numpy",
+        engine: Tengine_nn = "numpy",
         dtype: DTypeLike = "float64",
         name: str = "S",
     ) -> None:

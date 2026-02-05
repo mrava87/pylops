@@ -12,7 +12,13 @@ from pylops.signalprocessing._baseffts import _BaseFFT, _FFTNorms
 from pylops.utils import deps
 from pylops.utils.backend import get_array_module, inplace_divide, inplace_multiply
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import (
+    DTypeLike,
+    InputDimsLike,
+    NDArray,
+    Tfftengine_nfsm,
+    Tfftnorm,
+)
 
 pyfftw_message = deps.pyfftw_import("the fft module")
 mkl_fft_message = deps.mkl_fft_import("the fft module")
@@ -36,7 +42,7 @@ class _FFT_numpy(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -148,7 +154,7 @@ class _FFT_scipy(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -246,7 +252,7 @@ class _FFT_fftw(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -407,7 +413,7 @@ class _FFT_mklfft(_BaseFFT):
         axis: int = -1,
         nfft: Optional[int] = None,
         sampling: float = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -495,11 +501,11 @@ def FFT(
     axis: int = -1,
     nfft: Optional[int] = None,
     sampling: float = 1.0,
-    norm: Literal["ortho", "none", "1/n"] = "ortho",
+    norm: Tfftnorm = "ortho",
     real: bool = False,
     ifftshift_before: bool = False,
     fftshift_after: bool = False,
-    engine: Literal["numpy", "fftw", "scipy", "mkl_fft"] = "numpy",
+    engine: Tfftengine_nfsm = "numpy",
     dtype: DTypeLike = "complex128",
     name: str = "F",
     **kwargs_fft,

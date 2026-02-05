@@ -15,7 +15,7 @@ from pylops.utils._internal import _value_or_sized_to_array
 from pylops.utils.backend import get_array_module
 from pylops.utils.decorators import reshaped
 from pylops.utils.tapers import taper
-from pylops.utils.typing import DTypeLike, NDArray, Tengine1
+from pylops.utils.typing import DTypeLike, NDArray, Tengine_nnc
 
 skfmm_message = deps.skfmm_import("the kirchhoff module")
 jit_message = deps.numba_import("the kirchhoff module")
@@ -322,7 +322,7 @@ class Kirchhoff(LinearOperator):
         aperture: Optional[Tuple[float, float]] = None,
         angleaperture: Union[float, Tuple[float, float]] = 90.0,
         snell: Optional[Tuple[float, float]] = None,
-        engine: Tengine1 = "numpy",
+        engine: Tengine_nnc = "numpy",
         dtype: DTypeLike = "float64",
         name: str = "K",
     ) -> None:
@@ -1072,7 +1072,7 @@ class Kirchhoff(LinearOperator):
                                 )
         return y
 
-    def _register_multiplications(self, engine: Tengine1) -> None:
+    def _register_multiplications(self, engine: Tengine_nnc) -> None:
         if engine not in ["numpy", "numba", "cuda"]:
             raise ValueError("engine must be numpy or numba or cuda")
         if engine == "numba" and jit_message is None:

@@ -19,7 +19,7 @@ from pylops.signalprocessing import (
     Sliding3D,
 )
 from pylops.utils.dottest import dottest as Dottest
-from pylops.utils.typing import InputDimsLike, NDArray, Tengine2
+from pylops.utils.typing import InputDimsLike, NDArray, Tengine_nn
 
 
 def SeismicInterpolation(
@@ -50,7 +50,7 @@ def SeismicInterpolation(
     nwins: InputDimsLike = None,
     nwin: InputDimsLike = None,
     nover: InputDimsLike = None,
-    engine: Union[Tengine2, Literal["fftw"]] = "numba",
+    engine: Union[Tengine_nn, Literal["fftw"]] = "numba",
     dottest: bool = False,
     **kwargs_solver,
 ) -> Tuple[NDArray, NDArray, NDArray]:

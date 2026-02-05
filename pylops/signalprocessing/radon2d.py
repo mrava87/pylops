@@ -6,7 +6,7 @@ import numpy as np
 
 from pylops.basicoperators import Spread
 from pylops.utils import deps
-from pylops.utils.typing import DTypeLike, NDArray, Tengine2
+from pylops.utils.typing import DTypeLike, NDArray, Tengine_nn
 
 jit_message = deps.numba_import("the radon2d module")
 
@@ -147,7 +147,7 @@ def Radon2D(
     centeredh: bool = True,
     interp: bool = True,
     onthefly: bool = False,
-    engine: Tengine2 = "numpy",
+    engine: Tengine_nn = "numpy",
     dtype: DTypeLike = "float64",
     name: str = "R",
 ):

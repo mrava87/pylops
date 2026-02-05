@@ -11,7 +11,7 @@ from pylops.signalprocessing._baseffts import _BaseFFTND, _FFTNorms
 from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_sp_fft
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
+from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, Tfftnorm
 
 mkl_fft_message = deps.mkl_fft_import("the mkl fft module")
 
@@ -29,7 +29,7 @@ class _FFTND_numpy(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -134,7 +134,7 @@ class _FFTND_scipy(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -232,7 +232,7 @@ class _FFTND_mklfft(_BaseFFTND):
         axes: Union[int, InputDimsLike] = (-3, -2, -1),
         nffts: Optional[Union[int, InputDimsLike]] = None,
         sampling: Union[float, Sequence[float]] = 1.0,
-        norm: Literal["ortho", "none", "1/n"] = "ortho",
+        norm: Tfftnorm = "ortho",
         real: bool = False,
         ifftshift_before: bool = False,
         fftshift_after: bool = False,
@@ -328,7 +328,7 @@ def FFTND(
     axes: Union[int, InputDimsLike] = (-3, -2, -1),
     nffts: Optional[Union[int, InputDimsLike]] = None,
     sampling: Union[float, Sequence[float]] = 1.0,
-    norm: Literal["ortho", "none", "1/n"] = "ortho",
+    norm: Tfftnorm = "ortho",
     real: bool = False,
     ifftshift_before: bool = False,
     fftshift_after: bool = False,

@@ -12,7 +12,7 @@ from pylops import Block, BlockDiag, Diagonal, Identity, Roll
 from pylops.optimization.basic import cgls
 from pylops.utils import dottest as Dottest
 from pylops.utils.backend import get_array_module, get_module_name, to_cupy_conditional
-from pylops.utils.typing import DTypeLike, NDArray, Tfftengine
+from pylops.utils.typing import DTypeLike, NDArray, Tfftengine_nsf
 from pylops.waveeqprocessing.mdd import MDC
 
 logger = logging.getLogger(__name__)
@@ -262,7 +262,7 @@ class Marchenko:
         nsmooth: int = 10,
         saveRt: bool = True,
         prescaled: bool = False,
-        fftengine: Tfftengine = "numpy",
+        fftengine: Tfftengine_nsf = "numpy",
         dtype: DTypeLike = "float64",
         kwargs_fft: Optional[Dict[str, Any]] = None,
     ) -> None:

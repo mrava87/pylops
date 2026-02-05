@@ -38,28 +38,30 @@ else:
     TensorTypeLike = None
 
 # pylops specific types
-Tengine = Literal["numpy", "cupy", "jax"]
-Tengine1 = Literal["numpy", "numba", "cuda"]
-Tengine2 = Literal["numpy", "numba"]
 Tctengine = Literal["cpu", "cuda"]
-Tfftengine = Literal["numpy", "scipy", "fftw"]
-Tfftengine2 = Literal["numpy", "scipy"]
-Tfftengine3 = Literal["numpy", "scipy", "mkl_fft"]
-Tinoutengine = Tuple[Tengine, Tengine]
+Tengine_nn = Literal["numpy", "numba"]
+Tengine_nnc = Literal["numpy", "numba", "cuda"]
+Tfftengine_ncj = Literal["numpy", "cupy", "jax"]
+Tfftengine_ns = Literal["numpy", "scipy"]
+Tfftengine_nsf = Literal["numpy", "scipy", "fftw"]
+Tfftengine_nsm = Literal["numpy", "scipy", "mkl_fft"]
+Tfftengine_nfsm = Literal["numpy", "fftw", "scipy", "mkl_fft"]
+Tinoutengine = Tuple[Tfftengine_ncj, Tfftengine_ncj]
 Tmriengine = Literal["numpy", "jax"]
 
 Tavolinearization = Literal["akirich", "fatti", "PS"]
-Tderivkind = Literal["forward", "centered", "backward"]
-Tparallel_kind = Literal["multiproc", "multithread"]
-Ttaper = Literal["hanning", "cosine", "cosine_square"]
 Tctprojgeom = Literal["parallel", "fanflat"]
 Tctprojectortype = Literal["strip", "line", "linear", "cuda"]
+Tderivkind = Literal["forward", "centered", "backward"]
+Tfftnorm = Literal["ortho", "none", "1/n"]
 Tmrimask = Literal["vertical-reg", "vertical-uni", "radial-reg", "radial-uni"]
+Tparallel_kind = Literal["multiproc", "multithread"]
+Ttaper = Literal["hanning", "cosine", "cosine_square"]
 
 Tbackend = Literal["numpy", "cupy"]
+Tirlskind = Literal["data", "model", "datamodel"]
 Tmemunit = Literal["B", "KB", "MB", "GB"]
 Tsolverengine = Literal["scipy", "pylops"]
-Tirlskind = Literal["data", "model", "datamodel"]
 Tthreshkind = Literal[
     "hard",
     "soft",
@@ -69,6 +71,6 @@ Tthreshkind = Literal[
     "half-percentile",
 ]
 
+Tpwdsmoothing = Literal["triangle", "boxcar"]
 Tsampler = Literal["gaussian", "rayleigh", "rademacher", "unitvector"]
 Tsampler2 = Literal["gaussian", "rayleigh", "rademacher"]
-Tpwdsmoothing = Literal["triangle", "boxcar"]

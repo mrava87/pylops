@@ -15,7 +15,7 @@ from pylops.utils.typing import (
     DTypeLike,
     InputDimsLike,
     NDArray,
-    Tfftengine3,
+    Tfftengine_nsm,
     Tmriengine,
     Tmrimask,
 )
@@ -113,7 +113,7 @@ class MRI2D(LinearOperator):
         nlines: Optional[int] = None,
         perc_center: Optional[float] = 0.1,
         engine: Tmriengine = "numpy",
-        fft_engine: Tfftengine3 = "numpy",
+        fft_engine: Tfftengine_nsm = "numpy",
         dtype: DTypeLike = "complex128",
         name: str = "M",
         **kwargs_fft,
@@ -281,7 +281,7 @@ class MRI2D(LinearOperator):
         dims: InputDimsLike,
         mask_type: str,
         mask: NDArray,
-        fft_engine: Tfftengine3,
+        fft_engine: Tfftengine_nsm,
         dtype: DTypeLike,
         **kwargs_fft,
     ):
