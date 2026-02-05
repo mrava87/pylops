@@ -1,6 +1,7 @@
 __all__ = ["Bilinear"]
 
 import logging
+from typing import Optional
 
 import numpy as np
 
@@ -106,7 +107,7 @@ class Bilinear(LinearOperator):
         self,
         iava: SamplingLike,
         dims: InputDimsLike,
-        forceflat: bool = None,
+        forceflat: Optional[bool] = None,
         dtype: DTypeLike = "float64",
         name: str = "B",
     ) -> None:

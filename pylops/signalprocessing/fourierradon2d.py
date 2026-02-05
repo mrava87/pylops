@@ -1,6 +1,6 @@
 __all__ = ["FourierRadon2D"]
 
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 import numpy as np
 import scipy as sp
@@ -9,7 +9,7 @@ from pylops import LinearOperator
 from pylops.utils import deps
 from pylops.utils.backend import get_array_module, get_complex_dtype
 from pylops.utils.decorators import reshaped
-from pylops.utils.typing import DTypeLike, NDArray
+from pylops.utils.typing import DTypeLike, NDArray, Tengine_nnc
 
 jit_message = deps.numba_import("the radon2d module")
 cupy_message = deps.cupy_import("the radon2d module")
@@ -146,8 +146,8 @@ class FourierRadon2D(LinearOperator):
         pxaxis: NDArray,
         nfft: int,
         flims: Optional[Tuple[int, int]] = None,
-        kind: str = "linear",
-        engine: str = "numpy",
+        kind: Literal["linear", "parabolic"] = "linear",
+        engine: Tengine_nnc = "numpy",
         num_threads_per_blocks: Tuple[int, int] = (32, 32),
         dtype: DTypeLike = "float64",
         name: str = "R",
