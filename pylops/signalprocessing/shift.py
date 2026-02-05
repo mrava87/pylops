@@ -1,6 +1,6 @@
 __all__ = ["Shift"]
 
-from typing import TYPE_CHECKING, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Tuple, Union
 
 import numpy as np
 

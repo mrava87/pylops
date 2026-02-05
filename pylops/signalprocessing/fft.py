@@ -2,7 +2,7 @@ __all__ = ["FFT"]
 
 import logging
 import warnings
-from typing import Literal, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import scipy.fft
