@@ -10,7 +10,7 @@ from scipy.sparse.linalg import inv
 
 from pylops import LinearOperator
 from pylops.utils._internal import _value_or_sized_to_array
-from pylops.utils.backend import get_array_module
+from pylops.utils.backend import get_array_module, get_blosc
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class MatrixMult(LinearOperator):
     ) -> None:
         ncp = get_array_module(A)
         self.A = A
-        if isinstance(A, ncp.ndarray):
+        if isinstance(A, (ncp.ndarray, get_blosc())):
             self.complex = np.iscomplexobj(A)
         else:
             self.complex = np.iscomplexobj(A.data)

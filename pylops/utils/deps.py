@@ -1,5 +1,6 @@
 __all__ = [
     "astra_enabled",
+    "blosc_enabled",
     "cupy_enabled",
     "jax_enabled",
     "devito_enabled",
@@ -99,6 +100,24 @@ def astra_import(message: Optional[str] = None) -> str | None:
             f'"conda install -c astra-toolbox astra-toolbox".'
         )
     return astra_message
+
+
+def blosc_import(message: Optional[str] = None) -> str | None:
+    if blosc_enabled:
+        try:
+            import_module("blosc2")  # noqa: F401
+
+            blosc_message = None
+        except Exception as e:
+            blosc_message = f"Failed to import blosc2 (error:{e})."
+    else:
+        blosc_message = (
+            f"BLOSC2 not available. "
+            f"In order to be able to use "
+            f'{message} run "pip install blosc2" or '
+            f'"conda install -c conda-forge python-blosc2".'
+        )
+    return blosc_message
 
 
 def devito_import(message: Optional[str] = None) -> str | None:
@@ -283,9 +302,9 @@ def mkl_fft_import(message: Optional[str]) -> str | None:
 
 
 # Set package availability booleans
-# cupy and jax: the package is imported to check everything is working correctly,
+# cupy, jax: the package is imported to check everything is working correctly,
 # if not the package is disabled. We do this here as these libraries are used as drop-in
-# replacement for many numpy and scipy routines when cupy/jax arrays are provided.
+# replacement for many numpy and scipy routines when cupy/jax/blosc arrays are provided.
 # all other libraries: we simply check if the package is available and postpone its import
 # to check everything is working correctly when a user tries to create an operator that requires
 # such a package
@@ -296,6 +315,7 @@ jax_enabled: bool = (
     True if (jax_import() is None and int(os.getenv("JAX_PYLOPS", 1)) == 1) else False
 )
 astra_enabled = util.find_spec("astra") is not None
+blosc_enabled = util.find_spec("blosc2") is not None
 devito_enabled = util.find_spec("devito") is not None
 dtcwt_enabled = util.find_spec("dtcwt") is not None
 numba_enabled = util.find_spec("numba") is not None

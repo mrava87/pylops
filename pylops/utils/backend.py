@@ -17,6 +17,7 @@ __all__ = [
     "get_sp_fft",
     "get_complex_dtype",
     "get_real_dtype",
+    "get_blosc",
     "to_cupy",
     "to_numpy",
     "to_cupy_conditional",
@@ -25,11 +26,12 @@ __all__ = [
     "inplace_add",
     "inplace_multiply",
     "inplace_divide",
+    "isblosc",
     "randn",
 ]
 
 from types import ModuleType
-from typing import Callable
+from typing import Callable, Type, Union
 
 import numpy as np
 import scipy.fft as sp_fft
@@ -61,6 +63,9 @@ if deps.jax_enabled:
     from jax.scipy.signal import convolve as j_convolve
     from jax.scipy.signal import fftconvolve as j_fftconvolve
 
+if deps.blosc_enabled:
+    import blosc2
+
 # need to check numpy version since the namespace of normalize_axis_index
 # changed from numpy>=2.0.0
 np_version = np.__version__.split(".")
@@ -73,16 +78,23 @@ else:
 def get_module(backend: Tfftengine_ncj = "numpy") -> ModuleType:
     """Returns correct numerical module based on backend string
 
+    .. note:: This method does not check if the requested numerical
+    module is correctly installed in the system. It is user/developer
+    responsability to call this method only with the backend string
+    of an available module.
+
     Parameters
     ----------
     backend : :obj:`str`, optional
-        Backend used for dot test computations (``numpy`` or ``cupy`` or ``jax``). This
-        parameter will be used to choose how to create the random vectors.
+        Backend used for dot test computations (``numpy`` or ``cupy``
+        or ``jax`` or ``blosc``). This parameter will be used to choose
+        how to create the random vectors.
 
     Returns
     -------
     mod : :obj:`callable`
-        Module to be used to process array (:mod:`numpy` or :mod:`cupy` or :mod:`jax`)
+        Module to be used to process array (:mod:`numpy` or :mod:`cupy`
+        or :mod:`jax` or :mod:`blosc2`)
 
     """
     if backend == "numpy":
@@ -91,8 +103,10 @@ def get_module(backend: Tfftengine_ncj = "numpy") -> ModuleType:
         ncp = cp
     elif backend == "jax":
         ncp = jnp
+    elif backend == "blosc":
+        ncp = blosc2
     else:
-        raise ValueError("backend must be numpy, cupy, or jax")
+        raise ValueError("backend must be numpy, cupy, jax, or blosc")
     return ncp
 
 
@@ -485,6 +499,31 @@ def get_real_dtype(dtype: DTypeLike) -> DTypeLike:
     return np.real(np.ones(1, dtype)).dtype
 
 
+def get_blosc(lazy: bool = False) -> Union[Type, Union[Type, Type]]:
+    """Returns blosc array type.
+
+    Parameters
+    ----------
+    lazy : :obj:`bool`, optional
+        Return tuple with :obj:`blosc2.NDArray` and :obj:`blosc2.LazyArray`
+        (``True``) or just :obj:`blosc2.NDArray` (``False``) if ``blosc2``
+        is available, otherwise return :obj:`numpy.ndarray`
+
+    Returns
+    -------
+    _ : :obj:`type` or :obj:`tuple`
+        Blosc/Numpy array type or Blosc array and lazy expression types.
+
+    """
+    if deps.blosc_enabled:
+        if lazy:
+            return blosc2.NDArray, blosc2.LazyArray
+        else:
+            return blosc2.NDArray
+    else:
+        return np.ndarray
+
+
 def to_cupy(x: ArrayLike) -> ArrayLike:
     """Convert x to cupy array if cupy is available
 
@@ -678,6 +717,26 @@ def inplace_divide(x: ArrayLike, y: ArrayLike, idx: list) -> NDArray:
     else:
         y[idx] /= x
         return y
+
+
+def isblosc(x: ArrayLike) -> bool:
+    """Check if x is a :obj:`blosc2.NDArray`
+
+    Parameters
+    ----------
+    x : :obj:`numpy.ndarray`, :obj:`blosc2.NDArray`
+        Array to evaluate
+
+    Returns
+    -------
+    _ : :obj:`bool`
+        Whether ``x`` is a :obj:`blosc2.NDArray` or not
+
+    """
+    if deps.blosc_enabled:
+        return isinstance(x, (blosc2.NDArray, blosc2.LazyExpr))
+    else:
+        return False
 
 
 def randn(*n: int, backend: Tfftengine_ncj = "numpy") -> NDArray:

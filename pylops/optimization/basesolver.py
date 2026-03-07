@@ -115,7 +115,7 @@ class Solver(metaclass=ABCMeta):
                         if setup:
                             getattr(cb, f"on_{func.__name__}_begin")(
                                 self, kwargs.get("x0", None)
-                            )  # self is solver, args[0] is x
+                            )  # self is solver, args[0] is x0
                         else:
                             getattr(cb, f"on_{func.__name__}_begin")(
                                 self, args[0]

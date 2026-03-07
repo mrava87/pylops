@@ -14,6 +14,7 @@ from pylops.optimization.callback import _callback_stop
 from pylops.utils.backend import (
     get_array_module,
     get_module_name,
+    isblosc,
     to_numpy,
     to_numpy_conditional,
 )
@@ -93,6 +94,16 @@ class CG(Solver):
         strx = f"{x[0]:1.2e}        " if np.iscomplexobj(x) else f"{x[0]:11.4e}        "
         msg = f"{self.iiter:6g}        " + strx + f"{self.cost[self.iiter]:11.4e}"
         print(msg)
+
+    def _finalize_step(self, x: NDArray) -> None:
+        if isblosc(x):
+            x, self.c, self.r, self.kold = (
+                x.compute(),
+                self.c.compute(),
+                self.r.compute(),
+                self.kold.compute(),
+            )
+        return x
 
     def memory_usage(
         self,
@@ -244,6 +255,7 @@ class CG(Solver):
         self.cost.append(float(np.sqrt(self.kold)))
         if show:
             self._print_step(x)
+        x = self._finalize_step(x)
         return x
 
     def run(

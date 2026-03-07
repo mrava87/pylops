@@ -41,6 +41,7 @@ intersphinx_mapping = {
     "spgl1": ("https://spgl1.readthedocs.io/en/latest/", None),
     "pymc": ("https://www.pymc.io/", None),
     "arviz": ("https://python.arviz.org/en/latest/", None),
+    "blosc2": ("https://blosc.org/python-blosc2/", None),
 }
 
 # Generate autodoc stubs with summaries from code

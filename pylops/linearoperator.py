@@ -31,7 +31,7 @@ from typing import Callable, List, Optional, Sequence, Union
 
 from pylops import get_ndarray_multiplication
 from pylops.optimization.basic import cgls
-from pylops.utils.backend import get_array_module, get_module, get_sparse_eye
+from pylops.utils.backend import get_array_module, get_blosc, get_module, get_sparse_eye
 from pylops.utils.decorators import count
 from pylops.utils.estimators import trace_hutchinson, trace_hutchpp, trace_nahutchpp
 from pylops.utils.typing import DTypeLike, InputDimsLike, NDArray, ShapeLike
@@ -534,6 +534,9 @@ class LinearOperator(_LinearOperator):
             y = y.reshape(M, 1)
         else:
             raise ValueError("Invalid shape returned by user-defined matvec()")
+
+        if isinstance(x, get_blosc()) and not isinstance(y, get_blosc(lazy=True)):
+            y = get_module("blosc").asarray(y, chunks=x.chunks, dtype=self.dtype)
         return y
 
     @count(forward=False)
@@ -570,6 +573,9 @@ class LinearOperator(_LinearOperator):
             y = y.reshape(N, 1)
         else:
             raise ValueError("Invalid shape returned by user-defined rmatvec()")
+
+        if isinstance(x, get_blosc()) and not isinstance(y, get_blosc(lazy=True)):
+            y = get_module("blosc").asarray(y, chunks=x.chunks, dtype=self.dtype)
         return y
 
     @count(forward=True, matmat=True)
